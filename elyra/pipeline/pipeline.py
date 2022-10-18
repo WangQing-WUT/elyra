@@ -244,6 +244,8 @@ class GenericOperation(Operation):
                 inputs: List of files to be consumed by this operation, produced by parent operation(s)
                 outputs: List of files produced by this operation to be included in a child operation(s)
                 cpu: number of cpus requested to run the operation
+                npu310: number of npu310s requested to run the operation
+                npu910: number of npu910s requested to run the operation
                 memory: amount of memory requested to run the operation (in Gi)
                 gpu: number of gpus requested to run the operation
         Entries for other (non-built-in) component types are a function of the respective component.
@@ -259,6 +261,10 @@ class GenericOperation(Operation):
             raise ValueError("Invalid pipeline operation: Missing field 'operation runtime image'.")
         if component_params.get("cpu") and not self._validate_range(component_params.get("cpu"), min_value=1):
             raise ValueError("Invalid pipeline operation: CPU must be a positive value or None")
+        if component_params.get("npu310") and not self._validate_range(component_params.get("npu310"), min_value=1):
+            raise ValueError("Invalid pipeline operation: NPU310 must be a positive value or None")
+        if component_params.get("npu910") and not self._validate_range(component_params.get("npu910"), min_value=1):
+            raise ValueError("Invalid pipeline operation: NPU910 must be a positive value or None")
         if component_params.get("gpu") and not self._validate_range(component_params.get("gpu"), min_value=0):
             raise ValueError("Invalid pipeline operation: GPU must be a positive value or None")
         if component_params.get("memory") and not self._validate_range(component_params.get("memory"), min_value=1):
@@ -270,6 +276,8 @@ class GenericOperation(Operation):
         self._component_params["dependencies"] = Operation._scrub_list(component_params.get("dependencies", []))
         self._component_params["include_subdirectories"] = component_params.get("include_subdirectories", False)
         self._component_params["cpu"] = component_params.get("cpu")
+        self._component_params["npu310"] = component_params.get("npu310")
+        self._component_params["npu910"] = component_params.get("npu910")
         self._component_params["gpu"] = component_params.get("gpu")
         self._component_params["memory"] = component_params.get("memory")
 
@@ -310,6 +318,14 @@ class GenericOperation(Operation):
     @property
     def cpu(self) -> Optional[str]:
         return self._component_params.get("cpu")
+
+    @property
+    def npu310(self) -> Optional[str]:
+        return self._component_params.get("npu310")
+
+    @property
+    def npu910(self) -> Optional[str]:
+        return self._component_params.get("npu910")
 
     @property
     def memory(self) -> Optional[str]:

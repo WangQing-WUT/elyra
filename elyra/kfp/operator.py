@@ -82,6 +82,8 @@ class ExecuteFileOp(ContainerOp):
         bootstrap_script_url: Optional[str] = None,
         emptydir_volume_size: Optional[str] = None,
         cpu_request: Optional[str] = None,
+        npu310_request: Optional[str] = None,
+        npu910_request: Optional[str] = None,
         mem_request: Optional[str] = None,
         gpu_limit: Optional[str] = None,
         workflow_engine: Optional[str] = "argo",
@@ -105,6 +107,8 @@ class ExecuteFileOp(ContainerOp):
           bootstrap_script_url: URL to a custom python bootstrap script to run
           emptydir_volume_size: Size(GB) of the volume to create for the workspace when using CRIO container runtime
           cpu_request: number of CPUs requested for the operation
+          npu310_request: number of NPU310s requested for the operation
+          npu910_request: number of NPU910s requested for the operation
           mem_request: memory requested for the operation (in Gi)
           gpu_limit: maximum number of GPUs allowed for the operation
           workflow_engine: Kubeflow workflow engine, defaults to 'argo'
@@ -132,6 +136,8 @@ class ExecuteFileOp(ContainerOp):
         self.pipeline_inputs = pipeline_inputs
         self.pipeline_envs = pipeline_envs
         self.cpu_request = cpu_request
+        self.npu310_request = npu310_request
+        self.npu910_request = npu910_request
         self.mem_request = mem_request
         self.gpu_limit = gpu_limit
 
@@ -250,6 +256,12 @@ class ExecuteFileOp(ContainerOp):
 
         if self.cpu_request:
             self.container.set_cpu_request(cpu=str(cpu_request))
+
+        if self.npu310_request:
+            self.container.set_npu310_request(npu310=str(npu310_request))
+
+        if self.npu910_request:
+            self.container.set_npu910_request(npu910=str(npu910_request))
 
         if self.mem_request:
             self.container.set_memory_request(memory=str(mem_request) + "G")

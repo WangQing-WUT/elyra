@@ -38,7 +38,9 @@ export default class Utils {
     envObject: { [key: string]: string },
     cpu?: number,
     gpu?: number,
-    memory?: number
+    memory?: number,
+    npu310?: number,
+    npu910?: number
   ): any {
     const generated_uuid = uuid4();
 
@@ -73,6 +75,8 @@ export default class Utils {
                   cpu,
                   gpu,
                   memory,
+                  npu310,
+                  npu910,
                   include_subdirectories: false
                 },
                 ui_data: {

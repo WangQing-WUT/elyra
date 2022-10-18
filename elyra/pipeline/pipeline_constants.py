@@ -26,3 +26,4 @@ DISABLE_NODE_CACHING = "disable_node_caching"
 PIPELINE_META_PROPERTIES = ["name", "description", "runtime"]
 # optional static prefix to be used when generating an object name for object storage
 COS_OBJECT_PREFIX = "cos_object_prefix"
+TEST = "test"

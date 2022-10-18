@@ -113,6 +113,31 @@ export const FileSubmissionDialog: React.FC<IProps> = ({
         </div>
       </div>
       <br />
+      <div className="elyra-resourcesWrapper">
+        <div className="elyra-resourceInput">
+          <label htmlFor="npu310"> NPU310:</label>
+          <div
+            className="elyra-resourceInputDescription"
+            id="npu310-description"
+          >
+            For NPU310-intensive workloads, you can choose more than 1 NPU310
+            (e.g. 1.5).
+          </div>
+          <input id="npu310" type="number" name="npu310" />
+        </div>
+        <div className="elyra-resourceInput">
+          <label htmlFor="npu910"> NPU910:</label>
+          <div
+            className="elyra-resourceInputDescription"
+            id="npu910-description"
+          >
+            For NPU910-intensive workloads, you can choose more than 1 NPU910.
+            Must be an integer.
+          </div>
+          <input id="npu910" type="number" name="npu910" />
+        </div>
+      </div>
+      <br />
       <input
         type="checkbox"
         className="elyra-Dialog-checkbox"

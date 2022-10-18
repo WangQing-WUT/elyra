@@ -118,6 +118,8 @@ export class SubmitFileButtonExtension<
       cpu,
       gpu,
       memory,
+      npu310,
+      npu910,
       dependency_include,
       dependencies,
       ...envObject
@@ -134,7 +136,9 @@ export class SubmitFileButtonExtension<
       envObject,
       cpu,
       gpu,
-      memory
+      memory,
+      npu310,
+      npu910
     );
 
     PipelineService.submitPipeline(

@@ -220,6 +220,7 @@ const PipelineWrapper: React.FC<IProps> = ({
     mutate: mutatePalette
   } = usePalette(type);
 
+  console.log(palette);
   useEffect(() => {
     const handleMutateSignal = (): void => {
       mutatePalette();
@@ -732,6 +733,12 @@ const PipelineWrapper: React.FC<IProps> = ({
         if (node.app_data.component_parameters.cpu === null) {
           delete node.app_data.component_parameters.cpu;
         }
+        if (node.app_data.component_parameters.npu310 === null) {
+          delete node.app_data.component_parameters.npu310;
+        }
+        if (node.app_data.component_parameters.npu910 === null) {
+          delete node.app_data.component_parameters.npu910;
+        }
         if (node.app_data.component_parameters.memory === null) {
           delete node.app_data.component_parameters.memory;
         }
@@ -1096,7 +1103,7 @@ const PipelineWrapper: React.FC<IProps> = ({
           onError={onError}
           onFileRequested={onFileRequested}
           onPropertiesUpdateRequested={onPropertiesUpdateRequested}
-          leftPalette={true}
+          leftPalette={false}
         >
           {type === undefined ? (
             <EmptyGenericPipeline onOpenSettings={handleOpenSettings} />

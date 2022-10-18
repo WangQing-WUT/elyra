@@ -53,6 +53,18 @@
           "description": "The total amount of RAM specified.",
           "minimum": 0
         },
+        "npu310": {
+          "type": "integer",
+          "title": "NPU310",
+          "description": "For NPU310-intensive workloads, you can choose more than 1 NPU310 (e.g. 1.5).",
+          "minimum": 0
+        },
+        "npu910": {
+          "type": "integer",
+          "title": "NPU910",
+          "description": "For npu910-intensive workloads, you can choose more than 1 npu910 (e.g. 1.5).",
+          "minimum": 0
+        },
         "dependencies": {
           "title": "File Dependencies",
           "description": "Local file dependencies that need to be copied to remote execution environment.",

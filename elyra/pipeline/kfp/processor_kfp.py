@@ -556,6 +556,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     pipeline_envs=pipeline_envs,
                     emptydir_volume_size=emptydir_volume_size,
                     cpu_request=operation.cpu,
+                    npu310_request=operation.npu310,
+                    npu10_request=operation.npu910,
                     mem_request=operation.memory,
                     gpu_limit=operation.gpu,
                     workflow_engine=engine,
@@ -826,6 +828,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             pipeline_constants.KUBERNETES_POD_LABELS,
             pipeline_constants.KUBERNETES_TOLERATIONS,
             pipeline_constants.DISABLE_NODE_CACHING,
+            pipeline_constants.TEST,
         ]
 
 

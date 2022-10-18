@@ -341,6 +341,8 @@ be fully qualified (i.e., prefixed with their package names).
                     "parent_operation_ids": operation.parent_operation_ids,
                     "image_pull_policy": image_pull_policy,
                     "cpu_request": operation.cpu,
+                    "npu310_request": operation.npu310,
+                    "npu910_request": operation.npu910,
                     "mem_request": operation.memory,
                     "gpu_limit": operation.gpu,
                     "operator_source": operation.filename,
