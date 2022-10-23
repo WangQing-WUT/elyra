@@ -1,0 +1,207 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"title": "Name",
+			"description": "A custom Name for the node.",
+			"type": "string"
+		},
+		"label": {
+			"title": "Label",
+			"description": "A custom label for the node.",
+			"type": "string"
+		},
+		"component_parameters": {
+			"type": "object",
+			"properties": {
+				{% if  component.name == "Dataset Event" %}
+				"dataset_event_parameters": {
+					"type": "array",
+					"title": "Dataset Event Parameters",
+					"description": "Dataset event parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": "",
+								"enum": [ "", "DSEvent.name", "DSEvent.operate", "DSEvent.samples", "DSEvent.create_at", "DSEvent.publish_status", "DSEvent.subscribe_status" ]
+							},
+							"operate": {
+								"type": "string",
+								"title": "Operate",
+								"default": "",
+								"enum": [ "", ">", "<", "==", ">=", "<=" ]
+							},
+							"value": {
+								"type": "string",
+								"title": "Value"
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"operate": { "ui:placeholder": "operate" },
+							"value": { "ui:placeholder": "value" }
+						}
+					}
+				},
+				{% endif %}
+			    {% if  component.name == "Model Event" %}
+				"model_event_parameters": {
+					"type": "array",
+					"title": "Model Event Parameters",
+					"description": "Model event parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": "",
+								"enum": [ "", "ModelEvent.name", "ModelEvent.operate", "ModelEvent.version", "ModelEvent.create_at", "ModelEvent.update_at" ]
+							},
+							"operate": {
+								"type": "string",
+								"title": "Operate",
+								"default": "",
+								"enum": [ "", ">", "<", "==", ">=", "<=" ]
+							},
+							"value": {
+								"type": "string",
+								"title": "Value"
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"operate": { "ui:placeholder": "operate" },
+							"value": { "ui:placeholder": "value" }
+						}
+					}
+				},
+				{% endif %}
+				{% if  component.name == "MinIO Event" %}
+				"endpoint": {
+					"type": "string",
+					"title": "Minio Endpoint",
+					"description": "Minio endpoint.",
+					"format": "uri",
+					"uihints": {
+						"ui:placeholder": "minio-service.argo-events:9000"
+					}
+				},
+				"accesskey": {
+					"type": "string",
+					"title": "AccessKey",
+					"description": "Minio accesskey.",
+					"uihints": {
+						"ui:field": "password"
+					}
+				},
+				"secretkey": {
+					"type": "string",
+					"title": "SecretKey",
+					"description": "Minio secretkey.",
+					"uihints": {
+						"ui:field": "password"
+					}
+				},
+				"minio_event_parameters": {
+					"type": "array",
+					"title": "Minio Event Parameters",
+					"description": "Minio event parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": "",
+								"enum": [ "", "MinioEvent.operate", "MinioEvent.bucket", "MinioEvent.object" ]
+							},
+							"operate": {
+								"type": "string",
+								"title": "Operate",
+								"default": "",
+								"enum": [ "", ">", "<", "==", ">=", "<=" ]
+							},
+							"value": {
+								"type": "string",
+								"title": "Value"
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"operate": { "ui:placeholder": "operate" },
+							"value": { "ui:placeholder": "value" }
+						}
+					}
+				},
+				{% endif %}
+				{% if  component.name == "Pipeline Event" %}
+				"pipeline_event_parameters": {
+					"type": "array",
+					"title": "Pipeline Event parameters",
+					"description": "Pipeline event parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": "",
+								"enum": [ "", "PipelineEvent.name", "PipelineEvent.operate", "PipelineEvent.labels_selector" ]
+							},
+							"operate": {
+								"type": "string",
+								"title": "Operate",
+								"default": "",
+								"enum": [ "", ">", "<", "==", ">=", "<=" ]
+							},
+							"value": {
+								"type": "string",
+								"title": "Value"
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"operate": { "ui:placeholder": "operate" },
+							"value": { "ui:placeholder": "value" }
+						}
+					}
+				},
+				{% endif %}
+				{% if  component.name == "Calendar Event" %}
+				"interval": {
+					"type": "integer",
+					"title": "Interval",
+					"description": "Calendar interval.",
+					"minimum": 0
+				},
+				"schedule": {
+					"type": "string",
+					"title": "Schedule",
+					"description": "Calendar schedule."
+				}
+				{% endif %}
+				{% if  component.name != "Calendar Event" %}
+				"expression": {
+					"type": "string",
+					"title": "Expression",
+					"description": "{{component.name}} expression."
+				}
+				{% endif %}
+			},
+			"required": []
+		}
+	},
+	"required": ["component_parameters"]
+}

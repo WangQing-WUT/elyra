@@ -44,6 +44,10 @@ from elyra.pipeline.component import Component
 from elyra.pipeline.component import ComponentParser
 from elyra.pipeline.component_metadata import ComponentCatalogMetadata
 from elyra.pipeline.component_parameter import ComponentParameter
+from elyra.pipeline.component_parameter import WorkflowEvent
+from elyra.pipeline.component_parameter import WorkflowTrigger
+from elyra.pipeline.component_parameter import PipelineBranch
+from elyra.pipeline.component_parameter import PipelineLoop
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 
 BLOCKING_TIMEOUT = 0.5
@@ -679,7 +683,16 @@ class ComponentCache(SingletonConfigurable):
         if ComponentCache.get_generic_component(component.id) is not None:
             template = ComponentCache.load_jinja_template("generic_properties_template.jinja2")
         else:
-            template = ComponentCache.load_jinja_template("canvas_properties_template.jinja2")
+            if WorkflowEvent.is_exist(component.name):
+                template = ComponentCache.load_jinja_template("event_properties_template.jinja2")
+            elif WorkflowTrigger.is_exist(component.name):
+                template = ComponentCache.load_jinja_template("trigger_properties_template.jinja2")
+            elif PipelineBranch.is_exist(component.name):
+                template = ComponentCache.load_jinja_template("branch_properties_template.jinja2")
+            elif PipelineLoop.is_exist(component.name):
+                template = ComponentCache.load_jinja_template("loop_properties_template.jinja2")
+            else:
+                template = ComponentCache.load_jinja_template("canvas_properties_template.jinja2")
 
         template_vars = {
             "elyra_owned_parameters": component.get_elyra_parameters(),

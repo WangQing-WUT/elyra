@@ -35,6 +35,7 @@ class RuntimeProcessorType(Enum):
     KUBEFLOW_PIPELINES = "Kubeflow Pipelines"
     APACHE_AIRFLOW = "Apache Airflow"
     ARGO = "Argo"
+    WORKFLOW_PIPELINES = "Workflow Pipelines"
     ######################################
     # Add new entry here for each new type
     ######################################
@@ -76,6 +77,8 @@ class RuntimeTypeResources(object):
             return ArgoResources()
         if runtime_type == RuntimeProcessorType.LOCAL:
             return LocalResources()
+        if runtime_type == RuntimeProcessorType.WORKFLOW_PIPELINES:
+            return WfpPipelinesResources()
         raise ValueError(f"Runtime type {runtime_type} is not recognized.")
 
     @property
@@ -133,6 +136,14 @@ class LocalResources(RuntimeTypeResources):
     type = RuntimeProcessorType.LOCAL
     icon_endpoint = "static/elyra/pipeline-flow.svg"
     export_file_types = []
+
+
+class WfpPipelinesResources(RuntimeTypeResources):
+    """Holds static information relative to Kubeflow Pipelines processors"""
+
+    type = RuntimeProcessorType.WORKFLOW_PIPELINES
+    icon_endpoint = "static/elyra/workflow.svg"
+    export_file_types = [{"id": "yaml", "display_name": "WFP static configuration file (YAML formatted)"}]
 
 
 ###########################################################

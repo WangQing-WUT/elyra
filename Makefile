@@ -166,9 +166,9 @@ yarn-install:
 build-ui: # Build packages
 	yarn lerna run build --stream
 
-package-ui: build-dependencies yarn-install lint-ui build-ui
+package-ui: build-dependencies yarn-install build-ui
 
-package-ui-dev: dev-dependencies yarn-install dev-link lint-ui build-ui
+package-ui-dev: dev-dependencies yarn-install dev-link build-ui
 
 build-server: # Build backend
 	$(PYTHON) -m setup bdist_wheel sdist
@@ -179,7 +179,7 @@ uninstall-server-package:
 install-server-package: uninstall-server-package
 	$(PYTHON_PIP) install --upgrade --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "elyra-*-py3-none-any.whl")[kfp-tekton]"
 
-install-server: build-dependencies lint-server build-server install-server-package ## Build and install backend
+install-server: build-dependencies build-server install-server-package ## Build and install backend
 
 install: package-ui install-server check-install ## Build and install
 

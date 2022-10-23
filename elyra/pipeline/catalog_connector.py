@@ -85,6 +85,14 @@ class KfpEntryData(EntryData):
     pass
 
 
+class WfpEntryData(EntryData):
+    """
+    A WFP-specific EntryData object
+    """
+
+    pass
+
+
 class CatalogEntry(object):
     """
     An object corresponding to a single entry of a component catalog, which has a

@@ -143,11 +143,14 @@ setup_args = dict(
             "airflow-provider-package-catalog-schema = elyra.pipeline.airflow.provider_package_catalog_connector.airflow_provider_package_schema_provider:AirflowProviderPackageSchemasProvider",  # noqa: E501
             "airflow-package-catalog-schema = elyra.pipeline.airflow.package_catalog_connector.airflow_package_schema_provider:AirflowPackageSchemasProvider",  # noqa: E501
             "metadata-tests = elyra.tests.metadata.test_utils:MetadataTestSchemasProvider",
+            "workflow-provider-catalog-schema = elyra.pipeline.wfp.wfp_schema_provider:WorkFlowSchemasProvider",
+            "kubeflow-provider-catalog-schema = elyra.pipeline.kfp.kfp_schema_provider:KubeFlowSchemasProvider",
         ],
         "elyra.pipeline.processors": [
             "local = elyra.pipeline.local.processor_local:LocalPipelineProcessor",
             "airflow = elyra.pipeline.airflow.processor_airflow:AirflowPipelineProcessor",
             "kfp = elyra.pipeline.kfp.processor_kfp:KfpPipelineProcessor",
+            "wfp = elyra.pipeline.wfp.processor_wfp:WfpPipelineProcessor",
         ],
         "elyra.component.catalog_types": [
             "url-catalog = elyra.pipeline.catalog_connector:UrlComponentCatalogConnector",
@@ -155,6 +158,8 @@ setup_args = dict(
             "local-directory-catalog = elyra.pipeline.catalog_connector:DirectoryComponentCatalogConnector",
             "airflow-provider-package-catalog = elyra.pipeline.airflow.provider_package_catalog_connector.airflow_provider_package_catalog_connector:AirflowProviderPackageCatalogConnector",  # noqa: E501
             "airflow-package-catalog = elyra.pipeline.airflow.package_catalog_connector.airflow_package_catalog_connector:AirflowPackageCatalogConnector",  # noqa: E501
+            "workflow-catalog = elyra.pipeline.wfp.wfp_catalog_connector:WorkFlowCatalogConnector",
+            "elyra-kfp-loop-branch-catalog = elyra.pipeline.kfp.kfp_catalog_connector:KubeFlowCatalogConnector",
         ],
         "papermill.engine": [
             "ElyraEngine = elyra.pipeline.elyra_engine:ElyraEngine",

@@ -85,6 +85,8 @@ import {
   IRuntimeData
 } from './runtime-utils';
 import { theme } from './theme';
+import { consoleIcon } from '@jupyterlab/ui-components';
+import { OutputPrompt } from '@jupyterlab/outputarea';
 
 const PIPELINE_CLASS = 'elyra-PipelineEditor';
 
@@ -335,6 +337,37 @@ const PipelineWrapper: React.FC<IProps> = ({
     // Remove all null values from the pipeline
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
       removeNullValues(node.app_data ?? {});
+    }
+    for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []){
+      if (node.op.indexOf("loop-branch") != -1 ){
+          for (const k in node.app_data.component_parameters){
+            if (k == "branch_conditions"){
+              var conditionsNum = node.app_data.component_parameters.branch_conditions.length
+              var outputsNum = node.outputs.length
+              if (outputsNum > conditionsNum){
+                for(;outputsNum != conditionsNum && outputsNum > 1;outputsNum --){
+                  node.outputs.pop()
+                }
+              }else if (outputsNum < conditionsNum){
+                for (;outputsNum != conditionsNum;outputsNum ++){
+                  let tempNode:any={};
+                   for(let k in node.outputs[0]){
+                    if(typeof node.outputs[0][k]=='function'){
+                        tempNode[k] = node.outputs[0][k]
+                    }else{
+                      tempNode[k] = JSON.parse(JSON.stringify(node.outputs[0][k]))
+                    }
+                  }
+                  var index = outputsNum
+                  tempNode.id = "outPort".concat(index.toString())
+                  tempNode.app_data.ui_data.label = "Output Port".concat(index.toString())
+                  node.outputs.push(tempNode)
+                }
+              }
+            }
+          }
+          
+      }
     }
     removeNullValues(
       pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
@@ -1103,7 +1136,7 @@ const PipelineWrapper: React.FC<IProps> = ({
           onError={onError}
           onFileRequested={onFileRequested}
           onPropertiesUpdateRequested={onPropertiesUpdateRequested}
-          leftPalette={false}
+          leftPalette={true}
         >
           {type === undefined ? (
             <EmptyGenericPipeline onOpenSettings={handleOpenSettings} />

@@ -918,3 +918,57 @@ class InputTypeDescriptionMap(Enum):
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
     outputpath = None  # outputs are read-only and don't require a description
+
+
+class WorkflowTrigger(Enum):
+    """A mapping of workflow trigger types"""
+
+    http = "HTTP Trigger"
+    k8s_object = "K8s Object Trigger"
+    pipeline = "Pipeline Trigger"
+
+    def is_exist(trigger_type: str) -> bool :
+        for v in WorkflowTrigger:
+            if trigger_type == v.value:
+                return True
+        return False
+
+
+class WorkflowEvent(Enum):
+    """A mapping of workflow event types"""
+
+    calendar = "Calendar Event"
+    dataset = "Dataset Event"
+    minio = "MinIO Event"
+    model = "Model Event"
+    pipeline = "Pipeline Event"
+
+    def is_exist(event_type: str) -> bool :
+        for v in WorkflowEvent:
+            if event_type == v.value:
+                return True
+        return False
+
+
+class PipelineBranch(Enum):
+    """Pipeline Branch component"""
+
+    branch = "Pipeline Branch"
+
+    def is_exist(name: str) -> bool :
+        for v in PipelineBranch:
+            if name == v.value:
+                return True
+        return False
+
+
+class PipelineLoop(Enum):
+    """Pipeline Loop component"""
+
+    loop = "Pipeline Loop"
+
+    def is_exist(name: str) -> bool :
+        for v in PipelineLoop:
+            if name == v.value:
+                return True
+        return False  

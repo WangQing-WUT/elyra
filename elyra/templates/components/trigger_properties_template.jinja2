@@ -1,0 +1,167 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"title": "Name",
+			"description": "A custom Name for the node.",
+			"type": "string"
+		},
+		"label": {
+			"title": "Label",
+			"description": "A custom label for the node.",
+			"type": "string"
+		},
+		"component_parameters": {
+			"type": "object",
+			"properties": {
+				{% if  component.name == "Pipeline Trigger" %}
+                "template_name": {
+                    "title": "Template Name",
+                    "description": "Pipeline template name.",
+                    "type": "string",
+                    "uihints": {
+                        "ui:placeholder": "*.pipeline/*.yaml",
+                        "ui:widget": "file",
+						"extensions": [".yaml", ".pipeline"]
+                    }
+                },
+				"pipeline_trigger_parameters": {
+					"type": "array",
+					"title": "Pipeline Trigger Parameters",
+					"description": "Pipeline trigger parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": ""
+							},
+							"type": {
+								"type": "string",
+								"title": "Type",
+								"default": "",
+								"enum": [ "", "bool", "int32", "int64", "string", "uint32", "uint64" ]
+							},
+							"from": {
+								"type": "string",
+								"title": "From",
+								"default": ""
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"type": { "ui:placeholder": "type" },
+							"from": { "ui:placeholder": "from" }
+						}
+					}
+				}
+				{% endif %}
+			    {% if  component.name == "K8s Object Trigger" %}
+                "resource_file": {
+                    "title": "Resource File",
+                    "description": "K8s object trigger resource file.",
+                    "type": "string",
+                    "uihints": {
+                        "ui:placeholder": "*.yaml"
+                    }
+                },
+                "operation": {
+                    "title": "Operation",
+                    "description": "K8s object trigger operation.",
+                    "type": "string",
+                    "default": "",
+					"enum": [ "", "create", "update", "delete" ]
+                },
+				"k8s_object_trigger_parameters": {
+					"type": "array",
+					"title": "K8s Object Trigger Parameters",
+					"description": "K8s object trigger parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": ""
+							},
+							"type": {
+								"type": "string",
+								"title": "Type",
+								"default": "",
+								"enum": [ "", "bool", "int32", "int64", "string", "uint32", "uint64" ]
+							},
+							"from": {
+								"type": "string",
+								"title": "From",
+								"default": ""
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"type": { "ui:placeholder": "type" },
+							"from": { "ui:placeholder": "from" }
+						}
+					}
+				}
+				{% endif %}
+				{% if  component.name == "HTTP Trigger" %}
+				"url": {
+					"type": "string",
+					"title": "Http URL",
+					"description": "Http url.",
+					"format": "uri",
+					"uihints": {
+						"ui:placeholder": "http://http-server.argo-events.svc:8090/hello"
+					}
+				},
+				"method": {
+					"type": "string",
+					"title": "Method",
+					"description": "Http method.",
+                    "default": "",
+					"enum": [ "", "Post", "Get", "Head", "Patch", "Delete", "Connect", "Options", "Trace" ]
+				},
+				"timeout": {
+					"type": "integer",
+					"title": "Timeout",
+					"description": "Http timeout.",
+                    "minimum": 0
+				},
+				"http_trigger_parameters": {
+					"type": "array",
+					"title": "Http Trigger Parameters",
+					"description": "Http trigger parameters.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"title": "Name",
+								"default": ""
+							},
+							"from": {
+								"type": "string",
+								"title": "From",
+								"default": ""
+							}
+						}
+					},
+					"uihints": {
+						"items": {
+							"name": { "ui:placeholder": "name" },
+							"from": { "ui:placeholder": "from" }
+						}
+					}
+				}
+				{% endif %}
+			},
+			"required": []
+		}
+	},
+	"required": ["component_parameters"]
+}

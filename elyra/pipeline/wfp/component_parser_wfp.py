@@ -27,14 +27,14 @@ from elyra.pipeline.catalog_connector import CatalogEntry
 from elyra.pipeline.component import Component
 from elyra.pipeline.component import ComponentParser
 from elyra.pipeline.component_parameter import ComponentParameter
-from elyra.pipeline.kfp.kfp_component_utils import component_yaml_schema
 from elyra.pipeline.runtime_type import RuntimeProcessorType
+from elyra.pipeline.wfp.wfp_component_utils import component_yaml_schema
 
 
-class KfpComponentParser(ComponentParser):
+class WfpComponentParser(ComponentParser):
     _file_types: List[str] = [".yaml"]
 
-    component_platform: RuntimeProcessorType = RuntimeProcessorType.KUBEFLOW_PIPELINES
+    component_platform: RuntimeProcessorType = RuntimeProcessorType.WORKFLOW_PIPELINES
 
     def parse(self, catalog_entry: CatalogEntry) -> Optional[List[Component]]:
         # Get YAML object from component definition
@@ -199,7 +199,7 @@ class KfpComponentParser(ComponentParser):
         """
         Takes the type information of a component parameter as parsed from the component
         specification and returns a new type that is one of several standard options.
-        """                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+        """
         data_type_info = super().determine_type_information(parsed_type)
 
         data_type_info.allowed_input_types = []

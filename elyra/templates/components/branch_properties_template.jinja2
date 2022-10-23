@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "label": {
+      "title": "Label",
+      "description": "A custom label for the node.",
+      "type": "string"
+    },
+    "component_parameters": {
+      "type": "object",
+      "properties": {
+        "branch_conditions": {
+          "type": "array",
+          "title": "Branch Conditions",
+          "description": "Branch conditions.",
+          "items": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "required": []
+    }
+ },
+  "required": ["component_parameters"]
+}

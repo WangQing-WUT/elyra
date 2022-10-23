@@ -37,6 +37,8 @@ class RuntimesMetadata(Metadata):
                 self.metadata["runtime_type"] = "APACHE_AIRFLOW"
             elif self.schema_name == "argo":
                 self.metadata["runtime_type"] = "ARGO"
+            elif self.schema_name == "wfp":
+                self.metadata["runtime_type"] = "WORKFLOW_PIPELINES"
             else:
                 raise ValueError(f"Unknown Runtimes schema name detected: '{self.schema_name}'!  Skipping...")
 
