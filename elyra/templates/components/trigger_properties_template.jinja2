@@ -1,4 +1,71 @@
 {
+	"definitions":{
+		"oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string",
+                  "default": "string"
+                },
+                "value": {
+                  "type": "string",
+                  "default": "SHA256"
+                }
+              },
+              "uihints": {
+                "widget": {
+                  "ui:widget": "hidden"
+                },
+                "value": {}
+              },
+              "title": "Please enter a string value:"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string",
+                  "default": "inputpath"
+                },
+                "value": {
+                  "type": "string",
+                  "enum": []
+                }
+              },
+              "uihints": {
+                "widget": {
+                  "ui:widget": "hidden"
+                },
+                "value": {
+                  "inputpath": true
+                }
+              },
+              "title": "Please select an output from a parent:"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "widget": {
+                  "type": "string",
+                  "default": "file"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "uihints": {
+                "widget": {
+                  "ui:widget": "hidden"
+                },
+                "value": {
+                  "ui:widget": "file"
+                }
+              },
+              "title": "Please select a file to use as input:"
+            }
+        ]
+	},
 	"type": "object",
 	"properties": {
 		"name": {
@@ -44,17 +111,15 @@
 								"enum": [ "", "bool", "int32", "int64", "string", "uint32", "uint64" ]
 							},
 							"from": {
-								"type": "string",
 								"title": "From",
-								"default": ""
+								"$ref": "#/definitions"
 							}
 						}
 					},
 					"uihints": {
 						"items": {
 							"name": { "ui:placeholder": "name" },
-							"type": { "ui:placeholder": "type" },
-							"from": { "ui:placeholder": "from" }
+							"type": { "ui:placeholder": "type" }
 						}
 					}
 				}

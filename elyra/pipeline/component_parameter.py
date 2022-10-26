@@ -905,7 +905,6 @@ class ComponentParameter(object):
 
                 one_of.append(obj)
             json_dict["oneOf"] = one_of
-
         return json.dumps(json_dict)
 
 

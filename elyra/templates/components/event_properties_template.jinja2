@@ -22,29 +22,138 @@
 					"items": {
 						"type": "object",
 						"properties": {
+							"id": {
+								"type": "string",
+								"title": "Id"
+							},
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"default": "",
-								"enum": [ "", "DSEvent.name", "DSEvent.operate", "DSEvent.samples", "DSEvent.create_at", "DSEvent.publish_status", "DSEvent.subscribe_status" ]
-							},
-							"operate": {
-								"type": "string",
-								"title": "Operate",
-								"default": "",
-								"enum": [ "", ">", "<", "==", ">=", "<=" ]
-							},
-							"value": {
-								"type": "string",
-								"title": "Value"
+								"enum": ["DSEvent.name", "DSEvent.operate", "DSEvent.samples", "DSEvent.create_at", "DSEvent.publish_status", "DSEvent.subscribe_status"]
 							}
-						}
+						},
+						"allOf": [
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "DSEvent.name"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "DSEvent.operate"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "DSEvent.samples"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": [">", "<", "==", ">=", "<=", "!=" ]
+         								},
+										"value": {
+											"type": "integer",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "DSEvent.create_at"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["before", "after"]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value",
+											"format": "datetime"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"enum": ["DSEvent.publish_status", "DSEvent.subscribe_status"]
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							}
+						]
 					},
-					"uihints": {
+					"uihints":{
 						"items": {
-							"name": { "ui:placeholder": "name" },
-							"operate": { "ui:placeholder": "operate" },
-							"value": { "ui:placeholder": "value" }
+							"id": { "ui:readonly": "true" }
 						}
 					}
 				},
@@ -57,29 +166,115 @@
 					"items": {
 						"type": "object",
 						"properties": {
+							"id": {
+								"type": "string",
+								"title": "Id"
+							},
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"default": "",
-								"enum": [ "", "ModelEvent.name", "ModelEvent.operate", "ModelEvent.version", "ModelEvent.create_at", "ModelEvent.update_at" ]
-							},
-							"operate": {
-								"type": "string",
-								"title": "Operate",
-								"default": "",
-								"enum": [ "", ">", "<", "==", ">=", "<=" ]
-							},
-							"value": {
-								"type": "string",
-								"title": "Value"
+								"enum": ["ModelEvent.name", "ModelEvent.operate", "ModelEvent.version", "ModelEvent.create_at", "ModelEvent.update_at"]
 							}
-						}
+						},
+						"allOf": [
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "ModelEvent.name"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "ModelEvent.operate"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "ModelEvent.version"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"enum": ["ModelEvent.create_at", "ModelEvent.update_at"]
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["before", "after"]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value",
+											"format": "datetime"
+										}
+       								},
+        							"required": ["value"]
+								}
+							}
+						]
 					},
-					"uihints": {
+					"uihints":{
 						"items": {
-							"name": { "ui:placeholder": "name" },
-							"operate": { "ui:placeholder": "operate" },
-							"value": { "ui:placeholder": "value" }
+							"id": { "ui:readonly": "true" }
 						}
 					}
 				},
@@ -117,29 +312,68 @@
 					"items": {
 						"type": "object",
 						"properties": {
+							"id": {
+								"type": "string",
+								"title": "Id"
+							},
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"default": "",
-								"enum": [ "", "MinioEvent.operate", "MinioEvent.bucket", "MinioEvent.object" ]
-							},
-							"operate": {
-								"type": "string",
-								"title": "Operate",
-								"default": "",
-								"enum": [ "", ">", "<", "==", ">=", "<=" ]
-							},
-							"value": {
-								"type": "string",
-								"title": "Value"
+								"enum": ["MinioEvent.operate", "MinioEvent.bucket", "MinioEvent.bucket"]
 							}
-						}
+						},
+						"allOf": [
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "MinioEvent.operate"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["==", "!="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "MinioEvent.object"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["prefix", "suffix"]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							}
+						]
 					},
-					"uihints": {
+					"uihints":{
 						"items": {
-							"name": { "ui:placeholder": "name" },
-							"operate": { "ui:placeholder": "operate" },
-							"value": { "ui:placeholder": "value" }
+							"id": { "ui:readonly": "true" }
 						}
 					}
 				},
@@ -152,29 +386,115 @@
 					"items": {
 						"type": "object",
 						"properties": {
+							"id": {
+								"type": "string",
+								"title": "Id"
+							},
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"default": "",
-								"enum": [ "", "PipelineEvent.name", "PipelineEvent.operate", "PipelineEvent.labels_selector" ]
-							},
-							"operate": {
-								"type": "string",
-								"title": "Operate",
-								"default": "",
-								"enum": [ "", ">", "<", "==", ">=", "<=" ]
-							},
-							"value": {
-								"type": "string",
-								"title": "Value"
+								"enum": ["PipelineEvent.name", "PipelineEvent.operate", "PipelineEvent.label_selector", "PipelineEvent.create_at"]
 							}
-						}
+						},
+						"allOf": [
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "PipelineEvent.name"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["==", "prefix"]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "PipelineEvent.operate"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "PipelineEvent.label_selector"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["=="]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value"
+										}
+       								},
+        							"required": ["value"]
+								}
+							},
+							{
+								"if": {
+        							"properties": {
+          								"name": {
+           					 				"const": "PipelineEvent.create_at"
+     						  			}
+       								}
+      							},
+								"then": {
+        							"properties": {
+          								"operate": {
+            								"type": "string",
+											"title": "Operate",
+											"enum": ["before"]
+         								},
+										"value": {
+											"type": "string",
+											"title": "Value",
+											"format": "datetime"
+										}
+       								},
+        							"required": ["value"]
+								}
+							}
+						]
 					},
-					"uihints": {
+					"uihints":{
 						"items": {
-							"name": { "ui:placeholder": "name" },
-							"operate": { "ui:placeholder": "operate" },
-							"value": { "ui:placeholder": "value" }
+							"id": { "ui:readonly": "true" }
 						}
 					}
 				},

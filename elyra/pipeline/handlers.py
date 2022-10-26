@@ -31,6 +31,7 @@ from elyra.metadata.schemaspaces import ComponentCatalogs
 from elyra.pipeline.component import Component
 from elyra.pipeline.component_catalog import ComponentCache
 from elyra.pipeline.component_catalog import RefreshInProgressError
+from elyra.pipeline.component_parameter import WorkflowEvent
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline_definition import PipelineDefinition
 from elyra.pipeline.processor import PipelineProcessorManager
@@ -205,13 +206,22 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
         runtime_processor_type = get_runtime_processor_type(runtime_type, self.log, self.request.path)
         if not runtime_processor_type:
             raise web.HTTPError(400, f"Invalid runtime type '{runtime_type}'")
-
+        print("---")
+        print(runtime_type)
+        print("---")
         # Get pipeline properties json
-        pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(
+        if runtime_type == "WORKFLOW_PIPELINES":
+            pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(
             package_name="templates/pipeline",
-            template_name="pipeline_properties_template.jinja2",
+            template_name="workflow_pipeline_properties_template.jinja2",
             runtime_type=runtime_processor_type.name,
-        )
+            )
+        else:
+            pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(
+                package_name="templates/pipeline",
+                template_name="pipeline_properties_template.jinja2",
+                runtime_type=runtime_processor_type.name,
+            )
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
