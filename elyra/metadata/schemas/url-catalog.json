@@ -9,7 +9,7 @@
   "metadata_class_name": "elyra.pipeline.component_metadata.UrlCatalogMetadata",
   "uihints": {
     "icon": "",
-    "reference_url": "https://elyra.readthedocs.io/en/v3.12.0/user_guide/pipeline-components.html#url-component-catalog"
+    "reference_url": "https://elyra.readthedocs.io/en/latest/user_guide/pipeline-components.html#url-component-catalog"
   },
   "properties": {
     "schema_name": {
@@ -22,7 +22,8 @@
       "title": "Display Name",
       "description": "Display name of this Component Catalog",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "const": ""
     },
     "metadata": {
       "description": "Additional data specific to this metadata",
@@ -31,15 +32,19 @@
         "description": {
           "title": "Description",
           "description": "Description of this Component Catalog",
-          "type": "string"
+          "type": "string",
+          "uihints": {
+            "category": "Component Categories"
+          }
         },
         "runtime_type": {
           "title": "Runtime Type",
           "description": "The type of runtime associated with this Component Catalog",
           "type": "string",
-          "enum": ["KUBEFLOW_PIPELINES", "APACHE_AIRFLOW"],
+          "default": "KUBEFLOW_PIPELINES",
           "uihints": {
-            "category": "Runtime"
+            "category": "Runtime",
+            "ui:readonly": true
           }
         },
         "categories": {

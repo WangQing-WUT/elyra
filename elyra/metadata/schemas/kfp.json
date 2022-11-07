@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/meta-schema.json",
   "$id": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/kfp.json",
-  "title": "Kubeflow Pipelines",
+  "title": "Pipelines Engine",
   "name": "kfp",
   "schemaspace": "runtimes",
   "schemaspace_id": "130b8e00-de7c-4b32-b553-b4a52824a3b5",
   "metadata_class_name": "elyra.pipeline.kfp.kfp_metadata.KfpMetadata",
   "runtime_type": "KUBEFLOW_PIPELINES",
   "uihints": {
-    "title": "Kubeflow Pipelines runtimes",
+    "title": "Pipelines Engine runtimes",
     "icon": "elyra:runtimes",
     "reference_url": "https://elyra.readthedocs.io/en/v3.12.0/user_guide/runtime-conf.html"
   },
@@ -21,7 +21,7 @@
     },
     "display_name": {
       "title": "Display Name",
-      "description": "Display name of this Kubeflow Pipelines configuration",
+      "description": "Display name of this Pipelines Engine configuration",
       "type": "string",
       "minLength": 1
     },
@@ -40,74 +40,74 @@
         },
         "description": {
           "title": "Description",
-          "description": "Description of this Kubeflow Pipelines configuration",
+          "description": "Description of this Pipelines Engine configuration",
           "type": "string"
         },
         "api_endpoint": {
-          "title": "Kubeflow Pipelines API Endpoint",
-          "description": "The Kubeflow Pipelines API endpoint",
+          "title": "Pipelines Engine API Endpoint",
+          "description": "The Pipelines Engine API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Kubeflow Pipelines",
+            "category": "Pipelines Engine",
             "ui:placeholder": "https://your-kubeflow-service:port/pipeline"
           }
         },
         "public_api_endpoint": {
-          "title": "Public Kubeflow Pipelines API Endpoint",
-          "description": "The public Kubeflow Pipelines API endpoint",
+          "title": "Public Pipelines Engine API Endpoint",
+          "description": "The public Pipelines Engine API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Kubeflow Pipelines",
+            "category": "Pipelines Engine",
             "ui:placeholder": "https://your-kubeflow-service:port/pipeline"
           }
         },
         "user_namespace": {
-          "title": "Kubeflow Pipelines User Namespace",
-          "description": "The Kubeflow Pipelines user namespace used to create experiments",
+          "title": "Pipelines Engine User Namespace",
+          "description": "The Pipelines Engine user namespace used to create experiments",
           "type": "string",
           "pattern": "^[a-z0-9][-a-z0-9]*[a-z0-9]$",
           "maxLength": 63,
           "uihints": {
-            "category": "Kubeflow Pipelines"
+            "category": "Pipelines Engine"
           }
         },
         "engine": {
-          "title": "Kubeflow Pipelines engine",
-          "description": "The Kubeflow Pipelines engine in use",
+          "title": "Pipelines Engine engine",
+          "description": "The Pipelines Engine engine in use",
           "type": "string",
           "enum": ["Argo", "Tekton"],
           "default": "Argo",
           "uihints": {
-            "category": "Kubeflow Pipelines"
+            "category": "Pipelines Engine"
           }
         },
         "auth_type": {
           "title": "Authentication Type",
-          "description": "Authentication type Elyra uses to authenticate with Kubeflow",
+          "description": "Authentication type Elyra uses to authenticate with Pipelines Engine",
           "type": "string",
           "enum": ["{AUTH_PROVIDER_PLACEHOLDERS}"],
           "default": "{DEFAULT_AUTH_PROVIDER_PLACEHOLDER}",
           "uihints": {
-            "category": "Kubeflow Pipelines"
+            "category": "Pipelines Engine"
           }
         },
         "api_username": {
-          "title": "Kubeflow Pipelines API Endpoint Username",
-          "description": "The Kubeflow Pipelines API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
+          "title": "Pipelines Engine API Endpoint Username",
+          "description": "The Pipelines Engine API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
-            "category": "Kubeflow Pipelines"
+            "category": "Pipelines Engine"
           }
         },
         "api_password": {
-          "title": "Kubeflow Pipelines API Endpoint Password",
+          "title": "Pipelines Engine API Endpoint Password",
           "description": "Password for the specified username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
             "ui:field": "password",
-            "category": "Kubeflow Pipelines"
+            "category": "Pipelines Engine"
           }
         },
         "cos_endpoint": {
@@ -184,7 +184,7 @@
         },
         "tags": {
           "title": "Tags",
-          "description": "Tags for categorizing Kubeflow pipelines",
+          "description": "Tags for categorizing Pipelines Engine",
           "uniqueItems": true,
           "type": "array",
           "items": {

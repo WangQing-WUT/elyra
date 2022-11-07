@@ -202,55 +202,55 @@ const extension: JupyterFrontEndPlugin<void> = {
      */
 
     // Add a python launcher
-    if (launcher) {
-      launcher.add({
-        command: commandIDs.createNewPythonEditor,
-        category: 'Elyra',
-        rank: 4
-      });
-    }
+    // if (launcher) {
+    //   launcher.add({
+    //     command: commandIDs.createNewPythonEditor,
+    //     category: 'Elyra',
+    //     rank: 4
+    //   });
+    // }
 
-    if (menu) {
-      // Add new python editor creation to the file menu
-      menu.fileMenu.newMenu.addGroup(
-        [{ command: commandIDs.createNewPythonEditor, args: { isMenu: true } }],
-        92
-      );
-    }
+    // if (menu) {
+    //   // Add new python editor creation to the file menu
+    //   menu.fileMenu.newMenu.addGroup(
+    //     [{ command: commandIDs.createNewPythonEditor, args: { isMenu: true } }],
+    //     92
+    //   );
+    // }
 
-    // Function to create a new untitled python file, given the current working directory
-    const createNew = (cwd: string): Promise<any> => {
-      return app.commands
-        .execute(commandIDs.newDocManager, {
-          path: cwd,
-          type: 'file',
-          ext: '.py'
-        })
-        .then(model => {
-          return app.commands.execute(commandIDs.openDocManager, {
-            path: model.path,
-            factory: PYTHON_FACTORY
-          });
-        });
-    };
+    // // Function to create a new untitled python file, given the current working directory
+    // const createNew = (cwd: string): Promise<any> => {
+    //   return app.commands
+    //     .execute(commandIDs.newDocManager, {
+    //       path: cwd,
+    //       type: 'file',
+    //       ext: '.py'
+    //     })
+    //     .then(model => {
+    //       return app.commands.execute(commandIDs.openDocManager, {
+    //         path: model.path,
+    //         factory: PYTHON_FACTORY
+    //       });
+    //     });
+    // };
 
-    // Add a command to create new Python editor
-    app.commands.addCommand(commandIDs.createNewPythonEditor, {
-      label: args =>
-        args['isPalette'] ? 'New Python Editor' : 'Python Editor',
-      caption: 'Create a new Python Editor',
-      icon: args => (args['isPalette'] ? undefined : pythonIcon),
-      execute: args => {
-        const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-        return createNew(cwd as string);
-      }
-    });
+    // // Add a command to create new Python editor
+    // app.commands.addCommand(commandIDs.createNewPythonEditor, {
+    //   label: args =>
+    //     args['isPalette'] ? 'New Python Editor' : 'Python Editor',
+    //   caption: 'Create a new Python Editor',
+    //   icon: args => (args['isPalette'] ? undefined : pythonIcon),
+    //   execute: args => {
+    //     const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+    //     return createNew(cwd as string);
+    //   }
+    // });
 
-    palette.addItem({
-      command: commandIDs.createNewPythonEditor,
-      args: { isPalette: true },
-      category: 'Elyra'
-    });
+    // palette.addItem({
+    //   command: commandIDs.createNewPythonEditor,
+    //   args: { isPalette: true },
+    //   category: 'Elyra'
+    // });
   }
 };
 

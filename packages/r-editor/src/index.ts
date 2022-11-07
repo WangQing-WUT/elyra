@@ -202,54 +202,54 @@ const extension: JupyterFrontEndPlugin<void> = {
      */
 
     // Add a r launcher
-    if (launcher) {
-      launcher.add({
-        command: commandIDs.createNewREditor,
-        category: 'Elyra',
-        rank: 5
-      });
-    }
+    // if (launcher) {
+    //   launcher.add({
+    //     command: commandIDs.createNewREditor,
+    //     category: 'Elyra',
+    //     rank: 5
+    //   });
+    // }
 
-    if (menu) {
-      // Add new r file creation to the file menu
-      menu.fileMenu.newMenu.addGroup(
-        [{ command: commandIDs.createNewREditor, args: { isMenu: true } }],
-        93
-      );
-    }
+    // if (menu) {
+    //   // Add new r file creation to the file menu
+    //   menu.fileMenu.newMenu.addGroup(
+    //     [{ command: commandIDs.createNewREditor, args: { isMenu: true } }],
+    //     93
+    //   );
+    // }
 
     // Function to create a new untitled r file, given the current working directory
-    const createNew = (cwd: string): Promise<any> => {
-      return app.commands
-        .execute(commandIDs.newDocManager, {
-          path: cwd,
-          type: 'file',
-          ext: '.r'
-        })
-        .then(model => {
-          return app.commands.execute(commandIDs.openDocManager, {
-            path: model.path,
-            factory: R_FACTORY
-          });
-        });
-    };
+    // const createNew = (cwd: string): Promise<any> => {
+    //   return app.commands
+    //     .execute(commandIDs.newDocManager, {
+    //       path: cwd,
+    //       type: 'file',
+    //       ext: '.r'
+    //     })
+    //     .then(model => {
+    //       return app.commands.execute(commandIDs.openDocManager, {
+    //         path: model.path,
+    //         factory: R_FACTORY
+    //       });
+    //     });
+    // };
 
     // Add a command to create new R editor
-    app.commands.addCommand(commandIDs.createNewREditor, {
-      label: args => (args['isPalette'] ? 'New R Editor' : 'R Editor'),
-      caption: 'Create a new R Editor',
-      icon: args => (args['isPalette'] ? undefined : rIcon),
-      execute: args => {
-        const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-        return createNew(cwd as string);
-      }
-    });
+    // app.commands.addCommand(commandIDs.createNewREditor, {
+    //   label: args => (args['isPalette'] ? 'New R Editor' : 'R Editor'),
+    //   caption: 'Create a new R Editor',
+    //   icon: args => (args['isPalette'] ? undefined : rIcon),
+    //   execute: args => {
+    //     const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+    //     return createNew(cwd as string);
+    //   }
+    // });
 
-    palette.addItem({
-      command: commandIDs.createNewREditor,
-      args: { isPalette: true },
-      category: 'Elyra'
-    });
+    // palette.addItem({
+    //   command: commandIDs.createNewREditor,
+    //   args: { isPalette: true },
+    //   category: 'Elyra'
+    // });
   }
 };
 

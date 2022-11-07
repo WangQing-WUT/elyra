@@ -18,7 +18,7 @@
 .PHONY: lint-dependencies lint-server black-format prettier-check-ui eslint-check-ui prettier-ui eslint-ui lint-ui lint
 .PHONY: dev-link dev-unlink
 .PHONY: build-dependencies dev-dependencies yarn-install build-ui package-ui package-ui-dev
-.PHONY: build-server install-server-package install-server
+.PHONY: build-server install-server-package install-server build-local-pipeline-editor
 .PHONY: install install-all install-dev install-examples install-gitlab-dependency check-install watch release
 .PHONY: test-dependencies pytest test-server test-ui-unit test-integration test-integration-debug test-ui test
 .PHONY: docs-dependencies docs
@@ -173,6 +173,9 @@ package-ui-dev: dev-dependencies yarn-install dev-link build-ui
 build-server: # Build backend
 	$(PYTHON) -m setup bdist_wheel sdist
 
+build-local-pipeline-editor:
+	cd ./pipeline-editor && make install dev-link
+
 uninstall-server-package:
 	@$(PYTHON_PIP) uninstall elyra -y
 
@@ -181,7 +184,7 @@ install-server-package: uninstall-server-package
 
 install-server: build-dependencies build-server install-server-package ## Build and install backend
 
-install: package-ui install-server check-install ## Build and install
+install: build-local-pipeline-editor dev-link package-ui install-server check-install ## Build and install
 
 install-all: package-ui install-server install-examples install-gitlab-dependency check-install ## Build and install, including examples
 

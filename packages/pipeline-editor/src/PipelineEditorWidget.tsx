@@ -304,7 +304,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       currentContext.model.contentChanged.disconnect(changeHandler);
     };
   }, [runtimeDisplayName]);
-  
+
   const onChange = useCallback((pipelineJson: any): void => {
     const removeNullValues = (data: any, removeEmptyString?: boolean): void => {
       for (const key in data) {
@@ -332,67 +332,77 @@ const PipelineWrapper: React.FC<IProps> = ({
         }
       }
     };
-    const autoADD = (data: any,op : string): void => {
-      if (op.indexOf("workflow-catalog") != -1 ){
-        for (const parametersKey in data.component_parameters){
-          if (parametersKey.indexOf("parameters") != -1){
+    const autoADD = (data: any, op: string): void => {
+      if (op.indexOf('workflow-catalog') != -1) {
+        for (const parametersKey in data.component_parameters) {
+          if (parametersKey.indexOf('fliter') != -1) {
             for (const key in data.component_parameters[parametersKey])
-            data.component_parameters[parametersKey][key].id = Number(key) + 1
+              data.component_parameters[parametersKey][key].id =
+                Number(key) + 1;
           }
         }
       }
     };
-    const loop = (subNode : any):void =>{
-      if (subNode.app_data.ui_data.label == "Pipeline Loop"){
-        if (subNode.outputs.length == 1){
-          let tempNode:any={};
-          for(let k in subNode.outputs[0]){
-            if(typeof subNode.outputs[0][k]=='function'){
-              tempNode[k] = subNode.outputs[0][k]
-            }else{
-            tempNode[k] = JSON.parse(JSON.stringify(subNode.outputs[0][k]))
+    const loop = (subNode: any): void => {
+      if (subNode.app_data.ui_data.label == 'Pipeline Loop') {
+        if (subNode.outputs.length == 1) {
+          let tempNode: any = {};
+          for (let k in subNode.outputs[0]) {
+            if (typeof subNode.outputs[0][k] == 'function') {
+              tempNode[k] = subNode.outputs[0][k];
+            } else {
+              tempNode[k] = JSON.parse(JSON.stringify(subNode.outputs[0][k]));
             }
           }
-          tempNode.id = "loopEntrypoint"
-          tempNode.app_data.ui_data.label = "loop entrypoint"
-          subNode.outputs.push(tempNode)
+          tempNode.id = 'loopEntrypoint';
+          tempNode.app_data.ui_data.label = 'loop entrypoint';
+          subNode.outputs.push(tempNode);
         }
       }
     };
-    const branch = (subNode : any):void =>{
-      if (subNode.op.indexOf("loop-branch") != -1 ){
-        for (const k in subNode.app_data.component_parameters){
-          if (k == "branch_conditions"){
-            var conditionsNum = subNode.app_data.component_parameters.branch_conditions.length
-            var outputsNum = subNode.outputs.length
-            if (outputsNum > conditionsNum){
-              for(;outputsNum != conditionsNum && outputsNum > 1;outputsNum --){
-                subNode.outputs.pop()
+    const branch = (subNode: any): void => {
+      if (subNode.op.indexOf('loop-branch') != -1) {
+        for (const k in subNode.app_data.component_parameters) {
+          if (k == 'branch_conditions') {
+            var conditionsNum =
+              subNode.app_data.component_parameters.branch_conditions.length;
+            var outputsNum = subNode.outputs.length;
+            if (outputsNum > conditionsNum) {
+              for (
+                ;
+                outputsNum != conditionsNum && outputsNum > 1;
+                outputsNum--
+              ) {
+                subNode.outputs.pop();
               }
-            }else if (outputsNum < conditionsNum){
-              for (;outputsNum != conditionsNum;outputsNum ++){
-                let tempNode:any={};
-                 for(let k in subNode.outputs[0]){
-                  if(typeof subNode.outputs[0][k]=='function'){
-                      tempNode[k] = subNode.outputs[0][k]
-                  }else{
-                    tempNode[k] = JSON.parse(JSON.stringify(subNode.outputs[0][k]))
+            } else if (outputsNum < conditionsNum) {
+              for (; outputsNum != conditionsNum; outputsNum++) {
+                let tempNode: any = {};
+                for (let k in subNode.outputs[0]) {
+                  if (typeof subNode.outputs[0][k] == 'function') {
+                    tempNode[k] = subNode.outputs[0][k];
+                  } else {
+                    tempNode[k] = JSON.parse(
+                      JSON.stringify(subNode.outputs[0][k])
+                    );
                   }
                 }
-                var index = outputsNum
-                tempNode.id = "outPort".concat(index.toString())
-                tempNode.app_data.ui_data.label = "Output Port".concat(index.toString())
-                subNode.outputs.push(tempNode)
+                var index = outputsNum;
+                tempNode.id = 'outPort'.concat(index.toString());
+                tempNode.app_data.ui_data.label = 'Output Port'.concat(
+                  index.toString()
+                );
+                subNode.outputs.push(tempNode);
               }
             }
           }
         }
-    }
-    }
+      }
+    };
     // Remove all null values from the pipeline
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
       removeNullValues(node.app_data ?? {});
-      autoADD((node.app_data ?? {}),node.op);
+      autoADD(node.app_data ?? {}, node.op);
       loop(node);
       branch(node);
     }
@@ -511,6 +521,9 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
+    console.log(filename);
+    console.log(args);
+    console.log('PE');
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
         browserFactory.defaultBrowser.model.manager,

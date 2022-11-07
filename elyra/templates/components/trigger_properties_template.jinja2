@@ -1,71 +1,4 @@
 {
-	"definitions":{
-		"oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "widget": {
-                  "type": "string",
-                  "default": "string"
-                },
-                "value": {
-                  "type": "string",
-                  "default": "SHA256"
-                }
-              },
-              "uihints": {
-                "widget": {
-                  "ui:widget": "hidden"
-                },
-                "value": {}
-              },
-              "title": "Please enter a string value:"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "widget": {
-                  "type": "string",
-                  "default": "inputpath"
-                },
-                "value": {
-                  "type": "string",
-                  "enum": []
-                }
-              },
-              "uihints": {
-                "widget": {
-                  "ui:widget": "hidden"
-                },
-                "value": {
-                  "inputpath": true
-                }
-              },
-              "title": "Please select an output from a parent:"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "widget": {
-                  "type": "string",
-                  "default": "file"
-                },
-                "value": {
-                  "type": "string"
-                }
-              },
-              "uihints": {
-                "widget": {
-                  "ui:widget": "hidden"
-                },
-                "value": {
-                  "ui:widget": "file"
-                }
-              },
-              "title": "Please select a file to use as input:"
-            }
-        ]
-	},
 	"type": "object",
 	"properties": {
 		"name": {
@@ -92,7 +25,7 @@
 						"extensions": [".yaml", ".pipeline"]
                     }
                 },
-				"pipeline_trigger_parameters": {
+				"trigger_parameters": {
 					"type": "array",
 					"title": "Pipeline Trigger Parameters",
 					"description": "Pipeline trigger parameters.",
@@ -104,22 +37,17 @@
 								"title": "Name",
 								"default": ""
 							},
-							"type": {
-								"type": "string",
-								"title": "Type",
-								"default": "",
-								"enum": [ "", "bool", "int32", "int64", "string", "uint32", "uint64" ]
-							},
 							"from": {
 								"title": "From",
-								"$ref": "#/definitions"
+								"type": "string",
+								"enum": []
 							}
 						}
 					},
 					"uihints": {
 						"items": {
 							"name": { "ui:placeholder": "name" },
-							"type": { "ui:placeholder": "type" }
+							"type": { "ui:placeholder": "from" }
 						}
 					}
 				}
@@ -140,7 +68,7 @@
                     "default": "",
 					"enum": [ "", "create", "update", "delete" ]
                 },
-				"k8s_object_trigger_parameters": {
+				"trigger_parameters": {
 					"type": "array",
 					"title": "K8s Object Trigger Parameters",
 					"description": "K8s object trigger parameters.",
@@ -152,23 +80,16 @@
 								"title": "Name",
 								"default": ""
 							},
-							"type": {
-								"type": "string",
-								"title": "Type",
-								"default": "",
-								"enum": [ "", "bool", "int32", "int64", "string", "uint32", "uint64" ]
-							},
 							"from": {
 								"type": "string",
 								"title": "From",
-								"default": ""
+								"enum": []
 							}
 						}
 					},
 					"uihints": {
 						"items": {
 							"name": { "ui:placeholder": "name" },
-							"type": { "ui:placeholder": "type" },
 							"from": { "ui:placeholder": "from" }
 						}
 					}
@@ -197,7 +118,7 @@
 					"description": "Http timeout.",
                     "minimum": 0
 				},
-				"http_trigger_parameters": {
+				"trigger_parameters": {
 					"type": "array",
 					"title": "Http Trigger Parameters",
 					"description": "Http trigger parameters.",
@@ -206,13 +127,12 @@
 						"properties": {
 							"name": {
 								"type": "string",
-								"title": "Name",
-								"default": ""
+								"title": "Name"
 							},
 							"from": {
 								"type": "string",
 								"title": "From",
-								"default": ""
+								"enum": []
 							}
 						}
 					},

@@ -2,32 +2,116 @@
   "type": "object",
   "properties": {
     "name": {
-      "title": "Pipeline Name",
+      "title": "Workflow Name",
       "type": "string",
       "uihints": {
         "ui:readonly": true
       }
     },
     "runtime": {
-      "title": "Pipeline Runtime",
+      "title": "Workflow Runtime",
       "type": "string",
       "uihints": {
         "ui:readonly": true
       }
     },
     "description": {
-      "title": "Pipeline Description",
+      "title": "Workflow Description",
       "type": "string",
       "uihints": {
-        "ui:placeholder": "Pipeline Description",
-        "ui:widget": "textarea"
+        "ui:placeholder": "Workflow Description"
       }
     },
-    "input": {
-      "title": "Workflow Input",
-      "type": "string",
-      "uihints": {
-        "ui:placeholder": "Workflow Input"
+    "input_paramters": {
+      "title": "Workflow Input Paramters",
+      "type": "array",
+      "items":{
+        "type": "object",
+        "properties": {
+          "key":{
+            "type": "string",
+            "title": "Key"
+          },
+          "value":{
+            "type": "string",
+            "title": "Value"
+          }
+        }
+      }
+    },
+    "init": {
+      "type": "object",
+      "properties": {
+        "init_header": {
+          "type": "null",
+          "title": "Init Pipeline",
+          "description":
+            "Default values are applied to all nodes in this pipeline and can be customized in each node.",
+          "uihints": {
+            "ui:field": "header"
+          }
+        },
+        "init_pipeline": {
+          "type": "string",
+          "title": "Pipeline File",
+          "uihints": {
+            "ui:widget" : "file",
+            "extensions": [".pipeline"]
+          }
+        },
+        "init_paramters": {
+          "title": "Init Paramters",
+          "type": "array",
+          "items":{
+            "type": "object",
+            "properties": {
+              "key":{
+                "type": "string",
+                "title": "Key"
+              },
+              "value":{
+                "type": "string",
+                "title": "Value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "exit": {
+      "type": "object",
+      "properties": {
+        "exit_header": {
+          "type": "null",
+          "title": "Exit Pipeline",
+          "description":
+            "Default values are applied to all nodes in this pipeline and can be customized in each node.",
+          "uihints": {
+            "ui:field": "header"
+          }
+        },
+        "exit_pipeline": {
+          "type": "string",
+          "title": "Pipeline File",
+          "uihints": {"ui:widget" : "file"}
+        },
+        "exit_paramters": {
+          "title": "Init Paramters",
+          "type": "array",
+          "items":{
+            "type": "object",
+            "properties": {
+              "key":{
+                "type": "string",
+                "title": "Key"
+              },
+              "value":{
+                "type": "string",
+                "title": "Value"
+              }
+            }
+          }
+        }
       }
     }
   }

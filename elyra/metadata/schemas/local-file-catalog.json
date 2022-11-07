@@ -37,7 +37,7 @@
           "title": "Runtime Type",
           "description": "The type of runtime associated with this Component Catalog",
           "type": "string",
-          "enum": ["KUBEFLOW_PIPELINES", "APACHE_AIRFLOW"],
+          "enum": ["KUBEFLOW_PIPELINES", "WORKFLOW_PIPELINES"],
           "uihints": {
             "category": "Runtime"
           }

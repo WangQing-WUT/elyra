@@ -828,7 +828,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             pipeline_constants.KUBERNETES_POD_LABELS,
             pipeline_constants.KUBERNETES_TOLERATIONS,
             pipeline_constants.DISABLE_NODE_CACHING,
-            pipeline_constants.TEST,
         ]
 
 

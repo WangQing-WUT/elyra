@@ -152,38 +152,6 @@ const extension: JupyterFrontEndPlugin<ILauncher> = {
       );
     }
 
-    commands.addCommand(CommandIDs.openHelp, {
-      label: 'Documentation',
-      icon: helpIcon,
-      execute: (args: any) => {
-        window.open('https://elyra.readthedocs.io/en/v3.12.0/', '_blank');
-      }
-    });
-
-    commands.addCommand(CommandIDs.releases, {
-      label: "What's new in v3.12.0",
-      caption: "What's new in this release",
-      icon: whatsNewIcon,
-      execute: (args: any) => {
-        window.open(
-          'https://github.com/elyra-ai/elyra/releases/v3.12.0/',
-          '_blank'
-        );
-      }
-    });
-
-    model.add({
-      command: CommandIDs.openHelp,
-      category: 'Elyra',
-      rank: 10
-    });
-
-    model.add({
-      command: CommandIDs.releases,
-      category: 'Elyra',
-      rank: 11
-    });
-
     return model;
   }
 };

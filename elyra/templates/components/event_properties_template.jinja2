@@ -15,10 +15,10 @@
 			"type": "object",
 			"properties": {
 				{% if  component.name == "Dataset Event" %}
-				"dataset_event_parameters": {
+				"event_filter": {
 					"type": "array",
-					"title": "Dataset Event Parameters",
-					"description": "Dataset event parameters.",
+					"title": "Dataset Event Filter",
+					"description": "Dataset event filter.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -29,7 +29,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["DSEvent.name", "DSEvent.operate", "DSEvent.samples", "DSEvent.create_at", "DSEvent.publish_status", "DSEvent.subscribe_status"]
+								"enum": ["name", "operate", "samples", "create_at", "publish_status", "subscribe_status"]
 							}
 						},
 						"allOf": [
@@ -37,7 +37,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "DSEvent.name"
+           					 				"const": "name"
      						  			}
        								}
       							},
@@ -60,7 +60,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "DSEvent.operate"
+           					 				"const": "operate"
      						  			}
        								}
       							},
@@ -83,7 +83,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "DSEvent.samples"
+           					 				"const": "samples"
      						  			}
        								}
       							},
@@ -106,7 +106,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "DSEvent.create_at"
+           					 				"const": "create_at"
      						  			}
        								}
       							},
@@ -130,7 +130,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"enum": ["DSEvent.publish_status", "DSEvent.subscribe_status"]
+           					 				"enum": ["publish_status", "subscribe_status"]
      						  			}
        								}
       							},
@@ -143,7 +143,8 @@
          								},
 										"value": {
 											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"enum": ["creat", "finish"]
 										}
        								},
         							"required": ["value"]
@@ -159,10 +160,10 @@
 				},
 				{% endif %}
 			    {% if  component.name == "Model Event" %}
-				"model_event_parameters": {
+				"event_filter": {
 					"type": "array",
-					"title": "Model Event Parameters",
-					"description": "Model event parameters.",
+					"title": "Model Event Filter",
+					"description": "Model event filter.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -173,7 +174,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["ModelEvent.name", "ModelEvent.operate", "ModelEvent.version", "ModelEvent.create_at", "ModelEvent.update_at"]
+								"enum": ["name", "operate", "version", "create_at", "update_at"]
 							}
 						},
 						"allOf": [
@@ -181,7 +182,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "ModelEvent.name"
+           					 				"const": "name"
      						  			}
        								}
       							},
@@ -204,7 +205,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "ModelEvent.operate"
+           					 				"const": "operate"
      						  			}
        								}
       							},
@@ -227,7 +228,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "ModelEvent.version"
+           					 				"const": "version"
      						  			}
        								}
       							},
@@ -250,7 +251,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"enum": ["ModelEvent.create_at", "ModelEvent.update_at"]
+           					 				"enum": ["create_at", "update_at"]
      						  			}
        								}
       							},
@@ -305,10 +306,10 @@
 						"ui:field": "password"
 					}
 				},
-				"minio_event_parameters": {
+				"event_filter": {
 					"type": "array",
-					"title": "Minio Event Parameters",
-					"description": "Minio event parameters.",
+					"title": "Minio Event Filter",
+					"description": "Minio event filter.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -319,7 +320,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["MinioEvent.operate", "MinioEvent.bucket", "MinioEvent.bucket"]
+								"enum": ["operate", "object", "bucket"]
 							}
 						},
 						"allOf": [
@@ -327,7 +328,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "MinioEvent.operate"
+           					 				"const": "operate"
      						  			}
        								}
       							},
@@ -350,7 +351,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "MinioEvent.object"
+           					 				"const": "object"
      						  			}
        								}
       							},
@@ -379,10 +380,10 @@
 				},
 				{% endif %}
 				{% if  component.name == "Pipeline Event" %}
-				"pipeline_event_parameters": {
+				"event_filter": {
 					"type": "array",
-					"title": "Pipeline Event parameters",
-					"description": "Pipeline event parameters.",
+					"title": "Pipeline Event Filter",
+					"description": "Pipeline event filter.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -393,7 +394,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["PipelineEvent.name", "PipelineEvent.operate", "PipelineEvent.label_selector", "PipelineEvent.create_at"]
+								"enum": ["name", "operate", "label_selector", "create_at"]
 							}
 						},
 						"allOf": [
@@ -401,7 +402,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "PipelineEvent.name"
+           					 				"const": "name"
      						  			}
        								}
       							},
@@ -424,7 +425,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "PipelineEvent.operate"
+           					 				"const": "operate"
      						  			}
        								}
       							},
@@ -447,7 +448,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "PipelineEvent.label_selector"
+           					 				"const": "label_selector"
      						  			}
        								}
       							},
@@ -470,7 +471,7 @@
 								"if": {
         							"properties": {
           								"name": {
-           					 				"const": "PipelineEvent.create_at"
+           					 				"const": "create_at"
      						  			}
        								}
       							},

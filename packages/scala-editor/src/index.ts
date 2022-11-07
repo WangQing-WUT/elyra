@@ -202,54 +202,54 @@ const extension: JupyterFrontEndPlugin<void> = {
      */
 
     // Add an scala launcher
-    if (launcher) {
-      launcher.add({
-        command: commandIDs.createNewScalaEditor,
-        category: 'Elyra',
-        rank: 4
-      });
-    }
+    // if (launcher) {
+    //   launcher.add({
+    //     command: commandIDs.createNewScalaEditor,
+    //     category: 'Elyra',
+    //     rank: 4
+    //   });
+    // }
 
-    if (menu) {
-      // Add new scala editor creation to the file menu
-      menu.fileMenu.newMenu.addGroup(
-        [{ command: commandIDs.createNewScalaEditor, args: { isMenu: true } }],
-        92
-      );
-    }
+    // if (menu) {
+    //   // Add new scala editor creation to the file menu
+    //   menu.fileMenu.newMenu.addGroup(
+    //     [{ command: commandIDs.createNewScalaEditor, args: { isMenu: true } }],
+    //     92
+    //   );
+    // }
 
-    // Function to create a new untitled scala file, given the current working directory
-    const createNew = (cwd: string): Promise<any> => {
-      return app.commands
-        .execute(commandIDs.newDocManager, {
-          path: cwd,
-          type: 'file',
-          ext: '.scala'
-        })
-        .then(model => {
-          return app.commands.execute(commandIDs.openDocManager, {
-            path: model.path,
-            factory: SCALA_FACTORY
-          });
-        });
-    };
+    // // Function to create a new untitled scala file, given the current working directory
+    // const createNew = (cwd: string): Promise<any> => {
+    //   return app.commands
+    //     .execute(commandIDs.newDocManager, {
+    //       path: cwd,
+    //       type: 'file',
+    //       ext: '.scala'
+    //     })
+    //     .then(model => {
+    //       return app.commands.execute(commandIDs.openDocManager, {
+    //         path: model.path,
+    //         factory: SCALA_FACTORY
+    //       });
+    //     });
+    // };
 
-    // Add a command to create new scala editor
-    app.commands.addCommand(commandIDs.createNewScalaEditor, {
-      label: args => (args['isPalette'] ? 'New Scala Editor' : 'Scala Editor'),
-      caption: 'Create a new Scala Editor',
-      icon: args => (args['isPalette'] ? undefined : scalaIcon),
-      execute: args => {
-        const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-        return createNew(cwd as string);
-      }
-    });
+    // // Add a command to create new scala editor
+    // app.commands.addCommand(commandIDs.createNewScalaEditor, {
+    //   label: args => (args['isPalette'] ? 'New Scala Editor' : 'Scala Editor'),
+    //   caption: 'Create a new Scala Editor',
+    //   icon: args => (args['isPalette'] ? undefined : scalaIcon),
+    //   execute: args => {
+    //     const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+    //     return createNew(cwd as string);
+    //   }
+    // });
 
-    palette.addItem({
-      command: commandIDs.createNewScalaEditor,
-      args: { isPalette: true },
-      category: 'Elyra'
-    });
+    // palette.addItem({
+    //   command: commandIDs.createNewScalaEditor,
+    //   args: { isPalette: true },
+    //   category: 'Elyra'
+    // });
   }
 };
 

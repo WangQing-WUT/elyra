@@ -37,6 +37,7 @@ recursive-exclude * *.py[co]
 recursive-include elyra/metadata/schemas *
 recursive-include elyra/templates *
 recursive-include elyra/static *
+recursive-include elyra/.component *
 recursive-include etc/config/components/ *.json
 recursive-include etc/config/components/kfp *.yaml
 recursive-include etc/config/jupyter_notebook_config.d *.json
@@ -44,6 +45,8 @@ recursive-include etc/config/jupyter_server_config.d *.json
 recursive-include etc/config/metadata/runtime-images *.json
 recursive-include etc/config/metadata/component-registries *.json
 recursive-include etc/config/settings/ *.json
+recursive-include elyra/pipeline/wfp *
+recursive-include elyra/pipeline/kfp *
 
 # Include Airflow catalog connector schemas
 include elyra/pipeline/airflow/provider_package_catalog_connector/airflow-provider-package-catalog.json

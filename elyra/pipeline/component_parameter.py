@@ -36,7 +36,6 @@ from elyra.pipeline.pipeline_constants import KUBERNETES_POD_LABELS
 from elyra.pipeline.pipeline_constants import KUBERNETES_SECRETS
 from elyra.pipeline.pipeline_constants import KUBERNETES_TOLERATIONS
 from elyra.pipeline.pipeline_constants import MOUNTED_VOLUMES
-from elyra.pipeline.pipeline_constants import TEST
 from elyra.util.kubernetes import is_valid_annotation_key
 from elyra.util.kubernetes import is_valid_annotation_value
 from elyra.util.kubernetes import is_valid_kubernetes_key
@@ -587,48 +586,6 @@ class KubernetesToleration(ElyraPropertyListItem):
     def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
         """Add KubernetesToleration instance to the execution object for the given runtime processor"""
         runtime_processor.add_kubernetes_toleration(instance=self, execution_object=execution_object, **kwargs)
-
-
-class Test(ElyraPropertyListItem):
-    """
-    Kubernetes tolerations to apply to the pod where the node is executed.
-    """
-
-    property_id = TEST
-    generic = True
-    custom = True
-    _display_name = "Test"
-    _json_data_type = "array"
-    _keys = ["key", "operator", "value", "effect"]
-    _ui_details_map = {
-        "key": {"display_name": "1", "placeholder": "key", "json_type": "string", "required": False},
-        "operator": {"display_name": "2", "json_type": "string", "required": True},
-        "value": {"display_name": "3", "placeholder": "value", "json_type": "string", "required": False},
-        "effect": {"display_name": "4", "placeholder": "NoSchedule", "json_type": "string", "required": False},
-    }
-
-    def __init__(self, key, operator, value, effect, **kwargs):
-        self.key = key
-        self.operator = operator
-        self.value = value
-        self.effect = effect
-
-    @classmethod
-    def create_instance(cls, prop_id: str, value: Optional[Any]) -> Test | None:
-        key, operator, value, effect = cls.unpack(value, "key", "operator", "value", "effect")
-        return Test(key=key, operator=operator, value=value, effect=effect)
-
-    @classmethod
-    def get_schema(cls) -> Dict[str, Any]:
-        """Build the JSON schema for an Elyra-owned component property"""
-        schema = super().get_schema()
-        op_enum = ["1", "2"]
-        schema["items"]["properties"]["operator"]["enum"] = op_enum
-        schema["items"]["properties"]["operator"]["default"] = op_enum[0]
-        schema["items"]["properties"]["effect"]["enum"] = ["", "1", "2", "3"]
-        schema["items"]["properties"]["key"]["enum"] = ["", "1", "2", "3"]
-        schema["items"]["properties"]["value"]["enum"] = ["", "1", "2", "3"]
-        return schema
 
 
 class ElyraPropertyList(list):

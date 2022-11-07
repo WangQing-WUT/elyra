@@ -28,6 +28,7 @@ from elyra.metadata.handlers import SchemaResourceHandler
 from elyra.metadata.handlers import SchemaspaceHandler
 from elyra.metadata.handlers import SchemaspaceResourceHandler
 from elyra.metadata.manager import MetadataManager
+from elyra.metadata.metadata import Metadata
 from elyra.metadata.schema import SchemaManager
 from elyra.metadata.storage import FileMetadataCache
 from elyra.pipeline.catalog_connector import ComponentCatalogConnector
@@ -49,6 +50,8 @@ from elyra.pipeline.validation import PipelineValidationManager
 
 DEFAULT_STATIC_FILES_PATH = os.path.join(os.path.dirname(__file__), "static")
 DEFAULT_TEMPLATE_FILES_PATH = os.path.join(os.path.dirname(__file__), "templates")
+DEFAULT_COMPONENT_PATH = os.path.join(os.path.dirname(__file__),".component")
+DEFAULT_PIPELINE_PATH = os.path.join(os.path.dirname(__file__),".pipeline")
 
 
 class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
@@ -125,6 +128,35 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
         FileMetadataCache.instance(parent=self)
         ComponentCache.instance(parent=self).load()
         SchemaManager.instance(parent=self)
+        # ------ Read Components ------ 
+        # TODO name  目前是删除，不知道有何影响
+        # TODO display_name 采用什么方式
+        # TODO 多维度测试
+        metadata_manager = MetadataManager(schemaspace="component-catalogs")
+        for category in os.listdir(DEFAULT_COMPONENT_PATH):
+            abs_path = DEFAULT_COMPONENT_PATH + "/" + category
+            if os.path.isdir(abs_path):
+                components_list = os.listdir(abs_path)
+                for i in range (len(components_list)):
+                    components_list[i] = abs_path+ "/" + components_list[i]
+                component_json = {
+                    "display_name": category,
+                    "metadata": {
+                        "display_name": category,
+                        "runtime_type": "WORKFLOW_PIPELINES",
+                        "categories": [
+                            category
+                        ],
+                        "paths": components_list
+                    },
+                    "schema_name": "local-file-catalog"
+                }
+                instance = Metadata(**component_json)
+                try:
+                    metadata_manager.create(instance.name, instance)
+                except:
+                    metadata_manager.update(instance.name, instance)
+        # ------ Read Components ------ 
 
     def initialize_templates(self):
         pass
