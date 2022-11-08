@@ -22,13 +22,25 @@
       "title": "Display Name",
       "description": "Display name of this Component Catalog",
       "type": "string",
-      "minLength": 1,
-      "const": ""
+      "minLength": 1
     },
     "metadata": {
       "description": "Additional data specific to this metadata",
       "type": "object",
       "properties": {
+        "categories": {
+          "title": "Category Name",
+          "description": "Category names associated with this Component Catalog (the components defined in this registry will be organized in the component palette according to these categories)",
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 18
+          },
+          "uihints": {
+            "category": "Component Categories"
+          }
+        },
         "description": {
           "title": "Description",
           "description": "Description of this Component Catalog",
@@ -45,18 +57,6 @@
           "uihints": {
             "category": "Runtime",
             "ui:readonly": true
-          }
-        },
-        "categories": {
-          "title": "Category Names",
-          "description": "Category names associated with this Component Catalog (the components defined in this registry will be organized in the component palette according to these categories)",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "maxLength": 18
-          },
-          "uihints": {
-            "category": "Component Categories"
           }
         },
         "paths": {

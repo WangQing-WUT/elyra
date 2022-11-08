@@ -1,9 +1,0 @@
-name: Pipeline Trigger
-inputs:
-- {name: Data}
-- {name: Hash algorithm, type: String, default: SHA256, description: "Hash algorithm to use. Supported values are MD5, SHA1, SHA256, SHA512, SHA3"}
-outputs:
-- {name: Hash}
-metadata:
-  annotations:
-    author: Alexey Volkov <alexey.volkov@ark-kun.com>

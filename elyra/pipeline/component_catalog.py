@@ -335,7 +335,7 @@ class ComponentCache(SingletonConfigurable):
     # and "errors":["<error1>", "<error2>", ...] to dynamically indicate the status of this catalog instance
     _component_cache: ComponentCacheType = {}
 
-    _generic_category_label = "Elyra"
+    _generic_category_label = "Generic"
     _generic_components: Dict[str, Component] = {
         "notebook": Component(
             id="notebook",

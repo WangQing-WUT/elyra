@@ -141,8 +141,6 @@ setup_args = dict(
             "code-snippets = elyra.metadata.schemasproviders:CodeSnippetsSchemas",
             "component-catalogs = elyra.metadata.schemasproviders:ComponentCatalogsSchemas",
             "metadata-tests = elyra.tests.metadata.test_utils:MetadataTestSchemasProvider",
-            "workflow-provider-catalog-schema = elyra.pipeline.wfp.wfp_schema_provider:WorkFlowSchemasProvider",
-            "kubeflow-provider-catalog-schema = elyra.pipeline.kfp.kfp_schema_provider:KubeFlowSchemasProvider",
         ],
         "elyra.pipeline.processors": [
             "local = elyra.pipeline.local.processor_local:LocalPipelineProcessor",
@@ -152,8 +150,6 @@ setup_args = dict(
         "elyra.component.catalog_types": [
             "local-file-catalog = elyra.pipeline.catalog_connector:FilesystemComponentCatalogConnector",
             "local-directory-catalog = elyra.pipeline.catalog_connector:DirectoryComponentCatalogConnector",
-            "workflow-catalog = elyra.pipeline.wfp.wfp_catalog_connector:WorkFlowCatalogConnector",
-            "elyra-kfp-loop-branch-catalog = elyra.pipeline.kfp.kfp_catalog_connector:KubeFlowCatalogConnector",
         ],
         "papermill.engine": [
             "ElyraEngine = elyra.pipeline.elyra_engine:ElyraEngine",

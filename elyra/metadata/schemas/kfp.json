@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/meta-schema.json",
   "$id": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/kfp.json",
-  "title": "Pipelines Engine",
+  "title": "Kubeflow Pipelines",
   "name": "kfp",
   "schemaspace": "runtimes",
   "schemaspace_id": "130b8e00-de7c-4b32-b553-b4a52824a3b5",

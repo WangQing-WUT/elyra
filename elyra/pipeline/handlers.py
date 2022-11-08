@@ -206,9 +206,6 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
         runtime_processor_type = get_runtime_processor_type(runtime_type, self.log, self.request.path)
         if not runtime_processor_type:
             raise web.HTTPError(400, f"Invalid runtime type '{runtime_type}'")
-        print("---")
-        print(runtime_type)
-        print("---")
         # Get pipeline properties json
         if runtime_type == "WORKFLOW_PIPELINES":
             pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(

@@ -172,22 +172,7 @@ export class MetadataEditorWidget extends ReactWidget {
 
       // Adds categories as wrapper objects in the schema.
       const metadataWithCategories: { [id: string]: any } = {};
-      const schemaPropertiesByCategory: { [id: string]: any } = {
-        _noCategory: {
-          type: 'object',
-          title: ' ',
-          properties: {
-            display_name: {
-              title: this.props.translator.__('Display Name'),
-              description: this.props.translator.__(
-                'Name used to identify an instance of metadata.'
-              ),
-              type: 'string'
-            }
-          },
-          required: ['display_name']
-        }
-      };
+      const schemaPropertiesByCategory: { [id: string]: any } = {};
 
       // Adds required fields to the wrapper required fields.
       const requiredCategories: string[] = [];
@@ -195,7 +180,7 @@ export class MetadataEditorWidget extends ReactWidget {
         const properties =
           schema.properties.metadata.properties[schemaProperty];
         const category =
-          (properties.uihints && properties.uihints.category) ?? '_noCategory';
+          (properties.uihints && properties.uihints.category);
 
         if (!metadataWithCategories[category]) {
           metadataWithCategories[category] = {};
@@ -230,7 +215,7 @@ export class MetadataEditorWidget extends ReactWidget {
       this.schema.properties.metadata.properties = schemaPropertiesByCategory;
       this.schema.properties.metadata.required = requiredCategories;
       this.metadata = metadataWithCategories;
-      this.title.label = metadata?.display_name ?? `New ${this.schema.title}`;
+      this.title.label = metadata?.display_name ?? `${this.schema.title}`;
       this.loading = false;
       this.update();
     } catch (error) {

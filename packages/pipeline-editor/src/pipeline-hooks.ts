@@ -148,7 +148,10 @@ export const sortPalette = (palette: {
 const NodeIcons: Map<string, string> = new Map([
   ['execute-notebook-node', 'static/elyra/notebook.svg'],
   ['execute-python-node', 'static/elyra/python.svg'],
-  ['execute-r-node', 'static/elyra/r-logo.svg']
+  ['execute-r-node', 'static/elyra/r-logo.svg'],
+  ['Events','/static/elyra/component/events_category.svg'],
+  ['Actions','/static/elyra/component/actions_category.svg'],
+  ['Logic','/static/elyra/component/logic_category.svg']
 ]);
 
 // TODO: We should decouple components and properties to support lazy loading.
@@ -206,7 +209,7 @@ export const componentFetcher = async (type: string): Promise<any> => {
     const defaultIcon = URLExt.parse(URLExt.join(baseUrl, type?.icon || ''))
       .pathname;
 
-    category.image = defaultIcon;
+    category.image = NodeIcons.get(category.id)||defaultIcon;
 
     for (const node of category.node_types) {
       // update icon

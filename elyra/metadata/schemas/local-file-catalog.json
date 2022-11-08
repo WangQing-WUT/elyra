@@ -28,30 +28,36 @@
       "description": "Additional data specific to this metadata",
       "type": "object",
       "properties": {
-        "description": {
-          "title": "Description",
-          "description": "Description of this Component Catalog",
-          "type": "string"
-        },
-        "runtime_type": {
-          "title": "Runtime Type",
-          "description": "The type of runtime associated with this Component Catalog",
-          "type": "string",
-          "enum": ["KUBEFLOW_PIPELINES", "WORKFLOW_PIPELINES"],
-          "uihints": {
-            "category": "Runtime"
-          }
-        },
         "categories": {
-          "title": "Category Names",
+          "title": "Category Name",
           "description": "Category names associated with this Component Catalog (the components defined in this registry will be organized in the component palette according to these categories)",
           "type": "array",
+          "maxItems": 1,
           "items": {
             "type": "string",
             "maxLength": 18
           },
           "uihints": {
             "category": "Component Categories"
+          }
+        },
+        "description": {
+          "title": "Description",
+          "description": "Description of this Component Catalog",
+          "type": "string",
+          "uihints": {
+            "category": "Component Categories"
+          }
+        },
+        "runtime_type": {
+          "title": "Runtime Type",
+          "description": "The type of runtime associated with this Component Catalog",
+          "type": "string",
+          "default": "KUBEFLOW_PIPELINES",
+          "uihints": {
+            "category": "Runtime",
+            "ui:readonly": true,
+            "hidden": true
           }
         },
         "base_path": {
