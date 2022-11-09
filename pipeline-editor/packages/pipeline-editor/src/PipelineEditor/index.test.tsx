@@ -1,0 +1,90 @@
+/*
+ * Copyright 2018-2022 Elyra Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {
+  render,
+  screen,
+  nodeSpec,
+  samplePipeline,
+  createPalette
+} from "../test-utils";
+import PipelineEditor from "./";
+
+it("shows custom empty component for undefined pipeline", () => {
+  render(
+    <PipelineEditor pipeline={undefined}>custom empty message</PipelineEditor>
+  );
+  expect(screen.getByText(/custom empty message/i)).toBeInTheDocument();
+});
+
+it("shows custom empty component for null pipeline", () => {
+  render(<PipelineEditor pipeline={null}>custom empty message</PipelineEditor>);
+  expect(screen.getByText(/custom empty message/i)).toBeInTheDocument();
+});
+
+it("renders a pipeline with two nodes", () => {
+  const { container } = render(<PipelineEditor pipeline={samplePipeline} />);
+
+  expect(container.getElementsByClassName("d3-node-group")).toHaveLength(2);
+});
+
+it("renders a pipeline with two nodes in readOnly mode", () => {
+  const { container } = render(
+    <PipelineEditor pipeline={samplePipeline} readOnly />
+  );
+
+  expect(container.getElementsByClassName("d3-node-group")).toHaveLength(2);
+});
+
+it("throws error for invalid pipeline json", () => {
+  const handleError = jest.fn();
+  render(<PipelineEditor pipeline="xxx" onError={handleError} />);
+
+  expect(handleError).toHaveBeenCalledTimes(1);
+  expect(handleError).toHaveBeenCalledWith(expect.any(Error));
+});
+
+it("renders", () => {
+  const handleError = jest.fn();
+  render(
+    <PipelineEditor
+      pipeline={samplePipeline}
+      palette={createPalette([])}
+      onError={handleError}
+    />
+  );
+  expect(handleError).not.toHaveBeenCalled();
+});
+
+it("can add node through imperative handle", async () => {
+  let handle: any;
+  const { container } = render(
+    <PipelineEditor
+      ref={r => (handle = r)}
+      pipeline={samplePipeline}
+      palette={createPalette([nodeSpec as any])}
+    />
+  );
+
+  expect(container.getElementsByClassName("d3-node-group")).toHaveLength(2);
+
+  handle.addFile({
+    nodeTemplate: { op: "execute-notebook-node" },
+    path: "example.ipynb"
+  });
+
+  expect(container.getElementsByClassName("d3-node-group")).toHaveLength(3);
+});

@@ -1,0 +1,31 @@
+{
+  "name": "@elyra/pipeline-services",
+  "version": "1.11.0-rc.0",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/elyra-ai/pipeline-editor",
+  "bugs": {
+    "url": "https://github.com/elyra-ai/pipeline-editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elyra-ai/pipeline-editor"
+  },
+  "license": "Apache-2.0",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf node_modules; rm -rf dist; yarn unlink || true",
+    "build": "tsc",
+    "watch": "tsc -w --preserveWatchOutput",
+    "test": "jest",
+    "link": "yarn link"
+  },
+  "dependencies": {
+    "immer": "^9.0.7",
+    "jsonc-parser": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
