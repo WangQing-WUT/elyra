@@ -36,6 +36,7 @@ lib64/
 parts/
 sdist/
 var/
+pipeline-editor/node_modules/
 *.egg-info/
 .installed.cfg
 *.egg
