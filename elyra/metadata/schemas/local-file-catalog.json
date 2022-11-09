@@ -33,6 +33,7 @@
           "description": "Category names associated with this Component Catalog (the components defined in this registry will be organized in the component palette according to these categories)",
           "type": "array",
           "maxItems": 1,
+          "minItems": 1,
           "items": {
             "type": "string",
             "maxLength": 18

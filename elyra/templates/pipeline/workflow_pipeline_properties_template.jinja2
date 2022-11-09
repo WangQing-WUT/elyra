@@ -28,13 +28,17 @@
       "items":{
         "type": "object",
         "properties": {
-          "key":{
+          "name":{
             "type": "string",
-            "title": "Key"
+            "title": "Name"
           },
           "value":{
             "type": "string",
             "title": "Value"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
           }
         }
       }
@@ -65,13 +69,27 @@
           "items":{
             "type": "object",
             "properties": {
-              "key":{
+              "name":{
                 "type": "string",
-                "title": "Key"
+                "title": "Name"
               },
               "value":{
+                "title": "Value",
+                "anyOf": [
+				          {
+                    "type": "string",
+                    "title": "Enter a value manually"
+    			        },
+                  {
+                    "type": "string",
+                    "title": "Select one of the workflow input parameters",
+                    "enum": []
+                  }
+    			      ]
+              },
+              "description": {
                 "type": "string",
-                "title": "Value"
+                "title": "Description"
               }
             }
           }
@@ -101,13 +119,27 @@
           "items":{
             "type": "object",
             "properties": {
-              "key":{
+              "name":{
                 "type": "string",
-                "title": "Key"
+                "title": "Name"
               },
               "value":{
+                "title": "Value",
+                "anyOf": [
+				          {
+                    "type": "string",
+                    "title": "Enter a value manually"
+    			        },
+                  {
+                    "type": "string",
+                    "title": "Select one of the workflow input parameters",
+                    "enum": []
+                  }
+    			      ]
+              },
+              "description": {
                 "type": "string",
-                "title": "Value"
+                "title": "Description"
               }
             }
           }

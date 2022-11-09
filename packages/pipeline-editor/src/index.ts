@@ -63,6 +63,7 @@ import '../style/index.css';
 
 const PIPELINE_EDITOR = 'Pipeline Editor';
 const PIPELINE = 'pipeline';
+const WORKFLOW = 'workflow';
 const PIPELINE_EDITOR_NAMESPACE = 'elyra-pipeline-editor-extension';
 const PLUGIN_ID = '@elyra/pipeline-editor-extension:plugin';
 
@@ -115,7 +116,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Set up new widget Factory for .pipeline files
     const pipelineEditorFactory = new PipelineEditorFactory({
       name: PIPELINE_EDITOR,
-      fileTypes: [PIPELINE],
+      fileTypes: [PIPELINE, WORKFLOW],
       defaultFor: [PIPELINE],
       shell: app.shell,
       commands: app.commands,
@@ -129,7 +130,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       {
         name: PIPELINE,
         displayName: 'Pipeline',
-        extensions: ['.pipeline'],
+        extensions: ['.pipeline', '.workflow'],
         icon: pipelineIcon
       },
       ['JSON']
@@ -227,11 +228,17 @@ const extension: JupyterFrontEndPlugin<void> = {
       },
       execute: (args: any) => {
         // Creates blank file, then opens it in a new window
+        let ext: string = '.pipeline';
+        console.log(args);
+        console.log('args');
+        if (args.runtimeType?.display_name == 'Workflow Pipelines') {
+          ext = '.workflow';
+        }
         app.commands
           .execute(commandIDs.newDocManager, {
             type: 'file',
             path: browserFactory.defaultBrowser.model.path,
-            ext: '.pipeline'
+            ext: ext
           })
           .then(async model => {
             const platformId = args.runtimeType?.id;

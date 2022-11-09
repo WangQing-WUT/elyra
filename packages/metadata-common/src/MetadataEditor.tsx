@@ -83,7 +83,8 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
   const schema = schemaTop.properties.metadata;
 
   const [metadata, setMetadata] = React.useState(initialMetadata);
-  const displayName = initialMetadata?.['Component Categories']?.['categories']?.[0];
+  const displayName =
+    initialMetadata?.['Component Categories']?.['categories']?.[0];
   const referenceURL = schemaTop.uihints?.reference_url;
 
   /**
@@ -100,8 +101,8 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
       metadata: flattenFormData(metadata)
     };
 
-    console.log(newMetadata)
-    console.log("newMetadata")
+    console.log();
+    console.log('newMetadata');
 
     if (!name) {
       MetadataService.postMetadata(schemaspace, JSON.stringify(newMetadata))
