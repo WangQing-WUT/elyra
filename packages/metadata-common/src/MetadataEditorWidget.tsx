@@ -172,7 +172,26 @@ export class MetadataEditorWidget extends ReactWidget {
 
       // Adds categories as wrapper objects in the schema.
       const metadataWithCategories: { [id: string]: any } = {};
-      const schemaPropertiesByCategory: { [id: string]: any } = {};
+      let schemaPropertiesByCategory: { [id: string]: any } = {};
+
+      if (schema.schemaspace != 'component-catalogs') {
+        schemaPropertiesByCategory = {
+          _noCategory: {
+            type: 'object',
+            title: ' ',
+            properties: {
+              display_name: {
+                title: this.props.translator.__('Display Name'),
+                description: this.props.translator.__(
+                  'Name used to identify an instance of metadata.'
+                ),
+                type: 'string'
+              }
+            },
+            required: ['display_name']
+          }
+        };
+      }
 
       // Adds required fields to the wrapper required fields.
       const requiredCategories: string[] = [];
@@ -180,7 +199,7 @@ export class MetadataEditorWidget extends ReactWidget {
         const properties =
           schema.properties.metadata.properties[schemaProperty];
         const category =
-          (properties.uihints && properties.uihints.category);
+          (properties.uihints && properties.uihints.category) ?? '_noCategory';
 
         if (!metadataWithCategories[category]) {
           metadataWithCategories[category] = {};

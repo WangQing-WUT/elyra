@@ -16,6 +16,7 @@
 from datetime import datetime
 from http.client import responses
 import json
+import os
 from logging import Logger
 import mimetypes
 from typing import List
@@ -36,6 +37,7 @@ from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline_definition import PipelineDefinition
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.processor import PipelineProcessorRegistry
+from elyra.pipeline.wfp.processor_wfp import WfpPipelineProcessor
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.pipeline.runtime_type import RuntimeTypeResources
 from elyra.pipeline.validation import PipelineValidationManager
@@ -97,32 +99,42 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         pipeline_export_path = payload["export_path"]
         pipeline_overwrite = payload["overwrite"]
 
-        response = await PipelineValidationManager.instance().validate(pipeline_definition)
-        self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
-
-        if not response.has_fatal:
-            pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
-                pipeline_definition
-            )
-
-            pipeline_exported_path = await PipelineProcessorManager.instance().export(
-                pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
-            )
+        
+        if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow Pipelines":
+            WPPR = WfpPipelineProcessor()
+            await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
             json_msg = json.dumps({"export_path": pipeline_export_path})
             self.set_status(201)
             self.set_header("Content-Type", "application/json")
-            location = url_path_join(self.base_url, "api", "contents", pipeline_exported_path)
+            location = url_path_join(self.base_url, "api", "contents", pipeline_export_path)
             self.set_header("Location", location)
         else:
-            json_msg = json.dumps(
-                {
-                    "reason": responses.get(400),
-                    "message": "Errors found in pipeline",
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "issues": response.to_json().get("issues"),
-                }
-            )
-            self.set_status(400)
+            response = await PipelineValidationManager.instance().validate(pipeline_definition)
+            self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
+
+            if not response.has_fatal:
+                pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
+                    pipeline_definition
+                )
+
+                pipeline_exported_path = await PipelineProcessorManager.instance().export(
+                    pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
+                )
+                json_msg = json.dumps({"export_path": pipeline_export_path})
+                self.set_status(201)
+                self.set_header("Content-Type", "application/json")
+                location = url_path_join(self.base_url, "api", "contents", pipeline_exported_path)
+                self.set_header("Location", location)
+            else:
+                json_msg = json.dumps(
+                    {
+                        "reason": responses.get(400),
+                        "message": "Errors found in pipeline",
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "issues": response.to_json().get("issues"),
+                    }
+                )
+                self.set_status(400)
 
         self.set_header("Content-Type", "application/json")
         await self.finish(json_msg)
@@ -223,6 +235,25 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
         await self.finish(pipeline_properties_json)
+
+
+class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
+    """Handler to get pipeline trigger parameters"""
+
+    @web.authenticated
+    async def get(self, pipeline_path):
+        result = []
+        pipeline_absolute_path = os.path.join(os.getcwd(), pipeline_path)
+        with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
+            pipeline = json.load(r)
+            pipeline_defaults = pipeline["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"]
+            if "input_parameters" in pipeline_defaults:
+                for input_parameter in pipeline_defaults["input_parameters"]:
+                    if "name" in input_parameter:
+                        result.append(input_parameter["name"])
+        self.set_status(200)
+        self.set_header("Content-Type", "application/json")
+        await self.finish({"input_parameters": result})
 
 
 class PipelineComponentPropertiesHandler(HttpErrorMixin, APIHandler):

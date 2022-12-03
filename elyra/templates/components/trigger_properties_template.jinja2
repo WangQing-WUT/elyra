@@ -1,14 +1,9 @@
 {
 	"type": "object",
 	"properties": {
-		"name": {
-			"title": "Name",
-			"description": "A custom Name for the node.",
-			"type": "string"
-		},
 		"label": {
-			"title": "Label",
-			"description": "A custom label for the node.",
+			"title": "Name",
+			"description": "A custom name for the node.",
 			"type": "string"
 		},
 		"component_parameters": {
@@ -35,31 +30,104 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"default": ""
+								"enum": []
 							},
 							"from": {
 								"title": "From",
-								"type": "string",
-								"enum": []
+								"oneOf":[
+									{
+										"label": "Enter a value manually",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "string"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the workflow input parameters",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									}
+								]
 							}
-						}
-					},
-					"uihints": {
-						"items": {
-							"name": { "ui:placeholder": "name" },
-							"type": { "ui:placeholder": "from" }
 						}
 					}
 				}
 				{% endif %}
 			    {% if  component.name == "K8s Object Trigger" %}
-                "resource_file": {
-                    "title": "Resource File",
+                "source": {
+                    "title": "Source",
                     "description": "K8s object trigger resource file.",
-                    "type": "string",
-                    "uihints": {
-                        "ui:placeholder": "*.yaml"
-                    }
+					"oneOf":[
+						{
+							"label": "s3",
+							"properties": {
+								"bucket_name": {
+									"title": "Bucket Name",
+									"type": "string"
+								},
+								"object": {
+									"title": "Object",
+									"type": "string"
+								},
+								"value": {
+									"type": "string",
+									"default": ""
+								},
+								"widget": {
+									"type": "string",
+									"default": "s3"
+								}
+							},
+							"uihints":{
+								"widget": {"ui:field": "hidden"},
+								"value": {"ui:field": "hidden"}
+							}
+						},
+						{
+							"label": "http",
+							"properties": {
+								"url": {
+									"title": "Url",
+									"type": "string"
+								},
+								"value": {
+									"type": "string",
+									"default": ""
+								},
+								"widget": {
+									"type": "string",
+									"default": "http"
+								}
+							},
+							"required": ["url"],
+							"uihints":{
+								"widget": {"ui:field": "hidden"},
+								"value": {"ui:field": "hidden"}
+							}
+						}
+					],
+					"required": ["bucket_name", "object", "url"]
                 },
                 "operation": {
                     "title": "Operation",
@@ -75,22 +143,48 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"name": {
-								"type": "string",
-								"title": "Name",
-								"default": ""
-							},
 							"from": {
-								"type": "string",
 								"title": "From",
-								"enum": []
+								"oneOf":[
+									{
+										"label": "Enter a value manually",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "string"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the workflow input parameters",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									}
+								]
+							},
+							"dest": {
+								"type": "string",
+								"title": "Destination"
 							}
-						}
-					},
-					"uihints": {
-						"items": {
-							"name": { "ui:placeholder": "name" },
-							"from": { "ui:placeholder": "from" }
 						}
 					}
 				}
@@ -130,23 +224,50 @@
 								"title": "Name"
 							},
 							"from": {
-								"type": "string",
 								"title": "From",
-								"enum": []
+								"oneOf":[
+									{
+										"label": "Enter a value manually",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "string"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the workflow input parameters",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									}
+								]
 							}
-						}
-					},
-					"uihints": {
-						"items": {
-							"name": { "ui:placeholder": "name" },
-							"from": { "ui:placeholder": "from" }
 						}
 					}
 				}
 				{% endif %}
 			},
-			"required": []
+			"required": ["template_name", "url", "method", "timeout", "operation"]
 		}
 	},
-	"required": ["component_parameters"]
+	"required": ["label", "component_parameters"]
 }

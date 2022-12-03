@@ -127,6 +127,7 @@ class CatalogEntry(object):
 
         :returns: a unique component id of the form '<catalog-type>:<hash_of_entry_info>'
         """
+        specific_categories = ["Logic", "Events", "Actions", "Global"]
         hash_str = ""
         for key in hash_keys:
             if not self.entry_reference.get(key):
@@ -137,7 +138,11 @@ class CatalogEntry(object):
 
         # Use only the first 12 characters of the resulting hash
         hash_digest = f"{hashlib.sha256(hash_str.encode()).hexdigest()[:12]}"
-        return f"{self.catalog_type}:{hash_digest}"
+        if (self.categories[0] in specific_categories):
+            file_name = Path(str(self.entry_reference["path"])).stem
+            return f"{file_name}:{hash_digest}"
+        else:
+            return f"{self.catalog_type}:{hash_digest}"
 
     def get_component(
         self, id: str, name: str, description: str, properties: List[ComponentParameter], file_extension: str

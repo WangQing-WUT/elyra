@@ -35,6 +35,27 @@
             "ui:placeholder": "project/subproject"
           }
         },
+        "input_parameters": {
+          "title": "Pipeline Input parameters",
+          "type": "array",
+          "items":{
+            "type": "object",
+            "properties": {
+              "name":{
+                "type": "string",
+                "title": "Name"
+              },
+              "value":{
+                "type": "string",
+                "title": "Value"
+              },
+              "description": {
+                "type": "string",
+                "title": "Description"
+              }
+            }
+          }
+        },
         {% if elyra_owned_parameters %}
         "node_defaults_header": {
           "type": "null",

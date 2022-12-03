@@ -22,8 +22,8 @@
         "ui:placeholder": "Workflow Description"
       }
     },
-    "input_paramters": {
-      "title": "Workflow Input Paramters",
+    "input_parameters": {
+      "title": "Workflow Input parameters",
       "type": "array",
       "items":{
         "type": "object",
@@ -39,109 +39,6 @@
           "description": {
             "type": "string",
             "title": "Description"
-          }
-        }
-      }
-    },
-    "init": {
-      "type": "object",
-      "properties": {
-        "init_header": {
-          "type": "null",
-          "title": "Init Pipeline",
-          "description":
-            "Default values are applied to all nodes in this pipeline and can be customized in each node.",
-          "uihints": {
-            "ui:field": "header"
-          }
-        },
-        "init_pipeline": {
-          "type": "string",
-          "title": "Pipeline File",
-          "uihints": {
-            "ui:widget" : "file",
-            "extensions": [".pipeline"]
-          }
-        },
-        "init_paramters": {
-          "title": "Init Paramters",
-          "type": "array",
-          "items":{
-            "type": "object",
-            "properties": {
-              "name":{
-                "type": "string",
-                "title": "Name"
-              },
-              "value":{
-                "title": "Value",
-                "anyOf": [
-				          {
-                    "type": "string",
-                    "title": "Enter a value manually"
-    			        },
-                  {
-                    "type": "string",
-                    "title": "Select one of the workflow input parameters",
-                    "enum": []
-                  }
-    			      ]
-              },
-              "description": {
-                "type": "string",
-                "title": "Description"
-              }
-            }
-          }
-        }
-      }
-    },
-    "exit": {
-      "type": "object",
-      "properties": {
-        "exit_header": {
-          "type": "null",
-          "title": "Exit Pipeline",
-          "description":
-            "Default values are applied to all nodes in this pipeline and can be customized in each node.",
-          "uihints": {
-            "ui:field": "header"
-          }
-        },
-        "exit_pipeline": {
-          "type": "string",
-          "title": "Pipeline File",
-          "uihints": {"ui:widget" : "file"}
-        },
-        "exit_paramters": {
-          "title": "Init Paramters",
-          "type": "array",
-          "items":{
-            "type": "object",
-            "properties": {
-              "name":{
-                "type": "string",
-                "title": "Name"
-              },
-              "value":{
-                "title": "Value",
-                "anyOf": [
-				          {
-                    "type": "string",
-                    "title": "Enter a value manually"
-    			        },
-                  {
-                    "type": "string",
-                    "title": "Select one of the workflow input parameters",
-                    "enum": []
-                  }
-    			      ]
-              },
-              "description": {
-                "type": "string",
-                "title": "Description"
-              }
-            }
           }
         }
       }

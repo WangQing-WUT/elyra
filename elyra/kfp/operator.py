@@ -86,6 +86,7 @@ class ExecuteFileOp(ContainerOp):
         npu910_request: Optional[str] = None,
         mem_request: Optional[str] = None,
         gpu_limit: Optional[str] = None,
+        node_selector: Optional[Dict[str, str]] = None,
         workflow_engine: Optional[str] = "argo",
         **kwargs,
     ):
@@ -258,10 +259,10 @@ class ExecuteFileOp(ContainerOp):
             self.container.set_cpu_request(cpu=str(cpu_request))
 
         if self.npu310_request:
-            self.container.set_npu310_request(npu310=str(npu310_request))
+            self.container.add_resource_request('npu310', str(npu310_request))
 
         if self.npu910_request:
-            self.container.set_npu910_request(npu910=str(npu910_request))
+            self.container.add_resource_request('npu910', str(npu910_request))
 
         if self.mem_request:
             self.container.set_memory_request(memory=str(mem_request) + "G")
@@ -269,6 +270,10 @@ class ExecuteFileOp(ContainerOp):
         if self.gpu_limit:
             gpu_vendor = self.pipeline_envs.get("GPU_VENDOR", "nvidia")
             self.container.set_gpu_limit(gpu=str(gpu_limit), vendor=gpu_vendor)
+        
+        if node_selector:
+            for key, value in node_selector.items():
+                self.add_node_selector_constraint(key, value)
 
         # Generate unique ELYRA_RUN_NAME value and expose it as an environment
         # variable in the container

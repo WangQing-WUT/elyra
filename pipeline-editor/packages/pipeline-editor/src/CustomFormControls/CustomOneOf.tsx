@@ -86,7 +86,7 @@ export const CustomOneOf: Field = props => {
   }
 
   const enumOptions = options.map((option: any, index: number) => ({
-    label: option.title || `Option ${index + 1}`,
+    label: option.title || option.label || `Option ${index + 1}`,
     value: index
   }));
 

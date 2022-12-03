@@ -175,6 +175,37 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
       continue;
     }
 
+    const nodeLabel = node.app_data?.label;
+    let path = ["nodes", n, "app_data"];
+    if (!nodeLabel) {
+      problems.push({
+        message: `The property 'Name' on node '${node.app_data.ui_data.label}' is required.`,
+        path,
+        info: {
+          type: "missingProperty",
+          pipelineID: pipeline.id,
+          nodeID: node.id,
+          property: "Name"
+        }
+      });
+    } else {
+      const rExp: RegExp = /^[a-z][a-z0-9-]*[a-z0-9]$/;
+      if (!rExp.test(nodeLabel)) {
+        problems.push({
+          message: `The property 'Name' on node '${node.app_data.ui_data.label}' is invalid: The field can only contain lowercase letters, numbers, '_' And '-'.`,
+          path,
+          info: {
+            type: "invalidProperty",
+            pipelineID: pipeline.id,
+            nodeID: node.id,
+            property: "Name",
+            message:
+              "The field can only contain lowercase letters, numbers, '_' And '-'"
+          }
+        });
+      }
+    }
+
     const nodeProperties =
       nodeDef.app_data.properties?.properties?.component_parameters?.properties;
     for (const fieldName in nodeProperties ?? []) {

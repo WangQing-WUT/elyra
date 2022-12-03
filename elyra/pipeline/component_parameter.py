@@ -253,7 +253,7 @@ class EnvironmentVariable(ElyraPropertyListItem):
 
     property_id = ENV_VARIABLES
     generic = True
-    custom = False
+    custom = True
     _display_name = "Environment Variables"
     _json_data_type = "array"
     _keys = ["env_var"]
@@ -314,7 +314,7 @@ class KubernetesSecret(ElyraPropertyListItem):
 
     property_id = KUBERNETES_SECRETS
     generic = True
-    custom = False
+    custom = True
     _display_name = "Kubernetes Secrets"
     _json_data_type = "array"
     _keys = ["env_var"]
@@ -895,7 +895,7 @@ class WorkflowEvent(Enum):
 
     calendar = "Calendar Event"
     dataset = "Dataset Event"
-    minio = "MinIO Event"
+    s3 = "S3 Event"
     model = "Model Event"
     pipeline = "Pipeline Event"
 
@@ -927,4 +927,16 @@ class PipelineLoop(Enum):
         for v in PipelineLoop:
             if name == v.value:
                 return True
-        return False  
+        return False
+
+class WorkflowInitExit(Enum):
+    """Pipeline Loop component"""
+
+    init = "Init"
+    exit = "Exit"
+
+    def is_exist(name: str) -> bool :
+        for v in WorkflowInitExit:
+            if name == v.value:
+                return True
+        return False    

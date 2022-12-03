@@ -4,10 +4,7 @@
 	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:none;}
-	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#8D98AA;}
-	.st2{filter:url(#Adobe_OpacityMaskFilter);}
-	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
-	.st4{mask:url(#mask-2_1_);fill-rule:evenodd;clip-rule:evenodd;fill:#707070;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#707070;}
 </style>
 <title>model</title>
 <g id="工作流_x2F_工作流实例">
@@ -15,27 +12,11 @@
 		<g id="model" transform="translate(97.000000, 117.000000)">
 			<rect id="矩形" class="st0" width="16" height="16"/>
 			<g id="蒙版">
-				<path id="path-1_1_" class="st1" d="M7.7,0.1C7.9,0,8.1,0,8.3,0.1l0,0l6.4,3.5C14.9,3.7,15,3.8,15,4l0,0v7
-					c0,0.2-0.1,0.4-0.3,0.5l0,0l-6.4,3.5c-0.2,0.1-0.4,0.1-0.6,0l0,0l-6.4-3.5C1.1,11.4,1,11.2,1,11l0,0V4c0-0.2,0.1-0.4,0.3-0.5
-					l0,0L7.7,0.1z M8,1L2,4.2v6.5L8,14l6-3.2V4.3L8,1z M11.6,5c0.2-0.1,0.5-0.1,0.7,0.2c0.1,0.2,0.1,0.5-0.2,0.6l0,0L8.5,7.8v3.9
-					c0,0.3-0.2,0.5-0.5,0.5c-0.3,0-0.5-0.2-0.5-0.5l0,0V7.8l-3.6-2C3.7,5.7,3.6,5.4,3.7,5.2c0,0,0,0,0,0C3.9,5,4.2,4.9,4.4,5l0,0
-					L8,7L11.6,5z"/>
+				<path id="path-1_1_" class="st1" d="M7.7,0.1C7.9,0,8.1,0,8.3,0.1l6.4,3.5C14.9,3.7,15,3.8,15,4v7c0,0.2-0.1,0.4-0.3,0.5
+					l-6.4,3.5c-0.2,0.1-0.4,0.1-0.6,0l-6.4-3.5C1.1,11.4,1,11.2,1,11V4c0-0.2,0.1-0.4,0.3-0.5L7.7,0.1z M8,1L2,4.2v6.5L8,14l6-3.2
+					V4.3L8,1z M11.6,5c0.2-0.1,0.5-0.1,0.7,0.2c0.1,0.2,0.1,0.5-0.2,0.6L8.5,7.8v3.9c0,0.3-0.2,0.5-0.5,0.5c-0.3,0-0.5-0.2-0.5-0.5
+					V7.8l-3.6-2C3.7,5.7,3.6,5.4,3.7,5.2c0,0,0,0,0,0C3.9,5,4.2,4.9,4.4,5L8,7L11.6,5z"/>
 			</g>
-			<defs>
-				<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="0" y="0" width="16" height="16">
-					<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
-				</filter>
-			</defs>
-			<mask maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16" id="mask-2_1_">
-				<g class="st2">
-					<path id="path-1_2_" class="st3" d="M7.7,0.1C7.9,0,8.1,0,8.3,0.1l0,0l6.4,3.5C14.9,3.7,15,3.8,15,4l0,0v7
-						c0,0.2-0.1,0.4-0.3,0.5l0,0l-6.4,3.5c-0.2,0.1-0.4,0.1-0.6,0l0,0l-6.4-3.5C1.1,11.4,1,11.2,1,11l0,0V4c0-0.2,0.1-0.4,0.3-0.5
-						l0,0L7.7,0.1z M8,1L2,4.2v6.5L8,14l6-3.2V4.3L8,1z M11.6,5c0.2-0.1,0.5-0.1,0.7,0.2c0.1,0.2,0.1,0.5-0.2,0.6l0,0L8.5,7.8v3.9
-						c0,0.3-0.2,0.5-0.5,0.5c-0.3,0-0.5-0.2-0.5-0.5l0,0V7.8l-3.6-2C3.7,5.7,3.6,5.4,3.7,5.2c0,0,0,0,0,0C3.9,5,4.2,4.9,4.4,5l0,0
-						L8,7L11.6,5z"/>
-				</g>
-			</mask>
-			<rect id="矩形_1_" class="st4" width="16" height="16"/>
 		</g>
 	</g>
 </g>

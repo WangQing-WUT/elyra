@@ -462,6 +462,8 @@ class PipelineValidationManager(SingletonConfigurable):
         :param pipeline_runtime: the pipeline runtime selected
         :return:
         """
+        if node.op.startswith("branch") or node.op.startswith("loop"):
+            return
         # Full dict of properties for the operation e.g. current params, optionals etc
         component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
         current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
@@ -471,7 +473,8 @@ class PipelineValidationManager(SingletonConfigurable):
             self._validate_elyra_owned_property(node.id, node.label, node, param, response, param_required)
 
         # List of just the current parameters for the component
-        parsed_parameters = [p for p in current_parameters.keys() if p not in node.elyra_owned_properties]
+        resources = ['cpu', 'gpu', 'memory', 'npu310', 'npu910', 'node_selector']
+        parsed_parameters = [p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources]
         for default_parameter in parsed_parameters:
             node_param = node.get_component_parameter(default_parameter)
             if not node_param or node_param.get("value") is None:

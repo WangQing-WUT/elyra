@@ -101,6 +101,14 @@ class Operation(object):
         self._component_params["inputs"] = Operation._scrub_list(component_params.get("inputs", []))
         self._component_params["outputs"] = Operation._scrub_list(component_params.get("outputs", []))
 
+        if component_params.get("node_selector"):
+            node_selector = {}
+            for key_value in component_params.get("node_selector"):
+                node_selector[key_value["key"]] = key_value["value"]
+            self._component_params["node_selector"] = node_selector
+        else:
+            self._component_params.pop("node_selector", 100)
+
     @property
     def id(self) -> str:
         return self._id
@@ -280,7 +288,8 @@ class GenericOperation(Operation):
         self._component_params["npu910"] = component_params.get("npu910")
         self._component_params["gpu"] = component_params.get("gpu")
         self._component_params["memory"] = component_params.get("memory")
-
+        self._component_params["node_selector"] = component_params.get("node_selector")
+        
         if not elyra_params:
             elyra_params = {}
         self._elyra_params["env_vars"] = ElyraPropertyList(elyra_params.get(ENV_VARIABLES, []))
@@ -334,6 +343,10 @@ class GenericOperation(Operation):
     @property
     def gpu(self) -> Optional[str]:
         return self._component_params.get("gpu")
+    
+    @property
+    def node_selector(self) -> Optional[Dict[str, str]]:
+        return self._component_params.get("node_selector")
 
     def __eq__(self, other: GenericOperation) -> bool:
         if isinstance(self, other.__class__):

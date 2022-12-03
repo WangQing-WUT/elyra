@@ -57,25 +57,10 @@ export function PropertiesPanel({
     return <Message>No properties defined.</Message>;
   }
 
-  let input_paramters: string[] = [];
-  if (data?.input_paramters) {
-    for (const input_paramter of data.input_paramters) {
-      input_paramters.push(`workflow.parameters.${input_paramter?.name}`);
-    }
-  }
-
-  let schema_copy = JSON.parse(JSON.stringify(schema));
-  const init = schema_copy.properties?.init;
-  const exit = schema_copy.properties?.exit;
-  if (init && exit) {
-    schema_copy.properties.init.properties.init_paramters.items.properties.value.anyOf[1].enum = input_paramters;
-    schema_copy.properties.exit.properties.exit_paramters.items.properties.value.anyOf[1].enum = input_paramters;
-  }
-
   const uiSchema: UiSchema = {};
-  for (const field in schema_copy.properties) {
+  for (const field in schema.properties) {
     uiSchema[field] = {};
-    const properties = schema_copy.properties[field];
+    const properties = schema.properties[field];
     if (properties.type === "object") {
       for (const subField in properties.properties) {
         const subProps = properties.properties[subField];
@@ -93,7 +78,7 @@ export function PropertiesPanel({
     <Form
       formData={data}
       uiSchema={uiSchema}
-      schema={schema_copy as any}
+      schema={schema as any}
       onChange={e => {
         const newFormData = e.formData;
         const params = schema.properties?.component_parameters?.properties;

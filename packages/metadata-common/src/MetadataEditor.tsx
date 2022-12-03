@@ -84,7 +84,8 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
 
   const [metadata, setMetadata] = React.useState(initialMetadata);
   const displayName =
-    initialMetadata?.['Component Categories']?.['categories']?.[0];
+    initialMetadata?.['Component Categories']?.['categories']?.[0] ||
+    initialMetadata?.['_noCategory']?.['display_name'];
   const referenceURL = schemaTop.uihints?.reference_url;
 
   /**
@@ -97,7 +98,9 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
 
     const newMetadata: any = {
       schema_name: schemaName,
-      display_name: metadata?.['Component Categories']?.['categories']?.[0],
+      display_name:
+        metadata?.['Component Categories']?.['categories']?.[0] ||
+        metadata?.['_noCategory']?.['display_name'],
       metadata: flattenFormData(metadata)
     };
 

@@ -76,6 +76,7 @@ class RuntimesSchemas(ElyraSchemasProvider):
     def get_schemas(self) -> List[Dict]:
 
         kfp_schema_present = False
+        wfp_schema_present = False
         airflow_schema_present = False
         # determine if both airflow and kfp are needed and note if kfp is needed for later
         runtime_schemas = []
@@ -87,19 +88,21 @@ class RuntimesSchemas(ElyraSchemasProvider):
                     kfp_schema_present = True
                 elif schema["name"] == "airflow":
                     airflow_schema_present = True
+                elif schema["name"] == "wfp":
+                    wfp_schema_present = True
             else:
                 self.log.error(
                     f"No entrypoint with name '{schema['name']}' was found in group "
                     f"'elyra.pipeline.processor' to match the schema with the same name. Skipping..."
                 )
 
-        if kfp_schema_present:  # Update the kfp engine enum to reflect current packages...
+        if kfp_schema_present or wfp_schema_present:  # Update the kfp engine enum to reflect current packages...
             # If TektonClient package is missing, navigate to the engine property
             # and remove 'tekton' entry if present and return updated result.
             if not TektonClient:
                 # locate the schema and update the enum
                 for schema in runtime_schemas:
-                    if schema["name"] == "kfp":
+                    if schema["name"] == "kfp" or schema["name"] == "wfp":
                         engine_enum: list = schema["properties"]["metadata"]["properties"]["engine"]["enum"]
                         if "Tekton" in engine_enum:
                             engine_enum.remove("Tekton")
@@ -112,7 +115,7 @@ class RuntimesSchemas(ElyraSchemasProvider):
             auth_type_default = SupportedAuthProviders.get_default_provider().name
 
             for schema in runtime_schemas:
-                if schema["name"] == "kfp":
+                if schema["name"] == "kfp" or schema["name"] == "wfp":
                     if schema["properties"]["metadata"]["properties"].get("auth_type") is not None:
                         schema["properties"]["metadata"]["properties"]["auth_type"]["enum"] = auth_type_enum
                         schema["properties"]["metadata"]["properties"]["auth_type"]["default"] = auth_type_default

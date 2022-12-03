@@ -42,6 +42,7 @@ from elyra.pipeline.handlers import PipelinePropertiesHandler
 from elyra.pipeline.handlers import PipelineRuntimeTypesHandler
 from elyra.pipeline.handlers import PipelineSchedulerHandler
 from elyra.pipeline.handlers import PipelineValidationHandler
+from elyra.pipeline.handlers import PipelineTriggerParametersHandler
 from elyra.pipeline.processor import PipelineProcessor
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.processor import PipelineProcessorRegistry
@@ -85,6 +86,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
         processor_regex = r"(?P<runtime_type>[\w]+)"
         component_regex = r"(?P<component_id>[\w\.\-:%]+)"
         catalog_regex = r"(?P<catalog>[\w\.\-:]+)"
+        pipeline_path = r"(.*)"
 
         self.handlers.extend(
             [
@@ -116,6 +118,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 (f"/{self.name}/pipeline/runtimes/types", PipelineRuntimeTypesHandler),
                 (f"/{self.name}/pipeline/schedule", PipelineSchedulerHandler),
                 (f"/{self.name}/pipeline/validate", PipelineValidationHandler),
+                (f"/{self.name}/pipeline/pipeline_trigger/{pipeline_path}", PipelineTriggerParametersHandler)
             ]
         )
 

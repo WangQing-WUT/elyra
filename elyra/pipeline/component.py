@@ -215,6 +215,22 @@ class Component(object):
             # Remove certain Elyra-owned parameters if a parameter of the same id is already present
             parsed_property_ids = [param.ref for param in self.properties]
             elyra_params = [param for param in elyra_params if param.property_id not in parsed_property_ids]
+        elyra_params_dict = {}
+        for elyra_param in elyra_params:
+            elyra_params_dict[elyra_param.property_id] = elyra_param
+        sorted_list = [
+            "disable_node_caching",
+            "env_vars",
+            "mounted_volumes",
+            "kubernetes_secrets",
+            "kubernetes_tolerations",
+            "kubernetes_pod_labels",
+            "kubernetes_pod_annotations"
+        ]
+        elyra_params = []
+        for item in sorted_list:
+            if item in elyra_params_dict:
+                elyra_params.append(elyra_params_dict[item])
         return elyra_params
 
 

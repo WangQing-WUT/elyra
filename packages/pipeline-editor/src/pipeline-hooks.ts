@@ -150,15 +150,15 @@ const NodeIcons: Map<string, string> = new Map([
   ['execute-notebook-node', 'static/elyra/notebook.svg'],
   ['execute-python-node', 'static/elyra/python.svg'],
   ['execute-r-node', 'static/elyra/r-logo.svg'],
-  ['Events', '/static/elyra/component/events_category.svg'],
-  ['Actions', '/static/elyra/component/actions_category.svg'],
-  ['Logic', '/static/elyra/component/logic_category.svg']
+  ['Events', 'static/elyra/events_category.svg'],
+  ['Actions', 'static/elyra/actions_category.svg'],
+  ['Logic', 'static/elyra/logic_category.svg']
 ]);
 
 const customIcons: Map<string, string> = new Map([
   ['Calendar Event', 'calendar.svg'],
   ['Dataset Event', 'dataset.svg'],
-  ['MinIO Event', 'S3.svg'],
+  ['S3 Event', 'S3.svg'],
   ['Model Event', 'model.svg'],
   ['Pipeline Event', 'event pipeline.svg'],
   ['HTTP Trigger', 'HTTP.svg'],
@@ -241,7 +241,7 @@ export const componentFetcher = async (type: string): Promise<any> => {
       node.app_data.properties = prop?.properties;
     }
   }
-
+  console.log(palette.categories);
   sortPalette(palette);
 
   return palette;

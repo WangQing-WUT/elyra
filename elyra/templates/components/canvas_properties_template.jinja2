@@ -18,6 +18,55 @@
             "ui:field": "header"
           }
         },
+        "cpu": {
+          "type": "integer",
+          "title": "CPU",
+          "description": "For CPU-intensive workloads, you can choose more than 1 CPU (e.g. 1.5).",
+          "minimum": 0
+        },
+        "gpu": {
+          "type": "integer",
+          "title": "GPU",
+          "description": "For GPU-intensive workloads, you can choose more than 1 GPU. Must be an integer.",
+          "minimum": 0
+        },
+        "memory": {
+          "type": "integer",
+          "title": "RAM(GB)",
+          "description": "The total amount of RAM specified.",
+          "minimum": 0
+        },
+        "npu310": {
+          "type": "integer",
+          "title": "NPU310",
+          "description": "For NPU310-intensive workloads, you can choose more than 1 NPU310 (e.g. 1.5).",
+          "minimum": 0
+        },
+        "npu910": {
+          "type": "integer",
+          "title": "NPU910",
+          "description": "For npu910-intensive workloads, you can choose more than 1 npu910 (e.g. 1.5).",
+          "minimum": 0
+        },
+        "node_selector": {
+          "type": "array",
+          "title": "Node Selector",
+          "description": "Assign the pod to the node with <label-key>=<label-value>.",
+          "items": {
+            "type": "object",
+						"properties": {
+              "key": {
+                "type": "string",
+                "title": "label key"
+              },
+              "value": {
+                "type": "string",
+                "title": "label value"
+              }
+            }
+          },
+          "maxItems": "1"
+        },
         {% for property in component.input_properties %}
         "{{ property.ref }}": {{ render_parameter_details(property) }},
         {% endfor %}
@@ -44,7 +93,7 @@
             "ui:field": "header"
           }
         },
-        {% for property in elyra_owned_parameters|sort(attribute="property_id") %}
+        {% for property in elyra_owned_parameters %}
         "{{property.property_id}}": {{ property.get_schema()|tojson }}
           {% if loop.index != loop|length %}
           ,

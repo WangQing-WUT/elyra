@@ -704,6 +704,8 @@ const PipelineEditor = forwardRef(
         icon: theme.overrides?.propertiesIcon,
         content: (
           <NodeProperties
+            data={pipeline?.pipelines?.[0]?.app_data?.properties}
+            basePath={pipeline.basepath}
             selectedNodes={selectedNodes}
             nodes={controller.current.getAllPaletteNodes()}
             upstreamNodes={upstreamNodes}
@@ -714,6 +716,13 @@ const PipelineEditor = forwardRef(
         )
       }
     ];
+
+    if (
+      pipeline?.pipelines?.[0]?.app_data?.runtime_type == "WORKFLOW_PIPELINES"
+    ) {
+      panelTabs[0].label = "Workflow Properties";
+      panelTabs[0].title = "Edit workflow properties";
+    }
 
     if (!leftPalette) {
       panelTabs.push({

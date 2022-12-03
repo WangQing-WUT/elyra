@@ -720,10 +720,27 @@ class PipelineDefinition(object):
         # Get intersection of parameter sets
         params_both = params_custom & params_generic
 
+        elyra_params_dict = {}
+        for elyra_param in params_both:
+            elyra_params_dict[elyra_param.property_id] = elyra_param
+        sorted_list = [
+            "disable_node_caching",
+            "env_vars",
+            "mounted_volumes",
+            "kubernetes_secrets",
+            "kubernetes_tolerations",
+            "kubernetes_pod_labels",
+            "kubernetes_pod_annotations"
+        ]
+        elyra_params = []
+        for item in sorted_list:
+            if item in elyra_params_dict:
+                elyra_params.append(elyra_params_dict[item])
+
         template_vars = {
             "elyra_owned_custom_parameters": params_both ^ params_custom,
             "elyra_owned_generic_parameters": params_generic ^ params_both,
-            "elyra_owned_parameters": params_both,
+            "elyra_owned_parameters": elyra_params,
             "render_parameter_details": ComponentParameter.render_parameter_details,
         }
         template_env = Environment(loader=loader, undefined=SilentUndefined)

@@ -1,0 +1,81 @@
+{
+    "type": "object",
+    "properties": {
+        "label": {
+			"title": "Name",
+			"description": "A custom name for the node.",
+			"type": "string"
+		},
+        "component_parameters": {
+            "type": "object",
+            "properties": {
+                "{{component_name}}_pipeline": {
+                    "type": "string",
+                    "title": "{{component_name.title()}} Pipeline File",
+                    "uihints": {
+                        "ui:widget" : "file",
+                        "extensions": [".pipeline"]
+                    }
+                },
+                "{{component_name}}_parameters": {
+                    "title": "{{component_name.title()}} Parameters",
+                    "type": "array",
+                    "items":{
+                        "type": "object",
+                        "properties": {
+                            "name":{
+                                "type": "string",
+                                "title": "Name"
+                            },
+                            "value":{
+                                "title": "Value",
+                                "oneOf":[
+                                    {
+                                        "label": "Enter a value manually",
+                                        "properties": {
+                                            "value": {
+                                                "type": "string",
+                                                "default": ""
+                                            },
+                                            "widget": {
+                                                "type": "string",
+                                                "default": "string"
+                                            }
+                                        },
+                                        "uihints":{
+                                            "widget": {"ui:field": "hidden"}
+                                        }
+                                    },
+                                    {
+                                        "label": "Select one of the workflow input parameters",
+                                        "properties": {
+                                            "value": {
+                                                "type": "string",
+                                                "enum": [""],
+                                                "default": ""
+                                            },
+                                            "widget": {
+                                                "type": "string",
+                                                "default": "enum"
+                                            }
+                                        },
+                                        "uihints":{
+                                            "widget": {"ui:field": "hidden"}
+                                        }
+                                    }
+                                ]
+                            },
+                            "description": {
+                                "type": "string",
+                                "title": "Description"
+                            }
+                        },
+                        "required": ["name", "value", "description"]
+                    }
+                }
+            },
+            "required": ["{{component_name}}_pipeline"]
+        }
+    },
+    "required": ["component_parameters"]
+}

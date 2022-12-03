@@ -48,6 +48,7 @@ from elyra.pipeline.component_parameter import WorkflowEvent
 from elyra.pipeline.component_parameter import WorkflowTrigger
 from elyra.pipeline.component_parameter import PipelineBranch
 from elyra.pipeline.component_parameter import PipelineLoop
+from elyra.pipeline.component_parameter import WorkflowInitExit
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 
 BLOCKING_TIMEOUT = 0.5
@@ -691,6 +692,8 @@ class ComponentCache(SingletonConfigurable):
                 template = ComponentCache.load_jinja_template("branch_properties_template.jinja2")
             elif PipelineLoop.is_exist(component.name):
                 template = ComponentCache.load_jinja_template("loop_properties_template.jinja2")
+            elif WorkflowInitExit.is_exist(component.name):
+                template = ComponentCache.load_jinja_template("init_exit_properties_template.jinja2")
             else:
                 template = ComponentCache.load_jinja_template("canvas_properties_template.jinja2")
 
@@ -698,6 +701,10 @@ class ComponentCache(SingletonConfigurable):
             "elyra_owned_parameters": component.get_elyra_parameters(),
             "render_parameter_details": ComponentParameter.render_parameter_details,
         }
+        if (component.name == "Init"):
+            template_vars["component_name"] = "init"
+        elif (component.name == "Exit"):
+            template_vars["component_name"] = "exit"
         template.globals.update(template_vars)
         canvas_properties = template.render(component=component)
         return json.loads(canvas_properties)

@@ -65,7 +65,12 @@ class PipelineParser(LoggingConfigurable):
             description=description,
             pipeline_parameters=primary_pipeline.pipeline_parameters,
         )
-
+        
+        pipelines = pipeline_definition.pipelines[0]
+        pipeline_defaults = pipelines.get_property("pipeline_defaults")
+        if "input_parameters" in pipeline_defaults:
+            pipeline_object.pipeline_parameters["input_parameters"] = pipeline_defaults["input_parameters"]
+        
         nodes = primary_pipeline.nodes
         for pipeline in pipeline_definition.pipelines:
             if pipeline.id == primary_pipeline.id:

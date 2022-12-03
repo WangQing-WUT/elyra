@@ -166,7 +166,7 @@ class PipelineProcessorManager(SingletonConfigurable):
         return res
 
     async def export(self, pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool):
-        processor = self.get_processor_for_runtime(pipeline.runtime)
+        processor = self.get_processor_for_runtime("kfp") #pipeline.runtime
 
         res = await asyncio.get_event_loop().run_in_executor(
             None, processor.export, pipeline, pipeline_export_format, pipeline_export_path, overwrite

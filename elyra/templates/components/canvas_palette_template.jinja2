@@ -20,6 +20,8 @@
           {% endif %}
           "type": "execution_node",
           "inputs": [
+            {% if  category_label == "Events" or category_label == "Global" %}
+            {% else %}
             {
               "id": "inPort",
               "app_data": {
@@ -32,8 +34,36 @@
                 }
               }
             }
+            {% endif %}
           ],
           "outputs": [
+            {% if  component.name == "Pipeline Loop" %}
+            {
+              "id": "outPort1",
+              "app_data": {
+                "ui_data": {
+                  "cardinality": {
+                    "min": 0,
+                    "max": -1
+                  },
+                  "label": "Output Port1"
+                }
+              }
+            },
+            {
+              "id": "outPort2",
+              "app_data": {
+                "ui_data": {
+                  "cardinality": {
+                    "min": 0,
+                    "max": -1
+                  },
+                  "label": "Output Port2"
+                }
+              }
+            }
+            {% elif category_label == "Actions" or category_label == "Global" %}
+            {% else %}
             {
               "id": "outPort",
               "app_data": {
@@ -46,6 +76,7 @@
                 }
               }
             }
+            {% endif %}
           ],
           "parameters": {},
           "app_data": {

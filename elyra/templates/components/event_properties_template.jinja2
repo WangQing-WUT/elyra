@@ -1,15 +1,11 @@
 {
 	"type": "object",
 	"properties": {
-		"name": {
-			"title": "Name",
-			"description": "A custom Name for the node.",
-			"type": "string"
-		},
 		"label": {
-			"title": "Label",
-			"description": "A custom label for the node.",
-			"type": "string"
+			"title": "Name",
+			"description": "A custom name for the node.",
+			"type": "string",
+			"pattern": "^[0-9]*$"
 		},
 		"component_parameters": {
 			"type": "object",
@@ -29,7 +25,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["name", "operate", "samples", "create_at", "publish_status", "subscribe_status"]
+								"enum": ["name", "operate", "samples", "create_at"]
 							}
 						},
 						"allOf": [
@@ -49,11 +45,61 @@
 											"enum": ["=="]
          								},
 										"value": {
-											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -73,10 +119,10 @@
          								},
 										"value": {
 											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"enum": ["create", "pulish", "subscribe", "delete", "change", "unsubscribe"]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -92,14 +138,64 @@
           								"operate": {
             								"type": "string",
 											"title": "Operate",
-											"enum": [">", "<", "==", ">=", "<=", "!=" ]
+											"enum": [">", "<", "==", ">=", "<=", "!=", "%" ]
          								},
 										"value": {
-											"type": "integer",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "integer",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -122,35 +218,11 @@
 											"title": "Value",
 											"format": "datetime"
 										}
-       								},
-        							"required": ["value"]
-								}
-							},
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"enum": ["publish_status", "subscribe_status"]
-     						  			}
        								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="]
-         								},
-										"value": {
-											"type": "string",
-											"title": "Value",
-											"enum": ["creat", "finish"]
-										}
-       								},
-        							"required": ["value"]
 								}
 							}
-						]
+						],
+						"required": ["name", "operate", "value"]
 					},
 					"uihints":{
 						"items": {
@@ -194,11 +266,61 @@
 											"enum": ["=="]
          								},
 										"value": {
-											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -218,10 +340,10 @@
          								},
 										"value": {
 											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"enum": ["create", "delete"]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -240,11 +362,61 @@
 											"enum": ["=="]
          								},
 										"value": {
-											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -267,11 +439,11 @@
 											"title": "Value",
 											"format": "datetime"
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							}
-						]
+						],
+						"required": ["name", "operate", "value"]
 					},
 					"uihints":{
 						"items": {
@@ -280,36 +452,22 @@
 					}
 				},
 				{% endif %}
-				{% if  component.name == "MinIO Event" %}
-				"endpoint": {
-					"type": "string",
-					"title": "Minio Endpoint",
-					"description": "Minio endpoint.",
-					"format": "uri",
-					"uihints": {
-						"ui:placeholder": "minio-service.argo-events:9000"
-					}
-				},
-				"accesskey": {
-					"type": "string",
-					"title": "AccessKey",
-					"description": "Minio accesskey.",
-					"uihints": {
-						"ui:field": "password"
-					}
-				},
-				"secretkey": {
-					"type": "string",
-					"title": "SecretKey",
-					"description": "Minio secretkey.",
-					"uihints": {
-						"ui:field": "password"
-					}
+				{% if  component.name == "S3 Event" %}
+				"bucket": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string",
+							"title": "Bucket Name",
+							"description": "Bucket name."
+						}
+					},
+					"required": ["name"]
 				},
 				"event_filter": {
 					"type": "array",
-					"title": "Minio Event Filter",
-					"description": "Minio event filter.",
+					"title": "S3 Event Filter",
+					"description": "S3 Event filter.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -320,7 +478,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["operate", "object", "bucket"]
+								"enum": ["operate", "object"]
 							}
 						},
 						"allOf": [
@@ -341,10 +499,42 @@
          								},
 										"value": {
 											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"enum": [
+												"ObjectAccessed:Get",
+												"ObjectAccessed:GetLegalHold",
+												"ObjectAccessed:GetRetention",
+												"ObjectAccessed:Head",
+												"ObjectCreated:CompleteMultipartUpload",
+												"ObjectCreated:Copy",
+												"ObjectCreated:DeleteTagging",
+												"ObjectCreated:Post",
+												"ObjectCreated:Put",
+												"ObjectCreated:PutLegalHold",
+												"ObjectCreated:PutRetention",
+												"ObjectCreated:PutTagging",
+												"ObjectRemoved:Delete",
+												"ObjectRemoved:DeleteMarkerCreated",
+												"ObjectAccessed:*",
+												"ObjectCreated:*",
+												"ObjectRemoved:*",
+												"Replication:OperationCompletedReplication",
+												"Replication:OperationFailedReplication",
+												"Replication:OperationMissedThreshold",
+												"Replication:OperationNotTracked",
+												"Replication:OperationReplicatedAfterThreshold",
+												"Replication:*",
+												"ObjectRestore:Post",
+												"ObjectRestore:Completed",
+												"ObjectRestore:*",
+												"ObjectTransition:Failed",
+												"ObjectTransition:Complete",
+												"ObjectTransition:*",
+												"BucketCreated",
+												"BucketRemoved"
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -363,14 +553,65 @@
 											"enum": ["prefix", "suffix"]
          								},
 										"value": {
-											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							}
-						]
+						],
+						"required": ["name", "operate", "value"]
 					},
 					"uihints":{
 						"items": {
@@ -394,7 +635,7 @@
 							"name": {
 								"type": "string",
 								"title": "Name",
-								"enum": ["name", "operate", "label_selector", "create_at"]
+								"enum": ["name", "operate", "create_at"]
 							}
 						},
 						"allOf": [
@@ -411,14 +652,64 @@
           								"operate": {
             								"type": "string",
 											"title": "Operate",
-											"enum": ["==", "prefix"]
+											"enum": ["prefix"]
          								},
 										"value": {
-											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"oneOf":[
+												{
+													"label": " ",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": ""
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"},
+														"value": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Enter a value manually",
+													"properties": {
+														"value": {
+															"type": "string",
+															"default": ""
+															},
+														"widget": {
+															"type": "string",
+															"default": "string"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												},
+												{
+													"label": "Select one of the workflow input parameters",
+													"properties": {
+														"value": {
+															"type": "string",
+															"enum": [""],
+															"default": ""
+														},
+														"widget": {
+															"type": "string",
+															"default": "enum"
+														}
+													},
+													"uihints":{
+														"widget": {"ui:field": "hidden"}
+													}
+												}
+											]
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							},
 							{
@@ -438,33 +729,10 @@
          								},
 										"value": {
 											"type": "string",
-											"title": "Value"
+											"title": "Value",
+											"enum": ["ADD", "UPDATE", "DELETE"]
 										}
-       								},
-        							"required": ["value"]
-								}
-							},
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "label_selector"
-     						  			}
        								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="]
-         								},
-										"value": {
-											"type": "string",
-											"title": "Value"
-										}
-       								},
-        							"required": ["value"]
 								}
 							},
 							{
@@ -487,11 +755,11 @@
 											"title": "Value",
 											"format": "datetime"
 										}
-       								},
-        							"required": ["value"]
+       								}
 								}
 							}
-						]
+						],
+						"required": ["name", "operate", "value"]
 					},
 					"uihints":{
 						"items": {
@@ -502,15 +770,32 @@
 				{% endif %}
 				{% if  component.name == "Calendar Event" %}
 				"interval": {
-					"type": "integer",
 					"title": "Interval",
-					"description": "Calendar interval.",
-					"minimum": 0
+					"description": "Calendar interval, such as 30s, 60m, 24h, etc.",
+					"type": "array",
+					"items":{
+						"type": "object",
+						"properties": {
+							"value": {
+								"title": "Value",
+								"description": "Calendar interval value.",
+								"type": "integer"
+							},
+							"unit": {
+								"title": "Unit",
+								"description": "Calendar interval unit.",
+								"type": "string",
+								"enum":["hours", "minitus", "second"]
+							}
+						},
+						"required": ["value", "unit"]
+					},
+					"maxItems": 1
 				},
 				"schedule": {
 					"type": "string",
 					"title": "Schedule",
-					"description": "Calendar schedule."
+					"description": "You can visit the website cronmaker.com to generate cron expressions online."
 				}
 				{% endif %}
 				{% if  component.name != "Calendar Event" %}
@@ -521,8 +806,8 @@
 				}
 				{% endif %}
 			},
-			"required": []
+			"required": ["expression"]
 		}
 	},
-	"required": ["component_parameters"]
+	"required": ["label", "component_parameters"]
 }

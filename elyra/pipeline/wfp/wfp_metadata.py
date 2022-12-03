@@ -19,7 +19,7 @@ from typing import Any
 from elyra.pipeline.runtimes_metadata import RuntimesMetadata
 
 
-class KfpMetadata(RuntimesMetadata):
+class WfpMetadata(RuntimesMetadata):
     """
     Applies changes specific to the kfp schema
     """

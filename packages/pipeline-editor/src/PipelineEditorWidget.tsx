@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {
   PipelineEditor,
   PipelineOutOfDateError,
@@ -333,9 +332,9 @@ const PipelineWrapper: React.FC<IProps> = ({
       }
     };
     const autoADD = (data: any, op: string): void => {
-      if (op.indexOf('workflow-catalog') != -1) {
+      if (op && op.indexOf('event') != -1) {
         for (const parametersKey in data.component_parameters) {
-          if (parametersKey.indexOf('fliter') != -1) {
+          if (parametersKey.indexOf('filter') != -1) {
             for (const key in data.component_parameters[parametersKey])
               data.component_parameters[parametersKey][key].id =
                 Number(key) + 1;
@@ -343,25 +342,8 @@ const PipelineWrapper: React.FC<IProps> = ({
         }
       }
     };
-    const loop = (subNode: any): void => {
-      if (subNode.app_data.ui_data.label == 'Pipeline Loop') {
-        if (subNode.outputs.length == 1) {
-          let tempNode: any = {};
-          for (let k in subNode.outputs[0]) {
-            if (typeof subNode.outputs[0][k] == 'function') {
-              tempNode[k] = subNode.outputs[0][k];
-            } else {
-              tempNode[k] = JSON.parse(JSON.stringify(subNode.outputs[0][k]));
-            }
-          }
-          tempNode.id = 'loopEntrypoint';
-          tempNode.app_data.ui_data.label = 'loop entrypoint';
-          subNode.outputs.push(tempNode);
-        }
-      }
-    };
     const branch = (subNode: any): void => {
-      if (subNode.op.indexOf('loop-branch') != -1) {
+      if (subNode.op.substring('branch') != -1) {
         for (const k in subNode.app_data.component_parameters) {
           if (k == 'branch_conditions') {
             var conditionsNum =
@@ -403,7 +385,6 @@ const PipelineWrapper: React.FC<IProps> = ({
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
       removeNullValues(node.app_data ?? {});
       autoADD(node.app_data ?? {}, node.op);
-      loop(node);
       branch(node);
     }
     removeNullValues(
@@ -521,9 +502,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
-    console.log(filename);
-    console.log(args);
-    console.log('PE');
+
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
         browserFactory.defaultBrowser.model.manager,
@@ -566,6 +545,35 @@ const PipelineWrapper: React.FC<IProps> = ({
     }
 
     return undefined;
+  };
+
+  const onOpenpipelineRequested = async () => {
+    const filename = PipelineService.getWorkspaceRelativeNodePath(
+      contextRef.current.path,
+      ''
+    );
+    const res = await showBrowseFileDialog(
+      browserFactory.defaultBrowser.model.manager,
+      {
+        startPath: PathExt.dirname(filename),
+        filter: (model: any): boolean => {
+          const ext = PathExt.extname(model.path);
+          return ['.pipeline'].includes(ext);
+        }
+      }
+    );
+
+    if (res.button.accept && res.value.length) {
+      const file = PipelineService.getPipelineRelativeNodePath(
+        contextRef.current.path,
+        res.value[0].path
+      );
+      console.log(file);
+      commands.execute(commandIDs.openDocManager, {
+        path: file,
+        factory: 'Pipeline Editor'
+      });
+    }
   };
 
   const onPropertiesUpdateRequested = async (args: any): Promise<any> => {
@@ -904,6 +912,9 @@ const PipelineWrapper: React.FC<IProps> = ({
   const onAction = useCallback(
     (args: { type: string; payload?: any }) => {
       switch (args.type) {
+        case 'openPipeline':
+          onOpenpipelineRequested();
+          break;
         case 'save':
           contextRef.current.save();
           break;
@@ -959,7 +970,8 @@ const PipelineWrapper: React.FC<IProps> = ({
     ]
   );
 
-  const openPipelineIcon = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IuWbvuWxgl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIKCSB2aWV3Qm94PSIwIDAgMTYgMTYiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDE2IDE2OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6bm9uZTt9Cgkuc3Qxe2ZpbGw6Izk3OTc5Nzt9Cgkuc3Qye2ZpbHRlcjp1cmwoI0Fkb2JlX09wYWNpdHlNYXNrRmlsdGVyKTt9Cgkuc3Qze2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6I0ZGRkZGRjt9Cgkuc3Q0e21hc2s6dXJsKCNtYXNrLTJfMV8pO2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cgkuc3Q1e2ZpbGw6I0I4RDlGRjt9Cgkuc3Q2e2ZpbGw6IzAwNzdGRjt9Cgkuc3Q3e2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cjwvc3R5bGU+Cjx0aXRsZT5vcGVuPC90aXRsZT4KPGcgaWQ9IuW3peS9nOa1gV94MkZf5bel5L2c5rWB5a6e5L6LIj4KCTxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNDEuMDAwMDAwLCAtNDA1LjAwMDAwMCkiPgoJCTxnIGlkPSJvcGVuIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDEuMDAwMDAwLCA0MDUuMDAwMDAwKSI+CgkJCTxyZWN0IGlkPSLnn6nlvaIiIGNsYXNzPSJzdDAiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIvPgoJCQk8ZyBpZD0i5b2i54q257uT5ZCIIj4KCQkJCTxwYXRoIGlkPSJwYXRoLTFfMV8iIGNsYXNzPSJzdDEiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJbDAtMC4xQzEzLjksNC42LDEzLjMsNCwxMi41LDRIOEM3LjksNCw3LjgsNCw3LjYsMy45TDUuNywzLjFDNS42LDMsNS41LDMsNS4zLDN6IE0yLjUsNGgyLjZjMC4xLDAsMC4zLDAsMC40LDAuMWwxLjksMC44CgkJCQkJQzcuNSw1LDcuNiw1LDcuOCw1aDQuN2wwLDBDMTIuOCw1LDEzLDUuMiwxMyw1LjV2OGMwLDAuMy0wLjIsMC41LTAuNSwwLjVoLTEwQzIuMiwxNCwyLDEzLjgsMiwxMy41di05QzIsNC4yLDIuMiw0LDIuNSw0eiIvPgoJCQk8L2c+CgkJCTxkZWZzPgoJCQkJPGZpbHRlciBpZD0iQWRvYmVfT3BhY2l0eU1hc2tGaWx0ZXIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ij4KCQkJCQk8ZmVDb2xvck1hdHJpeCAgdHlwZT0ibWF0cml4IiB2YWx1ZXM9IjEgMCAwIDAgMCAgMCAxIDAgMCAwICAwIDAgMSAwIDAgIDAgMCAwIDEgMCIvPgoJCQkJPC9maWx0ZXI+CgkJCTwvZGVmcz4KCQkJPG1hc2sgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBpZD0ibWFzay0yXzFfIj4KCQkJCTxnIGNsYXNzPSJzdDIiPgoJCQkJCTxwYXRoIGlkPSJwYXRoLTFfMl8iIGNsYXNzPSJzdDMiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJCWwwLTAuMUMxMy45LDQuNiwxMy4zLDQsMTIuNSw0SDhDNy45LDQsNy44LDQsNy42LDMuOUw1LjcsMy4xQzUuNiwzLDUuNSwzLDUuMywzeiBNMi41LDRoMi42YzAuMSwwLDAuMywwLDAuNCwwLjFsMS45LDAuOAoJCQkJCQlDNy41LDUsNy42LDUsNy44LDVoNC43bDAsMEMxMi44LDUsMTMsNS4yLDEzLDUuNXY4YzAsMC4zLTAuMiwwLjUtMC41LDAuNWgtMTBDMi4yLDE0LDIsMTMuOCwyLDEzLjV2LTlDMiw0LjIsMi4yLDQsMi41LDR6Ii8+CgkJCQk8L2c+CgkJCTwvbWFzaz4KCQkJPHJlY3QgaWQ9IuefqeW9ouWkh+S7vS0xOCIgY2xhc3M9InN0NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ii8+CgkJCTxnIGlkPSLnvJbnu4QtNCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMy4wMDAwMDAsIDUuMDAwMDAwKSI+CgkJCQk8cG9seWdvbiBpZD0i6Lev5b6ELTEzIiBjbGFzcz0ic3Q1IiBwb2ludHM9IjYuNSwzLjUgNi41LDQuNSAxLjYsNC41IDEuNiwzLjUgCQkJCSIvPgoJCQkJPHBhdGggaWQ9Iui3r+W+hC0xNCIgY2xhc3M9InN0NSIgZD0iTTYuNSwwLjV2MUg1QzQuOCwxLjUsNC41LDEuNyw0LjUsMnY0YzAsMC4zLDAuMywwLjUsMC41LDAuNWgxLjV2MUg1QzQuMiw3LjUsMy41LDYuNywzLjUsNgoJCQkJCVYyYzAtMC44LDAuNy0xLjUsMS41LTEuNUg2LjV6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTEyIiBjbGFzcz0ic3Q2IiBkPSJNMC41LDJoMUMxLjgsMiwyLDIuMiwyLDIuNXYzQzIsNS44LDEuOCw2LDEuNSw2aC0xQzAuMiw2LDAsNS44LDAsNS41di0zCgkJCQkJQzAsMi4yLDAuMiwyLDAuNSwyeiIvPgoJCQkJPHBhdGggaWQ9IuefqeW9ouWkh+S7vS0yMCIgY2xhc3M9InN0NiIgZD0iTTYuNSwwaDJDOC44LDAsOSwwLjIsOSwwLjV2MUM5LDEuOCw4LjgsMiw4LjUsMmgtMkM2LjIsMiw2LDEuOCw2LDEuNXYtMQoJCQkJCUM2LDAuMiw2LjIsMCw2LjUsMHoiLz4KCQkJCTxwYXRoIGlkPSLnn6nlvaLlpIfku70tMjIiIGNsYXNzPSJzdDYiIGQ9Ik02LjUsM2gyQzguOCwzLDksMy4yLDksMy41djFDOSw0LjgsOC44LDUsOC41LDVoLTJDNi4yLDUsNiw0LjgsNiw0LjV2LTEKCQkJCQlDNiwzLjIsNi4yLDMsNi41LDN6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTI0IiBjbGFzcz0ic3Q2IiBkPSJNNi41LDZoMkM4LjgsNiw5LDYuMiw5LDYuNXYxQzksNy44LDguOCw4LDguNSw4aC0yQzYuMiw4LDYsNy44LDYsNy41di0xCgkJCQkJQzYsNi4yLDYuMiw2LDYuNSw2eiIvPgoJCQk8L2c+CgkJCTxwYXRoIGlkPSLnn6nlvaJfMV8iIGNsYXNzPSJzdDciIGQ9Ik00LjYsMTFIMTVjMC42LDAsMSwwLjQsMSwxYzAsMC4xLDAsMC4zLTAuMSwwLjRsLTEuNywyYy0wLjIsMC40LTAuNSwwLjYtMC45LDAuNkgyLjYKCQkJCWMtMC42LDAtMS0wLjQtMS0xYzAtMC4yLDAtMC4zLDAuMS0wLjRsMi0yQzMuOSwxMS4yLDQuMiwxMSw0LjYsMTF6Ii8+CgkJPC9nPgoJPC9nPgo8L2c+Cjwvc3ZnPgo="
+  const openPipelineIcon =
+    'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IuWbvuWxgl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIKCSB2aWV3Qm94PSIwIDAgMTYgMTYiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDE2IDE2OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6bm9uZTt9Cgkuc3Qxe2ZpbGw6Izk3OTc5Nzt9Cgkuc3Qye2ZpbHRlcjp1cmwoI0Fkb2JlX09wYWNpdHlNYXNrRmlsdGVyKTt9Cgkuc3Qze2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6I0ZGRkZGRjt9Cgkuc3Q0e21hc2s6dXJsKCNtYXNrLTJfMV8pO2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cgkuc3Q1e2ZpbGw6I0I4RDlGRjt9Cgkuc3Q2e2ZpbGw6IzAwNzdGRjt9Cgkuc3Q3e2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cjwvc3R5bGU+Cjx0aXRsZT5vcGVuPC90aXRsZT4KPGcgaWQ9IuW3peS9nOa1gV94MkZf5bel5L2c5rWB5a6e5L6LIj4KCTxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNDEuMDAwMDAwLCAtNDA1LjAwMDAwMCkiPgoJCTxnIGlkPSJvcGVuIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDEuMDAwMDAwLCA0MDUuMDAwMDAwKSI+CgkJCTxyZWN0IGlkPSLnn6nlvaIiIGNsYXNzPSJzdDAiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIvPgoJCQk8ZyBpZD0i5b2i54q257uT5ZCIIj4KCQkJCTxwYXRoIGlkPSJwYXRoLTFfMV8iIGNsYXNzPSJzdDEiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJbDAtMC4xQzEzLjksNC42LDEzLjMsNCwxMi41LDRIOEM3LjksNCw3LjgsNCw3LjYsMy45TDUuNywzLjFDNS42LDMsNS41LDMsNS4zLDN6IE0yLjUsNGgyLjZjMC4xLDAsMC4zLDAsMC40LDAuMWwxLjksMC44CgkJCQkJQzcuNSw1LDcuNiw1LDcuOCw1aDQuN2wwLDBDMTIuOCw1LDEzLDUuMiwxMyw1LjV2OGMwLDAuMy0wLjIsMC41LTAuNSwwLjVoLTEwQzIuMiwxNCwyLDEzLjgsMiwxMy41di05QzIsNC4yLDIuMiw0LDIuNSw0eiIvPgoJCQk8L2c+CgkJCTxkZWZzPgoJCQkJPGZpbHRlciBpZD0iQWRvYmVfT3BhY2l0eU1hc2tGaWx0ZXIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ij4KCQkJCQk8ZmVDb2xvck1hdHJpeCAgdHlwZT0ibWF0cml4IiB2YWx1ZXM9IjEgMCAwIDAgMCAgMCAxIDAgMCAwICAwIDAgMSAwIDAgIDAgMCAwIDEgMCIvPgoJCQkJPC9maWx0ZXI+CgkJCTwvZGVmcz4KCQkJPG1hc2sgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBpZD0ibWFzay0yXzFfIj4KCQkJCTxnIGNsYXNzPSJzdDIiPgoJCQkJCTxwYXRoIGlkPSJwYXRoLTFfMl8iIGNsYXNzPSJzdDMiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJCWwwLTAuMUMxMy45LDQuNiwxMy4zLDQsMTIuNSw0SDhDNy45LDQsNy44LDQsNy42LDMuOUw1LjcsMy4xQzUuNiwzLDUuNSwzLDUuMywzeiBNMi41LDRoMi42YzAuMSwwLDAuMywwLDAuNCwwLjFsMS45LDAuOAoJCQkJCQlDNy41LDUsNy42LDUsNy44LDVoNC43bDAsMEMxMi44LDUsMTMsNS4yLDEzLDUuNXY4YzAsMC4zLTAuMiwwLjUtMC41LDAuNWgtMTBDMi4yLDE0LDIsMTMuOCwyLDEzLjV2LTlDMiw0LjIsMi4yLDQsMi41LDR6Ii8+CgkJCQk8L2c+CgkJCTwvbWFzaz4KCQkJPHJlY3QgaWQ9IuefqeW9ouWkh+S7vS0xOCIgY2xhc3M9InN0NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ii8+CgkJCTxnIGlkPSLnvJbnu4QtNCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMy4wMDAwMDAsIDUuMDAwMDAwKSI+CgkJCQk8cG9seWdvbiBpZD0i6Lev5b6ELTEzIiBjbGFzcz0ic3Q1IiBwb2ludHM9IjYuNSwzLjUgNi41LDQuNSAxLjYsNC41IDEuNiwzLjUgCQkJCSIvPgoJCQkJPHBhdGggaWQ9Iui3r+W+hC0xNCIgY2xhc3M9InN0NSIgZD0iTTYuNSwwLjV2MUg1QzQuOCwxLjUsNC41LDEuNyw0LjUsMnY0YzAsMC4zLDAuMywwLjUsMC41LDAuNWgxLjV2MUg1QzQuMiw3LjUsMy41LDYuNywzLjUsNgoJCQkJCVYyYzAtMC44LDAuNy0xLjUsMS41LTEuNUg2LjV6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTEyIiBjbGFzcz0ic3Q2IiBkPSJNMC41LDJoMUMxLjgsMiwyLDIuMiwyLDIuNXYzQzIsNS44LDEuOCw2LDEuNSw2aC0xQzAuMiw2LDAsNS44LDAsNS41di0zCgkJCQkJQzAsMi4yLDAuMiwyLDAuNSwyeiIvPgoJCQkJPHBhdGggaWQ9IuefqeW9ouWkh+S7vS0yMCIgY2xhc3M9InN0NiIgZD0iTTYuNSwwaDJDOC44LDAsOSwwLjIsOSwwLjV2MUM5LDEuOCw4LjgsMiw4LjUsMmgtMkM2LjIsMiw2LDEuOCw2LDEuNXYtMQoJCQkJCUM2LDAuMiw2LjIsMCw2LjUsMHoiLz4KCQkJCTxwYXRoIGlkPSLnn6nlvaLlpIfku70tMjIiIGNsYXNzPSJzdDYiIGQ9Ik02LjUsM2gyQzguOCwzLDksMy4yLDksMy41djFDOSw0LjgsOC44LDUsOC41LDVoLTJDNi4yLDUsNiw0LjgsNiw0LjV2LTEKCQkJCQlDNiwzLjIsNi4yLDMsNi41LDN6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTI0IiBjbGFzcz0ic3Q2IiBkPSJNNi41LDZoMkM4LjgsNiw5LDYuMiw5LDYuNXYxQzksNy44LDguOCw4LDguNSw4aC0yQzYuMiw4LDYsNy44LDYsNy41di0xCgkJCQkJQzYsNi4yLDYuMiw2LDYuNSw2eiIvPgoJCQk8L2c+CgkJCTxwYXRoIGlkPSLnn6nlvaJfMV8iIGNsYXNzPSJzdDciIGQ9Ik00LjYsMTFIMTVjMC42LDAsMSwwLjQsMSwxYzAsMC4xLDAsMC4zLTAuMSwwLjRsLTEuNywyYy0wLjIsMC40LTAuNSwwLjYtMC45LDAuNkgyLjYKCQkJCWMtMC42LDAtMS0wLjQtMS0xYzAtMC4yLDAtMC4zLDAuMS0wLjRsMi0yQzMuOSwxMS4yLDQuMiwxMSw0LjYsMTF6Ii8+CgkJPC9nPgoJPC9nPgo8L2c+Cjwvc3ZnPgo=';
 
   const toolbar = {
     leftBar: [
@@ -1153,6 +1165,10 @@ const PipelineWrapper: React.FC<IProps> = ({
   const handleOpenSettings = (): void => {
     commands.execute('settingeditor:open', { query: 'Pipeline Editor' });
   };
+
+  const pipeline_dir = PathExt.dirname(contextRef.current.path);
+  const basePath = pipeline_dir ? `${pipeline_dir}/` : '';
+  pipeline.basepath = basePath;
 
   return (
     <ThemeProvider theme={theme}>
