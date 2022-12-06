@@ -435,14 +435,13 @@ function NodeProperties({
   }
   // returns the node properties for selectedNode with the most recent content
   if (!pipelinePara) {
-    console.log(pipelinePara);
-    console.log("pipelinePara");
     let template_name =
       selectedNode.app_data?.component_parameters?.template_name;
     if (template_name) {
       template_name = basePath ? `${basePath}${template_name}` : template_name;
       const res = pipelineTriggerParameters(template_name);
       res.then((result: any) => {
+        para = [];
         for (let item of result) {
           para = [...para, item];
         }
@@ -452,8 +451,6 @@ function NodeProperties({
   }
 
   const getNodeProperties = (): any => {
-    console.log(pipelinePara);
-    console.log("pipelinePara2");
     const oneOfValues: any[] = [];
     const oneOfValuesNoOpt: any[] = [];
     const filters: string[] = [""];
@@ -542,7 +539,6 @@ function NodeProperties({
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.allOf;
         if (allOf && filters.length > 0) {
-          console.log(JSON.parse(JSON.stringify(allOf)));
           for (let item of allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
             if (valueOneOf) {
@@ -551,31 +547,41 @@ function NodeProperties({
           }
         }
 
+        const oneOf =
+          draft.properties.component_parameters?.properties?.event_filter?.items
+            ?.properties?.value?.oneOf;
+        if (oneOf && filters.length > 0) {
+          oneOf[2].properties.value.enum = filters;
+        }
+
+        const calendar_allOf =
+          draft.properties.component_parameters?.properties?.calendar?.allOf;
+        if (calendar_allOf && filters.length > 0) {
+          for (let item of calendar_allOf) {
+            const valueOneOf = item?.then?.properties?.value?.oneOf;
+            if (valueOneOf) {
+              valueOneOf[2].properties.value.enum = filters;
+            }
+          }
+        }
+
+        const s3_object =
+          draft.properties.component_parameters?.properties?.object?.properties;
+        if (s3_object && filters.length > 0) {
+          s3_object.prefix.oneOf[2].properties.value.enum = filters;
+          s3_object.suffix.oneOf[2].properties.value.enum = filters;
+        }
+
         const trigger_parameters_name =
           draft.properties.component_parameters?.properties?.trigger_parameters
             ?.items?.properties?.name;
-
-        console.log("para");
-        console.log(para);
-        if (trigger_parameters_name && para) {
+        if (
+          trigger_parameters_name &&
+          "enum" in trigger_parameters_name &&
+          para
+        ) {
           trigger_parameters_name.enum = para;
         }
-
-        // let template_name = selectedNode.app_data?.component_parameters?.template_name
-        // if (template_name) {
-        //   template_name = basePath ? `${basePath}${template_name}` : template_name;
-        //   const res = pipelineTriggerParameters(template_name)
-        //   res.then()
-        //   console.log(res)
-
-        //   const parameters: string[] = [""];
-        //   for (const item in res) {
-        //     parameters.push(item)
-        //   }
-        //   if (trigger_parameters_name && parameters) {
-        //     trigger_parameters_name.enum = parameters
-        //   }
-        // }
 
         const component_properties =
           draft.properties.component_parameters?.properties ?? {};

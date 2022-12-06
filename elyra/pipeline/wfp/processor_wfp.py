@@ -115,14 +115,15 @@ class WfpPipelineProcessor(PipelineProcessor):
                     "bucket": node["app_data"]["component_parameters"]["bucket"],
                     "insecure": True,
                     "eventFilter": {
-                        "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
-                                                             node["app_data"]["component_parameters"]["expression"])
+                        "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"]["object"],
+                                                                node["app_data"]["component_parameters"]["event_filter"],
+                                                                node["app_data"]["component_parameters"]["expression"])
                     }
                 }
             elif node_type == "calendar_event":
                 if "calendar" not in event_field:
                     event_field["calendar"] = {}
-                event_field["calendar"][node["app_data"]["label"].lstrip()] = self._get_date(node["app_data"]["component_parameters"])
+                event_field["calendar"][node["app_data"]["label"].lstrip()] = self._get_calendar_data(node["app_data"]["component_parameters"]["calendar"])
             elif node_type == "dataset_event":
                 if "dataset" not in event_field:
                     event_field["dataset"] = {}
@@ -139,7 +140,7 @@ class WfpPipelineProcessor(PipelineProcessor):
                 trigger_field["pipeline"][node["app_data"]["label"].lstrip()] = {
                     "condition": self._get_condition(node_json, node),
                     # TODO operation
-                    "operation": "create",
+                    "operation": node["app_data"]["component_parameters"]["operation"],
                     "pipeline": {
                         "pipelineTemplate": Path(str(node["app_data"]["component_parameters"]["template_name"])).stem,
                         # TODO parameters
@@ -251,10 +252,10 @@ class WfpPipelineProcessor(PipelineProcessor):
                 condition = "(" + condition + ")" + " && (events." + filed_map[
                     self._get_type(node_json, link['node_id_ref'])] + \
                             "." + self._get_name(node_json, link['node_id_ref']) + ")"
+                condition_num += 1
             else:
                 condition += " && (events." + filed_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
                              self._get_name(node_json, link['node_id_ref']) + ")"
-
         return condition
 
     def _get_event_filter(self, event_filter: list[dict], expression: str):
@@ -288,6 +289,61 @@ class WfpPipelineProcessor(PipelineProcessor):
                 stack_expression += expression_item
             else:
                 stack_expression += " (" + expression_item + ")"
+        return stack_expression
+    
+    def _widget_value_str(self, dict: dict):
+        if dict["value"] == "":
+            return ""
+        elif dict["widget"] == "string":
+            return dict["value"]
+        elif dict["widget"] == "enum":
+            return "{{" + dict["value"] + "}}"
+        else:
+            return ""
+
+    def _get_s3_event_filter(self, object: dict, event_filter: list[dict], expression: str):
+        expression = expression.replace(' ', '')
+        stack_expression = ""
+        expression_id = 0
+        prefix = self._widget_value_str(object["prefix"])
+        suffix = self._widget_value_str(object["suffix"])
+        if prefix:
+            stack_expression += "object prefix '" + prefix + "'"
+        if suffix:
+            if stack_expression == "":
+                stack_expression += "object suffix '" + suffix + "'"
+            else:
+                stack_expression = "(" + stack_expression + ") && " + \
+                                    "(object suffix '" + suffix + "')"
+        filter_expression = ""
+        for char in expression:
+            if char.isdigit():
+                expression_id = 10 * expression_id + int(char)
+            else:
+                expression_item = ""
+                if expression_id in range(1, len(event_filter) + 1):
+                    expression_item = self._get_expression_item(expression_id, event_filter)
+                if expression_item == "":
+                    filter_expression += char
+                else:
+                    if filter_expression:
+                        filter_expression += " (" + expression_item + ") " + char
+                    else:
+                        filter_expression += "(" + expression_item + ") " + char
+                    expression_id = 0
+        if expression_id != 0:
+            expression_item = self._get_expression_item(expression_id, event_filter)
+            if filter_expression == "":
+                if stack_expression == "":
+                    stack_expression += expression_item
+                else:
+                    stack_expression = stack_expression + " && (" + expression_item + ")"
+            else:
+                if stack_expression == "":
+                    stack_expression = filter_expression + " (" + expression_item + ")"
+                else:
+                    stack_expression = stack_expression + " && (" + filter_expression + \
+                                    " (" + expression_item + "))"
         return stack_expression
 
     @staticmethod
@@ -370,13 +426,19 @@ class WfpPipelineProcessor(PipelineProcessor):
         return trigger_parameters_field
     
     @staticmethod
-    def _get_date(parameters: dict):
-        date_field = {}
-        if parameters.__contains__("interval"):
-            date_field["interval"] = str(parameters["interval"][0]["value"]) + parameters["interval"][0]["unit"][0]
-        if parameters.__contains__("schedule"):
-            date_field["schedule"] = parameters["schedule"]
-        return date_field
+    def _get_calendar_data(parameters: dict):
+        data_field = {}
+        if parameters["name"] == "interval":
+            if parameters["value"]["widget"] == "enum":
+                data_field["interval"] = "{{" + parameters["value"]["value"] + "}}"
+            elif parameters["value"]["widget"] == "string":
+                data_field["interval"] = parameters["value"]["value"]
+        elif parameters["name"] == "schedule":
+            if parameters["value"]["widget"] == "enum":
+                data_field["schedule"] = "{{" + parameters["value"]["value"] + "}}"
+            elif parameters["value"]["widget"] == "string":
+                data_field["schedule"] = parameters["value"]["value"]
+        return data_field
 
     @staticmethod
     def _get_k8s_agruments(parameters: list, node_json: dict):

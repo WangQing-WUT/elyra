@@ -201,6 +201,7 @@ const PipelineWrapper: React.FC<IProps> = ({
   const [pipeline, setPipeline] = useState<any>(null);
   const [panelOpen, setPanelOpen] = React.useState(false);
   const [alert, setAlert] = React.useState('');
+  const [idRefresh, setIdRefresh] = React.useState(false);
 
   const type: string | undefined =
     pipeline?.pipelines?.[0]?.app_data?.runtime_type;
