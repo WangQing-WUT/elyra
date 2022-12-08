@@ -11,6 +11,49 @@
 			"type": "object",
 			"properties": {
 				{% if  component.name == "Dataset Event" %}
+				"dataset_name": {
+					"type": "array",
+					"title": "Dataset Name",
+					"description": "Dataset name.",
+					"items": {
+						"type": "object",
+						"oneOf":[
+							{
+								"label": "Enter a value manually",
+								"properties": {
+									"value": {
+										"type": "string",
+										"default": ""
+									},
+									"widget": {
+										"type": "string",
+										"default": "string"
+									}
+								},
+								"uihints":{
+									"widget": {"ui:field": "hidden"}
+								}
+							},
+							{
+								"label": "Select one of the workflow input parameters",
+								"properties": {
+									"value": {
+										"type": "string",
+										"enum": [""],
+										"default": ""
+									},
+									"widget": {
+										"type": "string",
+										"default": "enum"
+									}
+								},
+								"uihints":{
+									"widget": {"ui:field": "hidden"}
+								}
+							}
+						]
+					}
+				},
 				"event_filter": {
 					"type": "array",
 					"title": "Dataset Event Filter",
@@ -24,84 +67,11 @@
 							},
 							"name": {
 								"type": "string",
-								"title": "Name",
-								"enum": ["name", "operate", "samples", "create_at"]
+								"title": "Property Name",
+								"enum": ["operate", "samples"]
 							}
 						},
 						"allOf": [
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "name"
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="]
-         								},
-										"value": {
-											"title": "Value",
-											"oneOf":[
-												{
-													"label": " ",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": ""
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"},
-														"value": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Enter a value manually",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "string"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Select one of the workflow input parameters",
-													"properties": {
-														"value": {
-															"type": "string",
-															"enum": [""],
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "enum"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												}
-											]
-										}
-       								}
-								}
-							},
 							{
 								"if": {
         							"properties": {
@@ -142,7 +112,7 @@
 													"properties": {
 														"value": {
 															"type": "string",
-															"enum": ["create", "pulish", "subscribe", "delete", "change", "unsubscribe"],
+															"enum": ["create", "delete"],
 															"default": "create"
 														},
 														"widget": {
@@ -189,7 +159,7 @@
           								"operate": {
             								"type": "string",
 											"title": "Operate",
-											"enum": [">", "<", "==", ">=", "<=", "!=", "%" ]
+											"enum": [">", ">=", "==", "%" ]
          								},
 										"value": {
 											"title": "Value",
@@ -248,80 +218,6 @@
 										}
        								}
 								}
-							},
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "create_at"
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["before", "after"]
-         								},
-										"value": {
-											"title": "Value",
-											"oneOf":[
-												{
-													"label": " ",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": ""
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"},
-														"value": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Enter a value manually",
-													"properties": {
-														"value": {
-															"type": "string",
-															"format": "datetime",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "string"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Select one of the workflow input parameters",
-													"properties": {
-														"value": {
-															"type": "string",
-															"enum": [""],
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "enum"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												}
-											]
-										}
-       								}
-								}
 							}
 						],
 						"required": ["name", "operate", "value"]
@@ -347,7 +243,7 @@
 							},
 							"name": {
 								"type": "string",
-								"title": "Name",
+								"title": "Property Name",
 								"enum": ["name", "operate", "version", "create_at", "update_at"]
 							}
 						},
@@ -798,7 +694,7 @@
 							},
 							"name": {
 								"type": "string",
-								"title": "Name",
+								"title": "Property Name",
 								"enum": ["operate"],
 								"default": "operate"
 							},
@@ -918,7 +814,7 @@
 							},
 							"name": {
 								"type": "string",
-								"title": "Name",
+								"title": "Property Name",
 								"enum": ["name", "operate", "create_at"]
 							}
 						},

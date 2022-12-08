@@ -428,9 +428,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             # pipeline is imported into KFP by the user.
             def gen_function(args):
                 def new_function(*args,**kwargs):
-                    #print(args)
                     self._cc_pipeline(
-                        pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id
+                        pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id, args=args
                     )
                 params = [inspect.Parameter(param,
                                 inspect.Parameter.POSITIONAL_OR_KEYWORD,
@@ -511,6 +510,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _process_component(
         self,
+        args,
         node,
         parent_node,
         sub_node_dict,
@@ -607,7 +607,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         else:
             # Retrieve component from cache
             component = ComponentCache.instance().get_component(self._type, operation.classifier)
-
             # Convert the user-entered value of certain properties according to their type
             for component_property in component.properties:
                 self.log.debug(
@@ -630,6 +629,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     operation.component_params[component_property.ref] = target_ops[output_node_id].outputs[
                         output_node_parameter_key
                     ]
+                elif data_entry_type == "enum":
+                    for arg in args:
+                        if arg.name == property_value:
+                            operation.component_params[component_property.ref] = arg
                 else:  # Parameter is either of a raw data type or file contents
                     if data_entry_type == "file" and property_value:
                         # Read a value from a file
@@ -690,9 +693,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 if "cpu" in resources:
                     container_op.set_cpu_request(cpu=str(resources["cpu"]))
                 if "npu310" in resources:
-                    container_op.add_resource_request('npu310', str(resources["npu310"]))
+                    container_op.add_resource_request('huawei.com/Ascend310', str(resources["npu310"]))
                 if "npu910" in resources:
-                    container_op.add_resource_request('npu910', str(resources["npu910"]))
+                    container_op.add_resource_request('huawei.com/Ascend910', str(resources["npu910"]))
                 if "memory" in resources:
                     container_op.set_memory_request(memory=str(resources["memory"]) + "G")
                 if "gpu" in resources:
@@ -726,6 +729,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             op.after(parent_op)
 
         self._loop(
+            args,
             node,
             sub_node_dict,
             pipeline,
@@ -748,6 +752,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     
     def _loop(
         self,
+        args,
         parent_node,
         node_dict,
         pipeline,
@@ -770,6 +775,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         for node in node_dict:
             if pipeline.operations[node].classifier.startswith("branch"):
                 self._process_branch(
+                    args,
                     node,
                     node_dict[node],
                     pipeline,
@@ -791,6 +797,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 )
             elif pipeline.operations[node].classifier.startswith("loop"):
                 self._process_loop(
+                    args,
                     node,
                     node_dict[node],
                     pipeline,
@@ -812,6 +819,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 )
             else:
                 self._process_component(
+                    args,
                     node,
                     parent_node,
                     node_dict[node],
@@ -835,6 +843,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     
     def _process_branch(
         self,
+        args,
         node,
         sub_node_dict,
         pipeline,
@@ -858,6 +867,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops[operation.id] = "branch"
         with dsl.Condition(target_ops[operation.parent_operation_ids[0]].outputs["output1"] == "test"):
             self._loop(
+                args,
                 "",
                 sub_node_dict,
                 pipeline,
@@ -880,6 +890,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _process_loop(
         self,
+        args,
         node,
         sub_node_dict,
         pipeline,
@@ -903,6 +914,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops[branch_operation.id] = "loop"
         with dsl.Condition(target_ops[branch_operation.parent_operation_ids[0]].outputs["output1"] == "test"):
             self._loop(
+                args,
                 "",
                 sub_node_dict,
                 pipeline,
@@ -931,8 +943,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         experiment_name: str = "",
         pipeline_instance_id: str = None,
         export=False,
+        args=None
     ):
-
         runtime_configuration = self._get_metadata_configuration(
             schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=pipeline.runtime_config
         )
@@ -982,6 +994,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         PipelineProcessor._propagate_operation_inputs_outputs(pipeline, sorted_operations)
 
         self._loop(
+            args,
             "",
             link_ref,
             pipeline,

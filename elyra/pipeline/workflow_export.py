@@ -80,8 +80,6 @@ def events_trigger_parse(node_json: dict):
                 event_field["model"] = {}
             event_field["model"][node["app_data"]["label"].lstrip()] = {
                 # TODO endpoint insecure
-                "endpoint": "????",
-                "insecure": True,
                 "eventFilter": {
                     "expression": get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                    node["app_data"]["component_parameters"]["expression"])
@@ -94,7 +92,6 @@ def events_trigger_parse(node_json: dict):
             event_field["s3"][node["app_data"]["label"].lstrip()] = {
                 "endpoint": node["app_data"]["component_parameters"]["endpoint"],
                 "bucket": node["app_data"]["component_parameters"]["bucket"],
-                "insecure": True,
                 "eventFilter": {
                     "expression": get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                    node["app_data"]["component_parameters"]["expression"])

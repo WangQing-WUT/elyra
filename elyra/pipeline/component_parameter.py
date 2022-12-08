@@ -734,7 +734,7 @@ class ComponentParameter(object):
         self._description = description
 
         if not allowed_input_types:
-            allowed_input_types = ["inputvalue", "inputpath", "file"]
+            allowed_input_types = ["inputvalue", "inputpath", "file", "enum"]
         self._allowed_input_types = allowed_input_types
 
         self._items = items or []
@@ -844,6 +844,12 @@ class ComponentParameter(object):
                     # Render default value if it is not None
                     if param.value is not None:
                         obj["properties"]["value"]["default"] = param.value
+                elif widget_type == "enum":
+                    obj["title"] = InputTypeDescriptionMap["enum"].value
+                    obj["properties"]["widget"]["default"] = "enum"
+                    obj["properties"]["value"]["type"] = "string"
+                    obj["properties"]["value"]["enum"] = []
+
                 else:  # inputpath or file types
                     obj["title"] = InputTypeDescriptionMap[widget_type].value
                     obj["properties"]["widget"]["default"] = widget_type
@@ -873,7 +879,9 @@ class InputTypeDescriptionMap(Enum):
     boolean = "Please select or deselect the checkbox:"
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
+    enum = "Please select an value from pipeline input parameters"
     outputpath = None  # outputs are read-only and don't require a description
+
 
 
 class WorkflowTrigger(Enum):

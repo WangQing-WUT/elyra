@@ -78,6 +78,14 @@ class WfpPipelineProcessor(PipelineProcessor):
             spec_field["triggers"] = triggers
         spec_field["parameters"] = parameters
         return spec_field
+    
+    def _get_dataset_names(self, dataset_names: dict):
+        dataset_names_list = []
+        for item in dataset_names:
+            value = self._widget_value_str(item)
+            if value:
+                dataset_names_list.append(value)
+        return dataset_names_list
 
     async def _component_parse(self, root_dir, parent, node_json: dict, runtime_config, export_path, file_list):
         # key: catalog type
@@ -101,7 +109,6 @@ class WfpPipelineProcessor(PipelineProcessor):
                 if "model" not in event_field:
                     event_field["model"] = {}
                 event_field["model"][node["app_data"]["label"].lstrip()] = {
-                    "insecure": True,
                     "eventFilter": {
                         "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                              node["app_data"]["component_parameters"]["expression"])
@@ -113,7 +120,6 @@ class WfpPipelineProcessor(PipelineProcessor):
                     event_field["s3"] = {}
                 event_field["s3"][node["app_data"]["label"].lstrip()] = {
                     "bucket": node["app_data"]["component_parameters"]["bucket"],
-                    "insecure": True,
                     "eventFilter": {
                         "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"]["object"],
                                                                 node["app_data"]["component_parameters"]["event_filter"],
@@ -128,7 +134,7 @@ class WfpPipelineProcessor(PipelineProcessor):
                 if "dataset" not in event_field:
                     event_field["dataset"] = {}
                 event_field["dataset"][node["app_data"]["label"].lstrip()] = {
-                    "insecure": True,
+                    "datasets": self._get_dataset_names(node["app_data"]["component_parameters"]["dataset_name"]),
                     "eventFilter": {
                         "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                              node["app_data"]["component_parameters"]["expression"])
@@ -333,6 +339,8 @@ class WfpPipelineProcessor(PipelineProcessor):
                     expression_id = 0
         if expression_id != 0:
             expression_item = self._get_expression_item(expression_id, event_filter)
+            if "&&" not in stack_expression and stack_expression:
+                stack_expression = "(" + stack_expression + ")"
             if filter_expression == "":
                 if stack_expression == "":
                     stack_expression += expression_item
@@ -480,8 +488,7 @@ class WfpPipelineProcessor(PipelineProcessor):
                     "bucket": {
                         "name": parameters["bucket_name"]
                     },
-                    "object": parameters["object"],
-                    "insecure": True
+                    "object": parameters["object"]
                 }
             }
         elif parameters["widget"] == "http":
