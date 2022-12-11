@@ -19,6 +19,7 @@ import re
 import tempfile
 import time
 import inspect
+from pathlib import Path
 import kfp.dsl as dsl
 from typing import Any
 from typing import Dict
@@ -438,6 +439,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                             for param, value in args.items()]
                 new_function.__signature__ = inspect.Signature(params)
                 new_function.__annotations__ = args
+                name = Path(str(pipeline_name)).stem
+                new_function.__name__ = name
                 return new_function
             
             input_parameters = {}

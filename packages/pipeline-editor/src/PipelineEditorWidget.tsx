@@ -33,6 +33,7 @@ import {
   showBrowseFileDialog,
   runtimesIcon,
   containerIcon,
+  uploadIcon,
   Dropzone,
   RequestErrors,
   showFormDialog,
@@ -690,7 +691,7 @@ const PipelineWrapper: React.FC<IProps> = ({
   };
 
   const handleSubmission = useCallback(
-    async (actionType: 'run' | 'export'): Promise<void> => {
+    async (actionType: 'run' | 'export' | 'upload'): Promise<void> => {
       const pipelineJson: any = context.model.toJSON();
       // Check that all nodes are valid
       const errorMessages = validate(
@@ -786,6 +787,7 @@ const PipelineWrapper: React.FC<IProps> = ({
           };
           break;
         case 'export':
+        case 'upload':
           dialogOptions = {
             title,
             body: formDialogWidget(
@@ -868,7 +870,17 @@ const PipelineWrapper: React.FC<IProps> = ({
             pipelineJson,
             exportType,
             exportPath,
-            dialogResult.value.overwrite
+            dialogResult.value.overwrite,
+            false
+          ).catch(error => RequestErrors.serverError(error));
+          break;
+        case 'upload':
+          PipelineService.exportPipeline(
+            pipelineJson,
+            exportType,
+            exportPath,
+            dialogResult.value.overwrite,
+            true
           ).catch(error => RequestErrors.serverError(error));
           break;
       }
@@ -919,6 +931,7 @@ const PipelineWrapper: React.FC<IProps> = ({
         case 'save':
           contextRef.current.save();
           break;
+        case 'upload':
         case 'run':
         case 'export':
           handleSubmission(args.type);
@@ -974,98 +987,196 @@ const PipelineWrapper: React.FC<IProps> = ({
   const openPipelineIcon =
     'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IuWbvuWxgl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIKCSB2aWV3Qm94PSIwIDAgMTYgMTYiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDE2IDE2OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6bm9uZTt9Cgkuc3Qxe2ZpbGw6Izk3OTc5Nzt9Cgkuc3Qye2ZpbHRlcjp1cmwoI0Fkb2JlX09wYWNpdHlNYXNrRmlsdGVyKTt9Cgkuc3Qze2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6I0ZGRkZGRjt9Cgkuc3Q0e21hc2s6dXJsKCNtYXNrLTJfMV8pO2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cgkuc3Q1e2ZpbGw6I0I4RDlGRjt9Cgkuc3Q2e2ZpbGw6IzAwNzdGRjt9Cgkuc3Q3e2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO2ZpbGw6IzcwNzA3MDt9Cjwvc3R5bGU+Cjx0aXRsZT5vcGVuPC90aXRsZT4KPGcgaWQ9IuW3peS9nOa1gV94MkZf5bel5L2c5rWB5a6e5L6LIj4KCTxnIGlkPSLnlLvmnb8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xNDEuMDAwMDAwLCAtNDA1LjAwMDAwMCkiPgoJCTxnIGlkPSJvcGVuIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDEuMDAwMDAwLCA0MDUuMDAwMDAwKSI+CgkJCTxyZWN0IGlkPSLnn6nlvaIiIGNsYXNzPSJzdDAiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIvPgoJCQk8ZyBpZD0i5b2i54q257uT5ZCIIj4KCQkJCTxwYXRoIGlkPSJwYXRoLTFfMV8iIGNsYXNzPSJzdDEiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJbDAtMC4xQzEzLjksNC42LDEzLjMsNCwxMi41LDRIOEM3LjksNCw3LjgsNCw3LjYsMy45TDUuNywzLjFDNS42LDMsNS41LDMsNS4zLDN6IE0yLjUsNGgyLjZjMC4xLDAsMC4zLDAsMC40LDAuMWwxLjksMC44CgkJCQkJQzcuNSw1LDcuNiw1LDcuOCw1aDQuN2wwLDBDMTIuOCw1LDEzLDUuMiwxMyw1LjV2OGMwLDAuMy0wLjIsMC41LTAuNSwwLjVoLTEwQzIuMiwxNCwyLDEzLjgsMiwxMy41di05QzIsNC4yLDIuMiw0LDIuNSw0eiIvPgoJCQk8L2c+CgkJCTxkZWZzPgoJCQkJPGZpbHRlciBpZD0iQWRvYmVfT3BhY2l0eU1hc2tGaWx0ZXIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ij4KCQkJCQk8ZmVDb2xvck1hdHJpeCAgdHlwZT0ibWF0cml4IiB2YWx1ZXM9IjEgMCAwIDAgMCAgMCAxIDAgMCAwICAwIDAgMSAwIDAgIDAgMCAwIDEgMCIvPgoJCQkJPC9maWx0ZXI+CgkJCTwvZGVmcz4KCQkJPG1hc2sgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBpZD0ibWFzay0yXzFfIj4KCQkJCTxnIGNsYXNzPSJzdDIiPgoJCQkJCTxwYXRoIGlkPSJwYXRoLTFfMl8iIGNsYXNzPSJzdDMiIGQ9Ik01LjMsM0gyLjVsMCwwQzEuNywzLDEsMy43LDEsNC41djlDMSwxNC4zLDEuNywxNSwyLjUsMTVoMTBjMC44LDAsMS41LTAuNywxLjUtMS41di04CgkJCQkJCWwwLTAuMUMxMy45LDQuNiwxMy4zLDQsMTIuNSw0SDhDNy45LDQsNy44LDQsNy42LDMuOUw1LjcsMy4xQzUuNiwzLDUuNSwzLDUuMywzeiBNMi41LDRoMi42YzAuMSwwLDAuMywwLDAuNCwwLjFsMS45LDAuOAoJCQkJCQlDNy41LDUsNy42LDUsNy44LDVoNC43bDAsMEMxMi44LDUsMTMsNS4yLDEzLDUuNXY4YzAsMC4zLTAuMiwwLjUtMC41LDAuNWgtMTBDMi4yLDE0LDIsMTMuOCwyLDEzLjV2LTlDMiw0LjIsMi4yLDQsMi41LDR6Ii8+CgkJCQk8L2c+CgkJCTwvbWFzaz4KCQkJPHJlY3QgaWQ9IuefqeW9ouWkh+S7vS0xOCIgY2xhc3M9InN0NCIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ii8+CgkJCTxnIGlkPSLnvJbnu4QtNCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMy4wMDAwMDAsIDUuMDAwMDAwKSI+CgkJCQk8cG9seWdvbiBpZD0i6Lev5b6ELTEzIiBjbGFzcz0ic3Q1IiBwb2ludHM9IjYuNSwzLjUgNi41LDQuNSAxLjYsNC41IDEuNiwzLjUgCQkJCSIvPgoJCQkJPHBhdGggaWQ9Iui3r+W+hC0xNCIgY2xhc3M9InN0NSIgZD0iTTYuNSwwLjV2MUg1QzQuOCwxLjUsNC41LDEuNyw0LjUsMnY0YzAsMC4zLDAuMywwLjUsMC41LDAuNWgxLjV2MUg1QzQuMiw3LjUsMy41LDYuNywzLjUsNgoJCQkJCVYyYzAtMC44LDAuNy0xLjUsMS41LTEuNUg2LjV6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTEyIiBjbGFzcz0ic3Q2IiBkPSJNMC41LDJoMUMxLjgsMiwyLDIuMiwyLDIuNXYzQzIsNS44LDEuOCw2LDEuNSw2aC0xQzAuMiw2LDAsNS44LDAsNS41di0zCgkJCQkJQzAsMi4yLDAuMiwyLDAuNSwyeiIvPgoJCQkJPHBhdGggaWQ9IuefqeW9ouWkh+S7vS0yMCIgY2xhc3M9InN0NiIgZD0iTTYuNSwwaDJDOC44LDAsOSwwLjIsOSwwLjV2MUM5LDEuOCw4LjgsMiw4LjUsMmgtMkM2LjIsMiw2LDEuOCw2LDEuNXYtMQoJCQkJCUM2LDAuMiw2LjIsMCw2LjUsMHoiLz4KCQkJCTxwYXRoIGlkPSLnn6nlvaLlpIfku70tMjIiIGNsYXNzPSJzdDYiIGQ9Ik02LjUsM2gyQzguOCwzLDksMy4yLDksMy41djFDOSw0LjgsOC44LDUsOC41LDVoLTJDNi4yLDUsNiw0LjgsNiw0LjV2LTEKCQkJCQlDNiwzLjIsNi4yLDMsNi41LDN6Ii8+CgkJCQk8cGF0aCBpZD0i55+p5b2i5aSH5Lu9LTI0IiBjbGFzcz0ic3Q2IiBkPSJNNi41LDZoMkM4LjgsNiw5LDYuMiw5LDYuNXYxQzksNy44LDguOCw4LDguNSw4aC0yQzYuMiw4LDYsNy44LDYsNy41di0xCgkJCQkJQzYsNi4yLDYuMiw2LDYuNSw2eiIvPgoJCQk8L2c+CgkJCTxwYXRoIGlkPSLnn6nlvaJfMV8iIGNsYXNzPSJzdDciIGQ9Ik00LjYsMTFIMTVjMC42LDAsMSwwLjQsMSwxYzAsMC4xLDAsMC4zLTAuMSwwLjRsLTEuNywyYy0wLjIsMC40LTAuNSwwLjYtMC45LDAuNkgyLjYKCQkJCWMtMC42LDAtMS0wLjQtMS0xYzAtMC4yLDAtMC4zLDAuMS0wLjRsMi0yQzMuOSwxMS4yLDQuMiwxMSw0LjYsMTF6Ii8+CgkJPC9nPgoJPC9nPgo8L2c+Cjwvc3ZnPgo=';
 
-  const toolbar = {
-    leftBar: [
-      {
-        action: 'openPipeline',
-        label: 'Open Pipeline',
-        enable: true,
-        iconEnabled: openPipelineIcon,
-        iconDisabled: openPipelineIcon
-      },
-      {
-        action: 'run',
-        label: 'Run Pipeline',
-        enable: true
-      },
-      {
-        action: 'save',
-        label: 'Save Pipeline',
-        enable: true,
-        iconEnabled: IconUtil.encode(savePipelineIcon),
-        iconDisabled: IconUtil.encode(savePipelineIcon)
-      },
-      {
-        action: 'export',
-        label: 'Export Pipeline',
-        enable: true,
-        iconEnabled: IconUtil.encode(exportPipelineIcon),
-        iconDisabled: IconUtil.encode(exportPipelineIcon)
-      },
-      {
-        action: 'clear',
-        label: 'Clear Pipeline',
-        enable: true,
-        iconEnabled: IconUtil.encode(clearPipelineIcon),
-        iconDisabled: IconUtil.encode(clearPipelineIcon)
-      },
-      {
-        action: 'openRuntimes',
-        label: 'Open Runtimes',
-        enable: true,
-        iconEnabled: IconUtil.encode(runtimesIcon),
-        iconDisabled: IconUtil.encode(runtimesIcon)
-      },
-      {
-        action: 'openRuntimeImages',
-        label: 'Open Runtime Images',
-        enable: true,
-        iconEnabled: IconUtil.encode(containerIcon),
-        iconDisabled: IconUtil.encode(containerIcon)
-      },
-      {
-        action: 'openComponentCatalogs',
-        label: 'Open Component Catalogs',
-        enable: true,
-        iconEnabled: IconUtil.encode(componentCatalogIcon),
-        iconDisabled: IconUtil.encode(componentCatalogIcon)
-      },
-      { action: 'undo', label: 'Undo' },
-      { action: 'redo', label: 'Redo' },
-      { action: 'cut', label: 'Cut' },
-      { action: 'copy', label: 'Copy' },
-      { action: 'paste', label: 'Paste' },
-      { action: 'createAutoComment', label: 'Add Comment', enable: true },
-      { action: 'deleteSelectedObjects', label: 'Delete' },
-      {
-        action: 'arrangeHorizontally',
-        label: 'Arrange Horizontally',
-        enable: true
-      },
-      {
-        action: 'arrangeVertically',
-        label: 'Arrange Vertically',
-        enable: true
-      }
-    ],
-    rightBar: [
-      {
-        action: '',
-        label: `Runtime: ${runtimeDisplayName}`,
-        incLabelWithIcon: 'before',
-        enable: false,
-        kind: 'tertiary'
-        // TODO: re-add icon
-        // iconEnabled: IconUtil.encode(ICON_MAP[type ?? ''] ?? pipelineIcon)
-      },
-      {
-        action: 'toggleOpenPanel',
-        label: panelOpen ? 'Close Panel' : 'Open Panel',
-        enable: true,
-        iconTypeOverride: panelOpen ? 'paletteOpen' : 'paletteClose'
-      }
-    ]
-  };
+  let toolbar = {};
+  if (runtimeDisplayName == 'Workflow Pipelines') {
+    toolbar = {
+      leftBar: [
+        {
+          action: 'openPipeline',
+          label: 'Open Pipeline',
+          enable: true,
+          iconEnabled: openPipelineIcon,
+          iconDisabled: openPipelineIcon
+        },
+        {
+          action: 'upload',
+          label: 'Upload Workflow',
+          enable: true,
+          iconEnabled: IconUtil.encode(uploadIcon),
+          iconDisabled: IconUtil.encode(uploadIcon)
+        },
+        {
+          action: 'save',
+          label: 'Save Workflow',
+          enable: true,
+          iconEnabled: IconUtil.encode(savePipelineIcon),
+          iconDisabled: IconUtil.encode(savePipelineIcon)
+        },
+        {
+          action: 'export',
+          label: 'Export Workflow',
+          enable: true,
+          iconEnabled: IconUtil.encode(exportPipelineIcon),
+          iconDisabled: IconUtil.encode(exportPipelineIcon)
+        },
+        {
+          action: 'clear',
+          label: 'Clear Workflow',
+          enable: true,
+          iconEnabled: IconUtil.encode(clearPipelineIcon),
+          iconDisabled: IconUtil.encode(clearPipelineIcon)
+        },
+        {
+          action: 'openRuntimes',
+          label: 'Open Runtimes',
+          enable: true,
+          iconEnabled: IconUtil.encode(runtimesIcon),
+          iconDisabled: IconUtil.encode(runtimesIcon)
+        },
+        {
+          action: 'openRuntimeImages',
+          label: 'Open Runtime Images',
+          enable: true,
+          iconEnabled: IconUtil.encode(containerIcon),
+          iconDisabled: IconUtil.encode(containerIcon)
+        },
+        {
+          action: 'openComponentCatalogs',
+          label: 'Open Component Catalogs',
+          enable: true,
+          iconEnabled: IconUtil.encode(componentCatalogIcon),
+          iconDisabled: IconUtil.encode(componentCatalogIcon)
+        },
+        { action: 'undo', label: 'Undo' },
+        { action: 'redo', label: 'Redo' },
+        { action: 'cut', label: 'Cut' },
+        { action: 'copy', label: 'Copy' },
+        { action: 'paste', label: 'Paste' },
+        { action: 'createAutoComment', label: 'Add Comment', enable: true },
+        { action: 'deleteSelectedObjects', label: 'Delete' },
+        {
+          action: 'arrangeHorizontally',
+          label: 'Arrange Horizontally',
+          enable: true
+        },
+        {
+          action: 'arrangeVertically',
+          label: 'Arrange Vertically',
+          enable: true
+        }
+      ],
+      rightBar: [
+        {
+          action: '',
+          label: `Runtime: ${runtimeDisplayName}`,
+          incLabelWithIcon: 'before',
+          enable: false,
+          kind: 'tertiary'
+          // TODO: re-add icon
+          // iconEnabled: IconUtil.encode(ICON_MAP[type ?? ''] ?? pipelineIcon)
+        },
+        {
+          action: 'toggleOpenPanel',
+          label: panelOpen ? 'Close Panel' : 'Open Panel',
+          enable: true,
+          iconTypeOverride: panelOpen ? 'paletteOpen' : 'paletteClose'
+        }
+      ]
+    };
+  } else {
+    toolbar = {
+      leftBar: [
+        {
+          action: 'openPipeline',
+          label: 'Open Pipeline',
+          enable: true,
+          iconEnabled: openPipelineIcon,
+          iconDisabled: openPipelineIcon
+        },
+        {
+          action: 'run',
+          label: 'Run Pipeline',
+          enable: true
+        },
+        {
+          action: 'save',
+          label: 'Save Pipeline',
+          enable: true,
+          iconEnabled: IconUtil.encode(savePipelineIcon),
+          iconDisabled: IconUtil.encode(savePipelineIcon)
+        },
+        {
+          action: 'export',
+          label: 'Export Pipeline',
+          enable: true,
+          iconEnabled: IconUtil.encode(exportPipelineIcon),
+          iconDisabled: IconUtil.encode(exportPipelineIcon)
+        },
+        {
+          action: 'clear',
+          label: 'Clear Pipeline',
+          enable: true,
+          iconEnabled: IconUtil.encode(clearPipelineIcon),
+          iconDisabled: IconUtil.encode(clearPipelineIcon)
+        },
+        {
+          action: 'openRuntimes',
+          label: 'Open Runtimes',
+          enable: true,
+          iconEnabled: IconUtil.encode(runtimesIcon),
+          iconDisabled: IconUtil.encode(runtimesIcon)
+        },
+        {
+          action: 'openRuntimeImages',
+          label: 'Open Runtime Images',
+          enable: true,
+          iconEnabled: IconUtil.encode(containerIcon),
+          iconDisabled: IconUtil.encode(containerIcon)
+        },
+        {
+          action: 'openComponentCatalogs',
+          label: 'Open Component Catalogs',
+          enable: true,
+          iconEnabled: IconUtil.encode(componentCatalogIcon),
+          iconDisabled: IconUtil.encode(componentCatalogIcon)
+        },
+        { action: 'undo', label: 'Undo' },
+        { action: 'redo', label: 'Redo' },
+        { action: 'cut', label: 'Cut' },
+        { action: 'copy', label: 'Copy' },
+        { action: 'paste', label: 'Paste' },
+        { action: 'createAutoComment', label: 'Add Comment', enable: true },
+        { action: 'deleteSelectedObjects', label: 'Delete' },
+        {
+          action: 'arrangeHorizontally',
+          label: 'Arrange Horizontally',
+          enable: true
+        },
+        {
+          action: 'arrangeVertically',
+          label: 'Arrange Vertically',
+          enable: true
+        }
+      ],
+      rightBar: [
+        {
+          action: '',
+          label: `Runtime: ${runtimeDisplayName}`,
+          incLabelWithIcon: 'before',
+          enable: false,
+          kind: 'tertiary'
+          // TODO: re-add icon
+          // iconEnabled: IconUtil.encode(ICON_MAP[type ?? ''] ?? pipelineIcon)
+        },
+        {
+          action: 'toggleOpenPanel',
+          label: panelOpen ? 'Close Panel' : 'Open Panel',
+          enable: true,
+          iconTypeOverride: panelOpen ? 'paletteOpen' : 'paletteClose'
+        }
+      ]
+    };
+  }
 
   const [defaultPosition, setDefaultPosition] = useState(10);
 

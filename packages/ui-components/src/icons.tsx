@@ -36,7 +36,12 @@ import trashIconSvg from '../style/icons/trashIcon.svg';
 import viewOffIconSvg from '../style/icons/view--off.svg';
 import viewIconSvg from '../style/icons/view.svg';
 import whatsNewSvg from '../style/icons/whats-new.svg';
+import uploadSvg from '../style/icons/upload.svg';
 
+export const uploadIcon = new LabIcon({
+  name: 'elyra:upload',
+  svgstr: uploadSvg
+});
 export const importIcon = new LabIcon({
   name: 'elyra:import',
   svgstr: importSvg

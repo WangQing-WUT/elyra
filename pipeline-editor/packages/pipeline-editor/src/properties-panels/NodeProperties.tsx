@@ -280,6 +280,7 @@ function NodeProperties({
         if (s3_object && filters.length > 0) {
           s3_object.prefix.oneOf[2].properties.value.enum = filters;
           s3_object.suffix.oneOf[2].properties.value.enum = filters;
+          s3_object.bucket_name.oneOf[2].properties.value.enum = filters;
         }
 
         const dataset_oneOf =
@@ -288,6 +289,12 @@ function NodeProperties({
         if (dataset_oneOf && filters) {
           dataset_oneOf[1].properties.value.enum = filters;
         }
+
+        // const s3_bucket_name_oneOf =
+        //   draft.properties.component_parameters?.properties?.bucket_name?.oneOf;
+        // if (s3_bucket_name_oneOf && filters) {
+        //   s3_bucket_name_oneOf[2].properties.value.enum = filters;
+        // }
 
         const trigger_parameters_name =
           draft.properties.component_parameters?.properties?.trigger_parameters

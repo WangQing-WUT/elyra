@@ -553,20 +553,65 @@
 				},
 				{% endif %}
 				{% if  component.name == "S3 Event" %}
-				"bucket": {
-					"type": "object",
-					"properties": {
-						"name": {
-							"type": "string",
-							"title": "Bucket Name",
-							"description": "Bucket name."
-						}
-					},
-					"required": ["name"]
-				},
 				"object": {
 					"type": "object",
 					"properties": {
+						"bucket_name": {
+							"title": "Bucket Name",
+							"description": "S3 bucket name.",
+							"oneOf":[
+								{
+									"label": " ",
+									"properties": {
+										"value": {
+											"type": "string",
+											"default": ""
+										},
+										"widget": {
+											"type": "string",
+											"default": ""
+										}
+									},
+									"uihints":{
+										"widget": {"ui:field": "hidden"},
+										"value": {"ui:field": "hidden"}
+									}
+								},
+								{
+									"label": "Enter a value manually",
+									"properties": {
+										"value": {
+											"type": "string",
+											"default": ""
+										},
+										"widget": {
+											"type": "string",
+											"default": "string"
+										}
+									},
+									"uihints":{
+										"widget": {"ui:field": "hidden"}
+									}
+								},
+								{
+									"label": "Select one of the workflow input parameters",
+									"properties": {
+										"value": {
+											"type": "string",
+											"enum": [""],
+											"default": ""
+										},
+										"widget": {
+											"type": "string",
+											"default": "enum"
+										}
+									},
+									"uihints":{
+										"widget": {"ui:field": "hidden"}
+									}
+								}
+							]
+						},
 						"prefix": {
 							"title": "S3 Object Prefix",
 							"description": "S3 object prefix.",

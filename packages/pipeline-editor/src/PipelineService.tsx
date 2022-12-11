@@ -253,7 +253,8 @@ export class PipelineService {
     pipeline: any,
     pipeline_export_format: string,
     pipeline_export_path: string,
-    overwrite: boolean
+    overwrite: boolean,
+    upload: boolean
   ): Promise<any> {
     console.log(
       'Exporting pipeline to [' + pipeline_export_format + '] format'
@@ -265,7 +266,8 @@ export class PipelineService {
       pipeline: pipeline,
       export_format: pipeline_export_format,
       export_path: pipeline_export_path,
-      overwrite: overwrite
+      overwrite: overwrite,
+      upload: upload
     };
 
     return RequestHandler.makePostRequest(
@@ -273,11 +275,19 @@ export class PipelineService {
       JSON.stringify(body),
       this.getWaitDialog('Generating pipeline artifacts ...')
     ).then(response => {
-      return showDialog({
-        title: 'Pipeline export succeeded',
-        body: <p>Exported file: {response['export_path']} </p>,
-        buttons: [Dialog.okButton()]
-      });
+      if (upload) {
+        return showDialog({
+          title: 'Workflow upload succeeded',
+          body: <p>Upload file: {response['export_path']} </p>,
+          buttons: [Dialog.okButton()]
+        });
+      } else {
+        return showDialog({
+          title: 'Pipeline export succeeded',
+          body: <p>Exported file: {response['export_path']} </p>,
+          buttons: [Dialog.okButton()]
+        });
+      }
     });
   }
 

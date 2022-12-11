@@ -10,12 +10,99 @@
       "type": "object",
       "properties": {
         "branch_conditions": {
-          "type": "array",
+          "type": "object",
           "title": "Branch Conditions",
           "description": "Branch conditions.",
-          "items": {
-            "type": "string",
-            "default": ""
+          "properties": {
+            "parameter1": {
+              "title": "Parameter1",
+              "description": "Parameter1 of branch condition.",
+              "oneOf":[
+                {
+                  "label": "Select a value from component outputs",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "enum": [""],
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "enum_outputs"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "Select a value from the pipeline input parameters",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "enum": [""],
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "enum_parameters"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                }
+              ]
+            },
+            "operate":{
+              "type": "string",
+              "title": "Operate",
+              "description": "Operate of branch condition.",
+              "enum": ["==", "!=", ">", ">=", "<", "<="]
+            },
+            "parameter2": {
+              "title": "Parameter2",
+              "description": "Parameter2 of branch condition.",
+              "oneOf":[
+                {
+                  "label": "Select a value from component outputs",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "enum": [""],
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "enum_outputs"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "Select a value from the pipeline input parameters",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "enum": [""],
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "enum_parameters"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                }
+              ]
+            }
+          },
+          "uihints": {
+            "ui:field": "header"
           }
         }
       },

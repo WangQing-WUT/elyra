@@ -119,7 +119,9 @@ class WfpPipelineProcessor(PipelineProcessor):
                 if "s3" not in event_field:
                     event_field["s3"] = {}
                 event_field["s3"][node["app_data"]["label"].lstrip()] = {
-                    "bucket": node["app_data"]["component_parameters"]["bucket"],
+                    "bucket": {
+                        "name": self._widget_value_str(node["app_data"]["component_parameters"]["bucket_name"])
+                    },
                     "eventFilter": {
                         "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"]["object"],
                                                                 node["app_data"]["component_parameters"]["event_filter"],
@@ -537,7 +539,14 @@ class WfpPipelineProcessor(PipelineProcessor):
         file_list.append(save_path)
         zip_file_name = save_path.replace(".yaml", ".zip")
         self.file2zip(zip_file_name, file_list)
-
+        return zip_file_name
+    
+    async def upload(self, filePath: str, ip: str, port: str):
+        url = "http://" + ip + ":" + port + "/apis/v1beta1/workflows/upload"
+        files = {'uploadfile': open(filePath, 'rb')}
+        values = {'name': 'test', 'description': '111'}
+        r = requests.post(url, files=files, params=values)
+        print(r.text)
 
 
 class WfpPipelineProcessorResponse(PipelineProcessorResponse):
