@@ -14,12 +14,12 @@
           "title": "Branch Conditions",
           "description": "Branch conditions.",
           "properties": {
-            "parameter1": {
+            "branch_parameter1": {
               "title": "Parameter1",
               "description": "Parameter1 of branch condition.",
               "oneOf":[
                 {
-                  "label": "Select a value from component outputs",
+                  "label": "Please select a value from the pipeline input parameters",
                   "properties": {
                     "value": {
                       "type": "string",
@@ -28,7 +28,7 @@
                     },
                     "widget": {
                       "type": "string",
-                      "default": "enum_outputs"
+                      "default": "enum"
                     }
                   },
                   "uihints":{
@@ -36,7 +36,7 @@
                   }
                 },
                 {
-                  "label": "Select a value from the pipeline input parameters",
+                  "label": "Please select a value from component outputs",
                   "properties": {
                     "value": {
                       "type": "string",
@@ -45,11 +45,12 @@
                     },
                     "widget": {
                       "type": "string",
-                      "default": "enum_parameters"
+                      "default": "inputpath"
                     }
                   },
                   "uihints":{
-                    "widget": {"ui:field": "hidden"}
+                    "widget": {"ui:field": "hidden"},
+                    "value": {"inputpath": true}
                   }
                 }
               ]
@@ -60,21 +61,20 @@
               "description": "Operate of branch condition.",
               "enum": ["==", "!=", ">", ">=", "<", "<="]
             },
-            "parameter2": {
+            "branch_parameter2": {
               "title": "Parameter2",
               "description": "Parameter2 of branch condition.",
               "oneOf":[
                 {
-                  "label": "Select a value from component outputs",
+                  "label": "Please enter a value manually",
                   "properties": {
                     "value": {
                       "type": "string",
-                      "enum": [""],
                       "default": ""
                     },
                     "widget": {
                       "type": "string",
-                      "default": "enum_outputs"
+                      "default": "string"
                     }
                   },
                   "uihints":{
@@ -82,7 +82,7 @@
                   }
                 },
                 {
-                  "label": "Select a value from the pipeline input parameters",
+                  "label": "Please select a value from the pipeline input parameters",
                   "properties": {
                     "value": {
                       "type": "string",
@@ -91,11 +91,29 @@
                     },
                     "widget": {
                       "type": "string",
-                      "default": "enum_parameters"
+                      "default": "enum"
                     }
                   },
                   "uihints":{
                     "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "Please select a value from component outputs",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "enum": [""],
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "inputpath"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"},
+                    "value": {"inputpath": true}
                   }
                 }
               ]

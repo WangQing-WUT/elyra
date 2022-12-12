@@ -150,20 +150,25 @@ const NodeIcons: Map<string, string> = new Map([
   ['execute-notebook-node', 'static/elyra/notebook.svg'],
   ['execute-python-node', 'static/elyra/python.svg'],
   ['execute-r-node', 'static/elyra/r-logo.svg'],
-  ['Events', 'static/elyra/events_category.svg'],
-  ['Actions', 'static/elyra/actions_category.svg'],
-  ['Logic', 'static/elyra/logic_category.svg']
+  ['Events', 'static/elyra/component/category/events_category.svg'],
+  ['Actions', 'static/elyra/component/category/actions_category.svg'],
+  ['Logic', 'static/elyra/component/category/logic_category.svg'],
+  ['Global', 'static/elyra/component/category/global_category.svg']
 ]);
 
 const customIcons: Map<string, string> = new Map([
-  ['Calendar Event', 'calendar.svg'],
-  ['Dataset Event', 'dataset.svg'],
-  ['S3 Event', 'S3.svg'],
-  ['Model Event', 'model.svg'],
-  ['Pipeline Event', 'event pipeline.svg'],
-  ['HTTP Trigger', 'HTTP.svg'],
-  ['K8s Object Trigger', 'K8S.svg'],
-  ['Pipeline Trigger', 'Pipeline.svg']
+  ['Calendar Event', 'calendar_event.svg'],
+  ['Dataset Event', 'dataset_event.svg'],
+  ['S3 Event', 's3_event.svg'],
+  ['Model Event', 'model_event.svg'],
+  ['Pipeline Event', 'pipeline_event.svg'],
+  ['HTTP Trigger', 'http_trigger.svg'],
+  ['K8s Object Trigger', 'k8sobj_trigger.svg'],
+  ['Pipeline Trigger', 'pipeline_trigger.svg'],
+  ['Init', 'init.svg'],
+  ['Exit', 'exit.svg'],
+  ['Pipeline Branch', 'branch.svg'],
+  ['Pipeline Loop', 'loop.svg']
 ]);
 // TODO: We should decouple components and properties to support lazy loading.
 // TODO: type this
@@ -219,8 +224,11 @@ export const componentFetcher = async (type: string): Promise<any> => {
     const baseUrl = ServerConnection.makeSettings().baseUrl;
     const defaultIcon = URLExt.parse(URLExt.join(baseUrl, type?.icon || ''))
       .pathname;
-
-    category.image = NodeIcons.get(category.id) || defaultIcon;
+    const categoryIcon = URLExt.parse(
+      URLExt.join(baseUrl, NodeIcons.get(category.id) || '')
+    ).pathname;
+    category.image = NodeIcons.get(category.id) ? categoryIcon : defaultIcon;
+    console.log(defaultIcon);
 
     for (const node of category.node_types) {
       // update icon
@@ -241,7 +249,6 @@ export const componentFetcher = async (type: string): Promise<any> => {
       node.app_data.properties = prop?.properties;
     }
   }
-  console.log(palette.categories);
   sortPalette(palette);
 
   return palette;

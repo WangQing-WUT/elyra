@@ -1,43 +1,26 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">  <image id="image0" width="32" height="32" x="0" y="0"
-    href="data:image/png;base64,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
-QmCC" />
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;}
+	.st1{fill:none;stroke:#707070;}
+	.st2{fill:#0077FF;}
+	.st3{fill:#EBAF00;}
+	.st4{fill:#B8D9FF;}
+</style>
+<title>workflow 2</title>
+<g id="工作流_x2F_工作流实例">
+	<g id="画板" transform="translate(-111.000000, -36.000000)">
+		<g id="workflow" transform="translate(111.000000, 36.000000)">
+			<polygon id="路径" class="st0" points="16,0 0,0 0,16 16,16 			"/>
+			<path id="路径-12" class="st1" d="M8.5,3h5c0.6,0,1,0.4,1,1v3c0,0.6-0.4,1-1,1h-5l0,0"/>
+			<path id="路径-12备份" class="st1" d="M7.5,8h-5c-0.6,0-1,0.4-1,1v3c0,0.6,0.4,1,1,1h5l0,0"/>
+			<path id="路径_1_" class="st2" d="M14,11H8c-0.6,0-1,0.4-1,1v2c0,0.6,0.4,1,1,1h6c0.6,0,1-0.4,1-1v-2C15,11.4,14.6,11,14,11z"
+				/>
+			<path id="路径备份-9" class="st3" d="M11,6H5C4.4,6,4,6.4,4,7v2c0,0.6,0.4,1,1,1h6c0.6,0,1-0.4,1-1V7C12,6.4,11.6,6,11,6z"/>
+			<path id="路径备份-10" class="st4" d="M8,1H2C1.4,1,1,1.4,1,2v2c0,0.6,0.4,1,1,1h6c0.6,0,1-0.4,1-1V2C9,1.4,8.6,1,8,1z"/>
+		</g>
+	</g>
+</g>
 </svg>

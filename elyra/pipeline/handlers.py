@@ -101,7 +101,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         pipeline_upload = payload["upload"]
 
         
-        if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow Pipelines":
+        if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
             WPPR = WfpPipelineProcessor()
             zip_file = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
             if pipeline_upload:

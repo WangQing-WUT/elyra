@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/meta-schema.json",
   "$id": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/kfp.json",
-  "title": "Workflow Pipelines",
+  "title": "Workflow",
   "name": "wfp",
   "schemaspace": "runtimes",
   "schemaspace_id": "130b8e00-de7c-4b32-b553-b4a52824a3b5",
   "metadata_class_name": "elyra.pipeline.wfp.wfp_metadata.WfpMetadata",
   "runtime_type": "WORKFLOW_PIPELINES",
   "uihints": {
-    "title": "Workflow Pipelines runtimes",
+    "title": "Workflow runtimes",
     "icon": "elyra:runtimes",
     "reference_url": "https://elyra.readthedocs.io/en/latest/user_guide/runtime-conf.html"
   },
@@ -21,7 +21,7 @@
     },
     "display_name": {
       "title": "Display Name",
-      "description": "Display name of this Workflow Pipelines configuration",
+      "description": "Display name of this Workflow configuration",
       "type": "string",
       "minLength": 1
     },
@@ -40,32 +40,32 @@
         },
         "description": {
           "title": "Description",
-          "description": "Description of this Workflow Pipelines configuration",
+          "description": "Description of this Workflow configuration",
           "type": "string"
         },
         "api_endpoint": {
-          "title": "Workflow Pipelines API Endpoint",
-          "description": "The Workflow Pipelines API endpoint",
+          "title": "Workflow API Endpoint",
+          "description": "The Workflow API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Workflow Pipelines",
+            "category": "Workflow",
             "ui:placeholder": "https://your-kubeflow-service:port/pipeline"
           }
         },
         "public_api_endpoint": {
-          "title": "Public Workflow Pipelines API Endpoint",
-          "description": "The public Workflow Pipelines API endpoint",
+          "title": "Public Workflow API Endpoint",
+          "description": "The public Workflow API endpoint",
           "type": "string",
           "format": "uri",
           "uihints": {
-            "category": "Workflow Pipelines",
+            "category": "Workflow",
             "ui:placeholder": "https://your-kubeflow-service:port/pipeline"
           }
         },
         "user_namespace": {
-          "title": "Workflow Pipelines User Namespace",
-          "description": "The Workflow Pipelines user namespace used to create experiments",
+          "title": "Workflow User Namespace",
+          "description": "The Workflow user namespace used to create experiments",
           "type": "string",
           "pattern": "^[a-z0-9][-a-z0-9]*[a-z0-9]$",
           "maxLength": 63,
@@ -74,13 +74,13 @@
           }
         },
         "engine": {
-          "title": "Workflow Pipelines engine",
-          "description": "The Workflow Pipelines engine in use",
+          "title": "Workflow engine",
+          "description": "The Workflow engine in use",
           "type": "string",
           "enum": ["Argo", "Tekton"],
           "default": "Argo",
           "uihints": {
-            "category": "Workflow Pipelines"
+            "category": "Workflow"
           }
         },
         "auth_type": {
@@ -90,24 +90,24 @@
           "enum": ["{AUTH_PROVIDER_PLACEHOLDERS}"],
           "default": "{DEFAULT_AUTH_PROVIDER_PLACEHOLDER}",
           "uihints": {
-            "category": "Workflow Pipelines"
+            "category": "Workflow"
           }
         },
         "api_username": {
-          "title": "Workflow Pipelines API Endpoint Username",
-          "description": "The Workflow Pipelines API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
+          "title": "Workflow API Endpoint Username",
+          "description": "The Workflow API endpoint username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
-            "category": "Workflow Pipelines"
+            "category": "Workflow"
           }
         },
         "api_password": {
-          "title": "Workflow Pipelines API Endpoint Password",
+          "title": "Workflow API Endpoint Password",
           "description": "Password for the specified username. This property is required for all authentication types, except NO_AUTHENTICATION and KUBERNETES_SERVICE_ACCOUNT_TOKEN.",
           "type": "string",
           "uihints": {
             "ui:field": "password",
-            "category": "Workflow Pipelines"
+            "category": "Workflow"
           }
         },
         "cos_endpoint": {

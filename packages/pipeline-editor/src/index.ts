@@ -62,6 +62,7 @@ import { SubmitFileButtonExtension } from './SubmitFileButtonExtension';
 import '../style/index.css';
 
 const PIPELINE_EDITOR = 'Pipeline Editor';
+const WORKFLOW_EDITOR = 'Workflow Editor';
 const PIPELINE = 'pipeline';
 const WORKFLOW = 'workflow';
 const PIPELINE_EDITOR_NAMESPACE = 'elyra-pipeline-editor-extension';
@@ -200,6 +201,9 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (args.runtimeType?.id === 'LOCAL') {
           return `Generic ${PIPELINE_EDITOR}`;
         }
+        if (args.runtimeType?.display_name == 'Workflow') {
+          return WORKFLOW_EDITOR;
+        }
         if (args.isMenu) {
           return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
         }
@@ -229,9 +233,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       execute: (args: any) => {
         // Creates blank file, then opens it in a new window
         let ext: string = '.pipeline';
-        console.log(args);
-        console.log('args');
-        if (args.runtimeType?.display_name == 'Workflow Pipelines') {
+        if (args.runtimeType?.display_name == 'Workflow') {
           ext = '.workflow';
         }
         app.commands
@@ -310,6 +312,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           const fileMenuItems: IRankedMenu.IItemOptions[] = [];
 
           for (const t of resolvedTypes as any) {
+            if (t.id == 'LOCAL') {
+              continue;
+            }
             launcher.add({
               command: openPipelineEditorCommand,
               category: 'Elyra',

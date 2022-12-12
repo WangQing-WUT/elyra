@@ -188,7 +188,7 @@ install: build-local-pipeline-editor dev-link package-ui install-server check-in
 
 install-all: package-ui install-server install-examples install-gitlab-dependency check-install ## Build and install, including examples
 
-install-dev: package-ui-dev install-server install-examples install-gitlab-dependency check-install
+install-dev: build-local-pipeline-editor package-ui-dev install-server install-examples install-gitlab-dependency check-install
 
 install-examples: ## Install example pipeline components 
 	# install Kubeflow Pipelines example components

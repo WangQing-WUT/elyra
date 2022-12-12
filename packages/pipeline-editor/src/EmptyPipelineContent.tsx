@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { componentCatalogIcon, dragDropIcon } from '@elyra/ui-components';
+import {
+  componentCatalogIcon,
+  dragDropIcon,
+  emptyWorkflowIcon
+} from '@elyra/ui-components';
 import { settingsIcon } from '@jupyterlab/ui-components';
 
 import React from 'react';
@@ -60,6 +64,10 @@ export const EmptyGenericPipeline: React.FC<IEmptyGenericPipelineProps> = ({
 
 export interface IEmptyPlatformSpecificPipelineProps {
   onOpenCatalog: () => void;
+  onOpenSettings: () => void;
+}
+
+export interface IEmptyWorkflowCanvasProps {
   onOpenSettings: () => void;
 }
 
@@ -116,6 +124,22 @@ export const EmptyPlatformSpecificPipeline: React.FC<IEmptyPlatformSpecificPipel
           <settingsIcon.react className={ICON_CLASS} tag="div" height="24px" />
         </button>{' '}
         to configure the pipeline editor.
+      </h3>
+    </div>
+  );
+};
+
+export const EmptyWorkflowCanvas: React.FC<any> = () => {
+  return (
+    <div>
+      <emptyWorkflowIcon.react
+        className="empty-workflow-icon"
+        tag="div"
+        elementPosition="center"
+        height="120px"
+      />
+      <h3 className={HEADER_CLASS}>
+        Start your new worflow by dragging component from the left palette.
       </h3>
     </div>
   );

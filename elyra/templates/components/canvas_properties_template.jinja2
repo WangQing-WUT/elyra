@@ -109,21 +109,6 @@
           {% endif %}
       {% endfor %}
       ]
-    },
-    "component_source_header": {
-      "type": "null",
-      "title": "Component Source",
-      "uihints": {
-        "ui:field": "header"
-      }
-    },
-    "component_source": {
-      "type": "string",
-      "title": "Component Source",
-      "default": {{ component.component_source|tojson|safe }},
-      "uihints": {
-        "ui:readonly": true
-      }
     }
   },
   "required": ["component_parameters"]

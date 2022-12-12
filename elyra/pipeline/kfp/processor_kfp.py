@@ -19,6 +19,7 @@ import re
 import tempfile
 import time
 import inspect
+import operator
 from pathlib import Path
 import kfp.dsl as dsl
 from typing import Any
@@ -844,6 +845,29 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     target_ops
                 )
     
+    def _parse_branch_parameter(self, parameter, args, target_ops):
+        if parameter["widget"] == "string":
+            return parameter["value"]
+        elif parameter["widget"] == "enum":
+            for arg in args:
+                if arg.name == parameter["value"]:
+                    return arg
+        elif parameter["widget"] == "inputpath":
+            output_node_id = parameter["value"]["value"]
+            output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
+            return target_ops[output_node_id].outputs[output_node_parameter_key]
+
+    @staticmethod
+    def get_operator_fn(op):
+        return {
+            '==' : operator.eq,
+            '!=' : operator.ne,
+            '>' : operator.gt,
+            '>=' : operator.ge,
+            '<' : operator.lt,
+            '<=' : operator.le,
+            }[op]
+
     def _process_branch(
         self,
         args,
@@ -868,7 +892,20 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     ):
         operation = pipeline.operations[node]
         target_ops[operation.id] = "branch"
-        with dsl.Condition(target_ops[operation.parent_operation_ids[0]].outputs["output1"] == "test"):
+        component_params = operation.component_params
+        branch_parameter1 = self._parse_branch_parameter(
+            component_params["branch_conditions"]["branch_parameter1"],
+            args,
+            target_ops
+        )
+        branch_parameter2 = self._parse_branch_parameter(
+            component_params["branch_conditions"]["branch_parameter2"],
+            args,
+            target_ops
+        )
+        operate = component_params["branch_conditions"]["operate"]
+
+        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2)):
             self._loop(
                 args,
                 "",

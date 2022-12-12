@@ -295,6 +295,24 @@ function NodeProperties({
         // if (s3_bucket_name_oneOf && filters) {
         //   s3_bucket_name_oneOf[2].properties.value.enum = filters;
         // }
+        const branch_parameter1 =
+          draft.properties.component_parameters?.properties?.branch_conditions
+            ?.properties?.branch_parameter1;
+        const branch_parameter2 =
+          draft.properties.component_parameters?.properties?.branch_conditions
+            ?.properties?.branch_parameter2;
+        if (branch_parameter1 && branch_parameter2) {
+          branch_parameter1.oneOf[0].properties.value.enum = pipeline_input_parameters;
+          branch_parameter1.oneOf[1].properties.value.oneOf = oneOfValues;
+          branch_parameter1.oneOf[1].properties.value.type = "object";
+          delete branch_parameter1.oneOf[1].properties.value.enum;
+          delete branch_parameter1.oneOf[1].properties.value.default;
+          branch_parameter2.oneOf[1].properties.value.enum = pipeline_input_parameters;
+          branch_parameter2.oneOf[2].properties.value.oneOf = oneOfValues;
+          branch_parameter2.oneOf[2].properties.value.type = "object";
+          delete branch_parameter2.oneOf[2].properties.value.enum;
+          delete branch_parameter2.oneOf[2].properties.value.default;
+        }
 
         const trigger_parameters_name =
           draft.properties.component_parameters?.properties?.trigger_parameters

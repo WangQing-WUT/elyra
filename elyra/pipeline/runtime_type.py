@@ -35,7 +35,7 @@ class RuntimeProcessorType(Enum):
     KUBEFLOW_PIPELINES = "Kubeflow Pipelines"
     APACHE_AIRFLOW = "Apache Airflow"
     ARGO = "Argo"
-    WORKFLOW_PIPELINES = "Workflow Pipelines"
+    WORKFLOW_PIPELINES = "Workflow"
     ######################################
     # Add new entry here for each new type
     ######################################
