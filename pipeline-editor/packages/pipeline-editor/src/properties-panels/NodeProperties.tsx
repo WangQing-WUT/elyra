@@ -69,6 +69,16 @@ function getOneOfValue(value: string, option: string, label: string) {
   };
 }
 
+function getInitPipelineTriggerPara(name: string) {
+  return {
+    from: {
+      value: "",
+      widget: "string"
+    },
+    name: name
+  };
+}
+
 async function pipelineTriggerParameters(template_name: any): Promise<any> {
   const res = await RequestHandler.makeGetRequest(
     `elyra/pipeline/pipeline_trigger/${template_name}`
@@ -77,6 +87,8 @@ async function pipelineTriggerParameters(template_name: any): Promise<any> {
 }
 
 let para: string[] = [];
+let template_name_global: string = "";
+let id_global: string = "";
 
 function NodeProperties({
   data,
@@ -135,9 +147,13 @@ function NodeProperties({
     );
   }
   // returns the node properties for selectedNode with the most recent content
-  if (!pipelinePara) {
-    let template_name =
-      selectedNode.app_data?.component_parameters?.template_name;
+  let template_name =
+    selectedNode.app_data?.component_parameters?.template_name ||
+    selectedNode.app_data?.component_parameters?.init_pipeline ||
+    selectedNode.app_data?.component_parameters?.exit_pipeline;
+
+  if (template_name != template_name_global) {
+    template_name_global = template_name;
     if (template_name) {
       template_name = basePath ? `${basePath}${template_name}` : template_name;
       const res = pipelineTriggerParameters(template_name);
@@ -146,7 +162,7 @@ function NodeProperties({
         for (let item of result) {
           para = [...para, item];
         }
-        setPipelinePara(true);
+        setPipelinePara(!pipelinePara);
       });
     }
   }
@@ -290,11 +306,6 @@ function NodeProperties({
           dataset_oneOf[1].properties.value.enum = filters;
         }
 
-        // const s3_bucket_name_oneOf =
-        //   draft.properties.component_parameters?.properties?.bucket_name?.oneOf;
-        // if (s3_bucket_name_oneOf && filters) {
-        //   s3_bucket_name_oneOf[2].properties.value.enum = filters;
-        // }
         const branch_parameter1 =
           draft.properties.component_parameters?.properties?.branch_conditions
             ?.properties?.branch_parameter1;
@@ -314,15 +325,15 @@ function NodeProperties({
           delete branch_parameter2.oneOf[2].properties.value.default;
         }
 
-        const trigger_parameters_name =
+        const parameters_name =
           draft.properties.component_parameters?.properties?.trigger_parameters
+            ?.items?.properties?.name ||
+          draft.properties.component_parameters?.properties?.init_parameters
+            ?.items?.properties?.name ||
+          draft.properties.component_parameters?.properties?.exit_parameters
             ?.items?.properties?.name;
-        if (
-          trigger_parameters_name &&
-          "enum" in trigger_parameters_name &&
-          para
-        ) {
-          trigger_parameters_name.enum = para;
+        if (parameters_name && "enum" in parameters_name && para) {
+          parameters_name.enum = para;
         }
 
         const component_properties =

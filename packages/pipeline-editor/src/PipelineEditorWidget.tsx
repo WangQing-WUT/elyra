@@ -73,7 +73,10 @@ import {
   useRuntimeImages,
   useRuntimesSchema
 } from './pipeline-hooks';
-import { PipelineExportDialog } from './PipelineExportDialog';
+import {
+  PipelineExportDialog,
+  WorkflowExportDialog
+} from './PipelineExportDialog';
 import {
   PipelineService,
   RUNTIMES_SCHEMASPACE,
@@ -748,7 +751,7 @@ const PipelineWrapper: React.FC<IProps> = ({
 
       let title =
         type !== undefined
-          ? `${actionType} pipeline for ${runtimeDisplayName}`
+          ? `${actionType} ${runtimeDisplayName}`
           : `${actionType} pipeline`;
 
       if (actionType === 'export' || type !== undefined) {
@@ -789,19 +792,35 @@ const PipelineWrapper: React.FC<IProps> = ({
           break;
         case 'export':
         case 'upload':
-          dialogOptions = {
-            title,
-            body: formDialogWidget(
-              <PipelineExportDialog
-                runtimeData={runtimeData}
-                runtimeTypeInfo={runtimeTypes}
-                pipelineType={type}
-              />
-            ),
-            buttons: [Dialog.cancelButton(), Dialog.okButton()],
-            defaultButton: 1,
-            focusNodeSelector: '#runtime_config'
-          };
+          if (runtimeDisplayName == 'Workflow') {
+            dialogOptions = {
+              title,
+              body: formDialogWidget(
+                <WorkflowExportDialog
+                  runtimeData={runtimeData}
+                  runtimeTypeInfo={runtimeTypes}
+                  pipelineType={type}
+                />
+              ),
+              buttons: [Dialog.cancelButton(), Dialog.okButton()],
+              defaultButton: 1,
+              focusNodeSelector: '#runtime_config'
+            };
+          } else {
+            dialogOptions = {
+              title,
+              body: formDialogWidget(
+                <PipelineExportDialog
+                  runtimeData={runtimeData}
+                  runtimeTypeInfo={runtimeTypes}
+                  pipelineType={type}
+                />
+              ),
+              buttons: [Dialog.cancelButton(), Dialog.okButton()],
+              defaultButton: 1,
+              focusNodeSelector: '#runtime_config'
+            };
+          }
           break;
       }
 

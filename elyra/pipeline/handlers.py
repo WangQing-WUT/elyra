@@ -17,6 +17,7 @@ from datetime import datetime
 from http.client import responses
 import json
 import os
+import yaml
 from logging import Logger
 import mimetypes
 from typing import List
@@ -246,12 +247,20 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
         result = []
         pipeline_absolute_path = os.path.join(os.getcwd(), pipeline_path)
         with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
-            pipeline = json.load(r)
-            pipeline_defaults = pipeline["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"]
-            if "input_parameters" in pipeline_defaults:
-                for input_parameter in pipeline_defaults["input_parameters"]:
+            if pipeline_absolute_path.endswith(".pipeline"):
+                pipeline = json.load(r)
+                pipeline_defaults = pipeline["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"]
+                if "input_parameters" in pipeline_defaults:
+                    for input_parameter in pipeline_defaults["input_parameters"]:
+                        if "name" in input_parameter:
+                            result.append(input_parameter["name"])
+            elif pipeline_absolute_path.endswith(".yaml"):
+                pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
+                input_parameters = pipeline["spec"]["arguments"]["parameters"]
+                for input_parameter in input_parameters:
                     if "name" in input_parameter:
                         result.append(input_parameter["name"])
+
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
         await self.finish({"input_parameters": result})

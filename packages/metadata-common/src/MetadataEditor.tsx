@@ -104,9 +104,6 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
       metadata: flattenFormData(metadata)
     };
 
-    console.log();
-    console.log('newMetadata');
-
     if (!name) {
       MetadataService.postMetadata(schemaspace, JSON.stringify(newMetadata))
         .then((response: any): void => {

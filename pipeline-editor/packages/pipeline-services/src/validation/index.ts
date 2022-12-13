@@ -178,7 +178,6 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
     const nodeLabel = node.app_data?.label;
     const nodeOp = node.op;
     let path = ["nodes", n, "app_data"];
-    console.log(nodeOp);
     if (
       nodeOp.search("execute") == -1 &&
       nodeOp.search("catalog") == -1 &&

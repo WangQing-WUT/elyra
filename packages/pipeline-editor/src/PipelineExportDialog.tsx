@@ -45,6 +45,29 @@ const FileTypeSelect: React.FC<IFileTypeSelectProps> = ({ fileTypes }) => {
   );
 };
 
+const WorkflowFileTypeSelect: React.FC<IFileTypeSelectProps> = ({
+  fileTypes
+}) => {
+  return (
+    <>
+      <label htmlFor="pipeline_filetype">Export Workflow as:</label>
+      <br />
+      <select
+        id="pipeline_filetype"
+        name="pipeline_filetype"
+        className="elyra-form-export-filetype"
+        data-form-required
+      >
+        {fileTypes.map(f => (
+          <option key={f.id} value={f.id}>
+            {f.display_name}
+          </option>
+        ))}
+      </select>
+    </>
+  );
+};
+
 interface IProps {
   runtimeData: IRuntimeData;
   runtimeTypeInfo: IRuntimeType[];
@@ -65,6 +88,36 @@ export const PipelineExportDialog: React.FC<IProps> = ({
         {(platform): JSX.Element => {
           const info = runtimeTypeInfo.find(i => i.id === platform);
           return <FileTypeSelect fileTypes={info?.export_file_types ?? []} />;
+        }}
+      </RuntimeConfigSelect>
+      <input
+        type="checkbox"
+        className="elyra-Dialog-checkbox"
+        id="overwrite"
+        name="overwrite"
+      />
+      <label htmlFor="overwrite">Replace if file already exists</label>
+      <br />
+    </form>
+  );
+};
+
+export const WorkflowExportDialog: React.FC<IProps> = ({
+  runtimeData,
+  runtimeTypeInfo,
+  pipelineType
+}) => {
+  return (
+    <form className="elyra-dialog-form">
+      <RuntimeConfigSelect
+        runtimeData={runtimeData}
+        pipelineType={pipelineType}
+      >
+        {(platform): JSX.Element => {
+          const info = runtimeTypeInfo.find(i => i.id === platform);
+          return (
+            <WorkflowFileTypeSelect fileTypes={info?.export_file_types ?? []} />
+          );
         }}
       </RuntimeConfigSelect>
       <input
