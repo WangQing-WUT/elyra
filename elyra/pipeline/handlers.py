@@ -103,13 +103,11 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         
         if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
             WPPR = WfpPipelineProcessor()
-            zip_file = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
-            if pipeline_upload:
-                await WPPR.upload(zip_file, "123.60.231.196", "30050")
-            json_msg = json.dumps({"export_path": pipeline_export_path})
+            zip_file = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite, pipeline_upload)
+            json_msg = json.dumps({"export_path": zip_file})
             self.set_status(201)
             self.set_header("Content-Type", "application/json")
-            location = url_path_join(self.base_url, "api", "contents", pipeline_export_path)
+            location = url_path_join(self.base_url, "api", "contents", zip_file)
             self.set_header("Location", location)
         else:
             response = await PipelineValidationManager.instance().validate(pipeline_definition)

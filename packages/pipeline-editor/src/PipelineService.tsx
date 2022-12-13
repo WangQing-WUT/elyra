@@ -281,6 +281,15 @@ export class PipelineService {
           body: <p>Upload file: {response['export_path']} </p>,
           buttons: [Dialog.okButton()]
         });
+      } else if (
+        pipeline['pipelines'][0]['app_data']['properties']['runtime'] ==
+        'Workflow'
+      ) {
+        return showDialog({
+          title: 'Workflow export succeeded',
+          body: <p>Exported file: {response['export_path']} </p>,
+          buttons: [Dialog.okButton()]
+        });
       } else {
         return showDialog({
           title: 'Pipeline export succeeded',

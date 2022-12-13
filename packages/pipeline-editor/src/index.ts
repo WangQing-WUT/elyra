@@ -201,17 +201,25 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (args.runtimeType?.id === 'LOCAL') {
           return `Generic ${PIPELINE_EDITOR}`;
         }
-        if (args.runtimeType?.display_name == 'Workflow') {
+        if (args.runtimeType?.id === 'WORKFLOW_PIPELINES') {
           return WORKFLOW_EDITOR;
         }
         if (args.isMenu) {
-          return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
+          if (args.runtimeType?.id === 'KUBEFLOW_PIPELINES') {
+            return PIPELINE_EDITOR;
+          } else if (args.runtimeType?.id === 'WORKFLOW_PIPELINES') {
+            return WORKFLOW_EDITOR;
+          }
         }
         return PIPELINE_EDITOR;
       },
       caption: (args: any) => {
         if (args.runtimeType?.id === 'LOCAL') {
           return `Generic ${PIPELINE_EDITOR}`;
+        } else if (args.runtimeType?.id === 'KUBEFLOW_PIPELINES') {
+          return PIPELINE_EDITOR;
+        } else if (args.runtimeType?.id === 'WORKFLOW_PIPELINES') {
+          return WORKFLOW_EDITOR;
         }
         return `${args.runtimeType?.display_name} ${PIPELINE_EDITOR}`;
       },

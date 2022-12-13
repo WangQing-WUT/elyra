@@ -228,7 +228,6 @@ export const componentFetcher = async (type: string): Promise<any> => {
       URLExt.join(baseUrl, NodeIcons.get(category.id) || '')
     ).pathname;
     category.image = NodeIcons.get(category.id) ? categoryIcon : defaultIcon;
-    console.log(defaultIcon);
 
     for (const node of category.node_types) {
       // update icon

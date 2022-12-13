@@ -38,7 +38,12 @@ import viewIconSvg from '../style/icons/view.svg';
 import whatsNewSvg from '../style/icons/whats-new.svg';
 import uploadSvg from '../style/icons/upload.svg';
 import emptyWorkflowSvg from '../style/icons/emptyWorkflow.svg';
+import openPipelineSvg from '../style/icons/openPipeline.svg';
 
+export const openPipelineIcon = new LabIcon({
+  name: 'elyra:openPipeline',
+  svgstr: openPipelineSvg
+});
 export const emptyWorkflowIcon = new LabIcon({
   name: 'elyra:emptyWorkflow',
   svgstr: emptyWorkflowSvg

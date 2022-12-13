@@ -1,9 +1,10 @@
-from elyra.pipeline.processor import PipelineProcessor
-from elyra.pipeline.processor import PipelineProcessorResponse
+from elyra.pipeline.processor import RuntimePipelineProcessorResponse
+from elyra.pipeline.processor import RuntimePipelineProcessor
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.pipeline.validation import PipelineValidationManager
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.parser import PipelineParser
+from elyra.metadata.schemaspaces import Runtimes
 from pathlib import Path
 from yaml.resolver import BaseResolver
 from ruamel.yaml import YAML
@@ -14,9 +15,10 @@ import json
 import re
 import os
 import zipfile
+import requests
 
 
-class WfpPipelineProcessor(PipelineProcessor):
+class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     _type = RuntimeProcessorType.WORKFLOW_PIPELINES
     _name = "wfp"
@@ -120,7 +122,7 @@ class WfpPipelineProcessor(PipelineProcessor):
                     event_field["s3"] = {}
                 event_field["s3"][node["app_data"]["label"].lstrip()] = {
                     "bucket": {
-                        "name": self._widget_value_str(node["app_data"]["component_parameters"]["bucket_name"])
+                        "name": self._widget_value_str(node["app_data"]["component_parameters"]["object"]["bucket_name"])
                     },
                     "eventFilter": {
                         "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"]["object"],
@@ -219,11 +221,11 @@ class WfpPipelineProcessor(PipelineProcessor):
                     elif key == "exit_parameters":
                         exit_parameters = []
                         for exit_item in node["app_data"]["component_parameters"][key]:
-                            temp_value = init_item["value"]["value"]
-                            if init_item["value"]["value"].isdigit():
-                                temp_value = int(init_item["value"]["value"])
-                            elif "workflow.parameters" in init_item["value"]["value"]:
-                                temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
+                            temp_value = exit_item["value"]["value"]
+                            if exit_item["value"]["value"].isdigit():
+                                temp_value = int(exit_item["value"]["value"])
+                            elif "workflow.parameters" in exit_item["value"]["value"]:
+                                temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
 
                             temp_exit = {"name": exit_item["name"], "value": temp_value,
                                          "description": exit_item["description"]}
@@ -509,15 +511,11 @@ class WfpPipelineProcessor(PipelineProcessor):
                 parent_path, name = os.path.split(fn)
                 zf.write(fn, arcname=name)
     
-    async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool):
+    async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool, upload: bool):
         nodes = node_json["pipelines"][0]["nodes"]
         app_data_properties = node_json["pipelines"][0]["app_data"]["properties"]
         name = Path(str(export_path)).stem
-        events = {}
-        triggers = {}
-        parameters_field = {}
-        init_field = {}
-        exit_field = {}
+        parameters_field = []
         file_list = []
         runtime_config = node_json["pipelines"][0]["app_data"]["runtime_config"]
         if app_data_properties.__contains__("input_parameters"):
@@ -539,17 +537,22 @@ class WfpPipelineProcessor(PipelineProcessor):
         file_list.append(save_path)
         zip_file_name = save_path.replace(".yaml", ".zip")
         self.file2zip(zip_file_name, file_list)
+        runtime_configuration = self._get_metadata_configuration(
+            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=runtime_config
+        )
+        api_endpoint = runtime_configuration.metadata.get("api_endpoint")
+        if upload:
+            await self.upload(zip_file_name, api_endpoint)
         return zip_file_name
     
-    async def upload(self, filePath: str, ip: str, port: str):
-        url = "http://" + ip + ":" + port + "/apis/v1beta1/workflows/upload"
+    async def upload(self, filePath: str, api_endpoint: str):
+        url = api_endpoint + "/apis/v1beta1/workflows/upload"
         files = {'uploadfile': open(filePath, 'rb')}
-        values = {'name': 'test', 'description': '111'}
-        r = requests.post(url, files=files, params=values)
-        print(r.text)
+        values = {'name': 'wq', 'description': '111'}
+        result = requests.post(url, files=files, params=values)
+        print(result)
 
-
-class WfpPipelineProcessorResponse(PipelineProcessorResponse):
+class WfpPipelineProcessorResponse(RuntimePipelineProcessorResponse):
 
     _type = RuntimeProcessorType.WORKFLOW_PIPELINES
     _name = "wfp"
