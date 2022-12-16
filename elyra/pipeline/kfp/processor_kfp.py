@@ -410,7 +410,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # Since pipeline_export_path may be relative to the notebook directory, ensure
         # we're using its absolute form.
         absolute_pipeline_export_path = get_absolute_path(self.root_dir, pipeline_export_path)
-
         runtime_configuration = self._get_metadata_configuration(
             schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=pipeline.runtime_config
         )

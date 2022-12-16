@@ -110,6 +110,11 @@ class ValidationResponse(object):
     def to_json(self):
         return self._response
 
+    def update_message(self, data: Dict):
+        for issue in self._response["issues"]:
+            for key,value in data.items():
+                issue["data"][key] = value
+
 
 class PipelineValidationManager(SingletonConfigurable):
     def __init__(self, **kwargs):
@@ -148,11 +153,12 @@ class PipelineValidationManager(SingletonConfigurable):
         # of 'runtime' and 'runtime_type' obtained from 'runtime_config'.  We may want to move this
         # into PipelineDefinition, but then parsing tests have issues because parsing (tests) assume
         # no validation has been applied to the pipeline.
-        runtime_config = primary_pipeline.runtime_config
-        if runtime_config is None:
-            runtime_config = "local"
+        # runtime_config = primary_pipeline.runtime_config
+        # if runtime_config is None:
+        #     runtime_config = "local"
 
-        pipeline_runtime = PipelineValidationManager._determine_runtime(runtime_config)
+        # pipeline_runtime = PipelineValidationManager._determine_runtime(runtime_config)
+        pipeline_runtime = "kfp"
         if PipelineProcessorManager.instance().is_supported_runtime(pipeline_runtime):
             # Set the runtime since its derived from runtime_config and valid
             primary_pipeline.set("runtime", pipeline_runtime)
@@ -166,7 +172,8 @@ class PipelineValidationManager(SingletonConfigurable):
 
         self._validate_pipeline_structure(pipeline_definition=pipeline_definition, response=response)
 
-        pipeline_type = PipelineValidationManager._determine_runtime_type(runtime_config)
+        # pipeline_type = PipelineValidationManager._determine_runtime_type(runtime_config)
+        pipeline_type = "KUBEFLOW_PIPELINES"
         await self._validate_compatibility(
             pipeline_definition=pipeline_definition,
             pipeline_type=pipeline_type,

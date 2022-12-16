@@ -591,10 +591,10 @@ class PipelineDefinition(object):
                         input_parameter_names = []
                         for input_parameter in primary_pipeline["app_data"]["properties"]["pipeline_defaults"]["input_parameters"]:
                             if "name" not in input_parameter:
-                                validation_issues.append("The 'Parameters Name' field of pipeline input parameters cannot be empty.")
+                                validation_issues.append("The 'Parameter Name' field of pipeline input parameters cannot be empty.")
                             else:
                                 if input_parameter["name"] in input_parameter_names:
-                                    validation_issues.append("The 'Parameters Name' field of pipeline input parameters cannot be duplicate.")
+                                    validation_issues.append("The 'Parameter Name' field of pipeline input parameters cannot be duplicate.")
                                 else:
                                     input_parameter_names.append(input_parameter["name"])
                             

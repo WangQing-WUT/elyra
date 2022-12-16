@@ -13,7 +13,7 @@
 				{% if  component.name == "Dataset Event" %}
 				"dataset_name": {
 					"type": "array",
-					"title": "Dataset Name",
+					"title": "Dataset Names",
 					"description": "Dataset name.",
 					"items": {
 						"type": "object",
@@ -56,8 +56,8 @@
 				},
 				"event_filter": {
 					"type": "array",
-					"title": "Dataset Event Filter",
-					"description": "Dataset event filter.",
+					"title": "Dataset Event Filters",
+					"description": "Dataset event filters.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -232,8 +232,8 @@
 			    {% if  component.name == "Model Event" %}
 				"event_filter": {
 					"type": "array",
-					"title": "Model Event Filter",
-					"description": "Model event filter.",
+					"title": "Model Event Filters",
+					"description": "Model event filters.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -728,8 +728,8 @@
 				},
 				"event_filter": {
 					"type": "array",
-					"title": "S3 Event Filter",
-					"description": "S3 Event filter.",
+					"title": "S3 Event Filters",
+					"description": "S3 Event filters.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -848,8 +848,8 @@
 				{% if  component.name == "Pipeline Event" %}
 				"event_filter": {
 					"type": "array",
-					"title": "Pipeline Event Filter",
-					"description": "Pipeline event filter.",
+					"title": "Pipeline Event Filters",
+					"description": "Pipeline event filters.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -1098,8 +1098,8 @@
 				{% endif %}
 				{% if  component.name == "Calendar Event" %}
 				"calendar": {
-					"title": "Calendar Event Filter",
-					"description": "Calendar event filter.",
+					"title": "Calendar Event Filters",
+					"description": "Calendar event filters.",
 					"type": "object",
 					"properties": {
 						"name": {
