@@ -541,14 +541,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=runtime_config
         )
         api_endpoint = runtime_configuration.metadata.get("api_endpoint")
+        description = ""
+        if "description" in node_json["pipelines"][0]["app_data"]["properties"]:
+            description = node_json["pipelines"][0]["app_data"]["properties"]["description"]
         if upload:
-            await self.upload(zip_file_name, api_endpoint)
+            await self.upload(zip_file_name, api_endpoint, name, description)
         return zip_file_name
     
-    async def upload(self, filePath: str, api_endpoint: str):
+    async def upload(self, filePath: str, api_endpoint: str, name: str, description: str):
         url = api_endpoint + "/apis/v1beta1/workflows/upload"
         files = {'uploadfile': open(filePath, 'rb')}
-        values = {'name': 'wq', 'description': '111'}
+        values = {'name': name, 'description': description}
         result = requests.post(url, files=files, params=values)
         print(result)
 

@@ -263,19 +263,19 @@ const PipelineEditor = forwardRef(
 
         if (e.selectedObjectIds.length > 1) {
           return [
-            {
-              action: "createSuperNode",
-              label: "Create Supernode",
-              // NOTE: There is a bug if you try to create a supernode with only
-              // a comment selected. This will disable creating supernodes when
-              // the comment is right clicked on even if other nodes are
-              // selected, which is allowed. Just too lazy to loop through all
-              // selected items to determine if non comments are also selected.
-              enable: e.type !== "comment"
-            },
-            {
-              divider: true
-            },
+            // {
+            //   action: "createSuperNode",
+            //   label: "Create Supernode",
+            //   // NOTE: There is a bug if you try to create a supernode with only
+            //   // a comment selected. This will disable creating supernodes when
+            //   // the comment is right clicked on even if other nodes are
+            //   // selected, which is allowed. Just too lazy to loop through all
+            //   // selected items to determine if non comments are also selected.
+            //   enable: e.type !== "comment"
+            // },
+            // {
+            //   divider: true
+            // },
             {
               action: "cut",
               label: "Cut"
@@ -302,10 +302,10 @@ const PipelineEditor = forwardRef(
         switch (e.type) {
           case "canvas":
             return [
-              {
-                action: "newFileNode",
-                label: "New Node from File"
-              },
+              // {
+              //   action: "newFileNode",
+              //   label: "New Node from File"
+              // },
               {
                 action: "createComment",
                 label: "New Comment"
@@ -326,55 +326,138 @@ const PipelineEditor = forwardRef(
                 "filehandler"
               );
               const parameters = e.targetObject.app_data?.component_parameters;
-
-              return [
-                {
-                  action: "openFile",
-                  label: filenameRef
-                    ? "Open File"
-                    : "Open Component Definition",
-                  // NOTE: This only checks if the string is empty, but we
-                  // should verify the file exists.
-                  enable:
-                    filenameRef === undefined ||
-                    (parameters?.[filenameRef] !== undefined &&
-                      parameters?.[filenameRef].trim() !== "")
-                },
-                {
-                  action: "properties",
-                  label: "Open Properties"
-                },
-                {
-                  divider: true
-                },
-                {
-                  action: "createSuperNode",
-                  label: "Create Supernode"
-                },
-                {
-                  divider: true
-                },
-                {
-                  action: "cut",
-                  label: "Cut"
-                },
-                {
-                  action: "copy",
-                  label: "Copy"
-                },
-                {
-                  divider: true
-                },
-                {
-                  action: "disconnectNode",
-                  label: "Disconnect",
-                  enable: canDisconnect
-                },
-                {
-                  action: "deleteSelectedObjects",
-                  label: "Delete"
-                }
-              ];
+              const op = e.targetObject.op;
+              if (op.indexOf("execute") != -1 || op.indexOf("catalog") != -1) {
+                return [
+                  {
+                    action: "openFile",
+                    label: filenameRef
+                      ? "Open File"
+                      : "Open Component Definition",
+                    // NOTE: This only checks if the string is empty, but we
+                    // should verify the file exists.
+                    enable:
+                      filenameRef === undefined ||
+                      (parameters?.[filenameRef] !== undefined &&
+                        parameters?.[filenameRef].trim() !== "")
+                  },
+                  {
+                    action: "properties",
+                    label: "Open Properties"
+                  },
+                  // {
+                  //   divider: true
+                  // },
+                  // {
+                  //   action: "createSuperNode",
+                  //   label: "Create Supernode"
+                  // },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "cut",
+                    label: "Cut"
+                  },
+                  {
+                    action: "copy",
+                    label: "Copy"
+                  },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "disconnectNode",
+                    label: "Disconnect",
+                    enable: canDisconnect
+                  },
+                  {
+                    action: "deleteSelectedObjects",
+                    label: "Delete"
+                  }
+                ];
+              } else if (
+                op.indexOf("pipeline_trigger") != -1 ||
+                op.indexOf("init") != -1 ||
+                op.indexOf("exit") != -1
+              ) {
+                return [
+                  {
+                    action: "editPipeline",
+                    label: "Edit Pipeline",
+                    enable:
+                      (parameters?.template_name !== undefined &&
+                        parameters?.template_name.substring(
+                          parameters?.template_name.lastIndexOf(".") + 1
+                        ) == "pipeline") ||
+                      (parameters?.exit_pipeline !== undefined &&
+                        parameters?.exit_pipeline.substring(
+                          parameters?.exit_pipeline.lastIndexOf(".") + 1
+                        ) == "pipeline") ||
+                      (parameters?.init_pipeline !== undefined &&
+                        parameters?.init_pipeline.substring(
+                          parameters?.init_pipeline.lastIndexOf(".") + 1
+                        ) == "pipeline")
+                  },
+                  {
+                    action: "properties",
+                    label: "Open Properties"
+                  },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "cut",
+                    label: "Cut"
+                  },
+                  {
+                    action: "copy",
+                    label: "Copy"
+                  },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "disconnectNode",
+                    label: "Disconnect",
+                    enable: canDisconnect
+                  },
+                  {
+                    action: "deleteSelectedObjects",
+                    label: "Delete"
+                  }
+                ];
+              } else {
+                return [
+                  {
+                    action: "properties",
+                    label: "Open Properties"
+                  },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "cut",
+                    label: "Cut"
+                  },
+                  {
+                    action: "copy",
+                    label: "Copy"
+                  },
+                  {
+                    divider: true
+                  },
+                  {
+                    action: "disconnectNode",
+                    label: "Disconnect",
+                    enable: canDisconnect
+                  },
+                  {
+                    action: "deleteSelectedObjects",
+                    label: "Delete"
+                  }
+                ];
+              }
             }
             if (e.targetObject.type === "super_node") {
               return [
@@ -426,16 +509,16 @@ const PipelineEditor = forwardRef(
             ];
           case "comment":
             return [
-              {
-                action: "createSuperNode",
-                label: "Create Supernode",
-                // NOTE: There is a bug if you try to create a supernode with only
-                // a comment selected.
-                enable: false
-              },
-              {
-                divider: true
-              },
+              // {
+              //   action: "createSuperNode",
+              //   label: "Create Supernode",
+              //   // NOTE: There is a bug if you try to create a supernode with only
+              //   // a comment selected.
+              //   enable: false
+              // },
+              // {
+              //   divider: true
+              // },
               {
                 action: "cut",
                 label: "Cut"
@@ -519,6 +602,12 @@ const PipelineEditor = forwardRef(
       async (e: CanvasEditEvent) => {
         let payload;
         let type = e.editType;
+        if (e.editType === "editPipeline") {
+          payload =
+            e.targetObject.app_data?.component_parameters?.template_name ||
+            e.targetObject.app_data?.component_parameters?.exit_pipeline ||
+            e.targetObject.app_data?.component_parameters?.init_pipeline;
+        }
         if (e.editType === "openFile") {
           const filenameRef = controller.current.resolveParameterRef(
             e.targetObject.op,

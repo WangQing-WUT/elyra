@@ -891,6 +891,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops
     ):
         operation = pipeline.operations[node]
+        name = operation.name
         target_ops[operation.id] = "branch"
         component_params = operation.component_params
         branch_parameter1 = self._parse_branch_parameter(
@@ -905,7 +906,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         )
         operate = component_params["branch_conditions"]["operate"]
 
-        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2)):
+        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
             self._loop(
                 args,
                 "",

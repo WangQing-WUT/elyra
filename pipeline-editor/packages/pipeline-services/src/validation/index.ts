@@ -199,7 +199,7 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
         const rExp: RegExp = /^[a-z][a-z0-9-]*[a-z0-9]$/;
         if (!rExp.test(nodeLabel)) {
           problems.push({
-            message: `The property 'Name' on node '${node.app_data.ui_data.label}' is invalid: The field can only contain lowercase letters, numbers, '_' And '-'.`,
+            message: `The property 'Name' on node '${node.app_data.ui_data.label}' is invalid: The field can only contain lowercase letters, numbers and '-'.`,
             path,
             info: {
               type: "invalidProperty",
@@ -207,7 +207,7 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
               nodeID: node.id,
               property: "Name",
               message:
-                "The field can only contain lowercase letters, numbers, '_' And '-'"
+                "The field can only contain lowercase letters, numbers and '-'"
             }
           });
         }

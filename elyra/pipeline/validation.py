@@ -462,22 +462,37 @@ class PipelineValidationManager(SingletonConfigurable):
         :param pipeline_runtime: the pipeline runtime selected
         :return:
         """
-        if node.op.startswith("branch") or node.op.startswith("loop"):
+        parsed_parameters = []
+        component_property_dict = {}
+        if node.op.startswith("branch"):
+            parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
+            component_property_dict = {
+                "properties": {
+                    "component_parameters": {
+                        "required": parsed_parameters
+                    }
+                }
+            }
+        
+        elif node.op.startswith("loop"):
             return
+        else:
         # Full dict of properties for the operation e.g. current params, optionals etc
-        component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
-        current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
+            component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
+            current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
 
-        for param in node.elyra_owned_properties:
-            param_required = self._is_required_property(component_property_dict, param)
-            self._validate_elyra_owned_property(node.id, node.label, node, param, response, param_required)
+            for param in node.elyra_owned_properties:
+                param_required = self._is_required_property(component_property_dict, param)
+                self._validate_elyra_owned_property(node.id, node.label, node, param, response, param_required)
 
-        # List of just the current parameters for the component
-        resources = ['cpu', 'gpu', 'memory', 'npu310', 'npu910', 'node_selector']
-        parsed_parameters = [p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources]
+            # List of just the current parameters for the component
+            resources = ['cpu', 'gpu', 'memory', 'npu310', 'npu910', 'node_selector']
+            parsed_parameters = [p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources]
         for default_parameter in parsed_parameters:
             node_param = node.get_component_parameter(default_parameter)
-            if not node_param or node_param.get("value") is None:
+            if node.op.startswith("branch"):
+                node_param = node.get_component_parameter("branch_conditions").get(default_parameter)
+            if not node_param or (type(node_param) is not str and node_param.get("value") is None):
                 if self._is_required_property(component_property_dict, default_parameter):
                     response.add_message(
                         severity=ValidationSeverity.Error,
@@ -485,8 +500,8 @@ class PipelineValidationManager(SingletonConfigurable):
                         message="Node is missing a value for a required property.",
                         data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                     )
-            else:
-                if node_param.get("widget") == "inputpath":
+            elif type(node_param) is not str:
+                if  node_param.get("widget") == "inputpath":
                     # The value of any component property with widget type `inputpath` will be a
                     # dictionary of two keys:
                     #   "value": the node ID of the parent node containing the output
@@ -545,6 +560,44 @@ class PipelineValidationManager(SingletonConfigurable):
                             message="Node is missing a value for a required property.",
                             data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                         )
+                elif node_param.get("widget") == "string":
+                    if node_param.get("value") == "":
+                        response.add_message(
+                            severity=ValidationSeverity.Error,
+                            message_type="invalidNodeProperty",
+                            message="Node is missing a value for a required property.",
+                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        )
+                elif node_param.get("widget") == "enum":
+                    if node_param.get("value") == "":
+                        response.add_message(
+                            severity=ValidationSeverity.Error,
+                            message_type="invalidNodeProperty",
+                            message="Node is missing a value for a required property.",
+                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        )
+                    else:
+                        pipelines = pipeline_definition.pipelines[0]
+                        pipeline_defaults = pipelines.get_property("pipeline_defaults")
+                        if pipeline_defaults and "input_parameters" in pipeline_defaults:
+                            input_parameters = []
+                            for item in pipeline_defaults["input_parameters"]:
+                                input_parameters.append(item["name"])
+                            if node_param.get("value") not in input_parameters:
+                                response.add_message(
+                                    severity=ValidationSeverity.Error,
+                                    message_type="invalidNodeProperty",
+                                    message="Pipeline input parameters does not contain '" + node_param.get("value") + "'.",
+                                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                                )
+                        else:
+                            response.add_message(
+                                severity=ValidationSeverity.Error,
+                                message_type="invalidNodeProperty",
+                                message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
+                                data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                            )
+
 
     def _validate_container_image_name(
         self, node_id: str, node_label: str, image_name: str, response: ValidationResponse

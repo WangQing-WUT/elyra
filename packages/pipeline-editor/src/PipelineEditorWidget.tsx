@@ -976,6 +976,15 @@ const PipelineWrapper: React.FC<IProps> = ({
             `elyra-metadata:${COMPONENT_CATALOGS_SCHEMASPACE}`
           );
           break;
+        case 'editPipeline':
+          console.log('editPipeline');
+          console.log(contextRef.current.path);
+          console.log(args);
+          commands.execute(commandIDs.openDocManager, {
+            path: args.payload,
+            factory: 'Pipeline Editor'
+          });
+          break;
         case 'openFile':
           commands.execute(commandIDs.openDocManager, {
             path: PipelineService.getWorkspaceRelativeNodePath(
