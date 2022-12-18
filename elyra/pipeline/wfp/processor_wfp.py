@@ -47,27 +47,33 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         file_list.append(save_path)
     
     async def export_pipeline(self, path, runtime_config, root_dir, parent, file_list):
-        pipeline_file = open(path, 'r', encoding='UTF-8')
-        pipeline_definition = json.load(pipeline_file)
-        pipeline_definition["pipelines"][0]["app_data"]["runtime_config"] = runtime_config
-        pipeline_definition["pipelines"][0]["app_data"]["runtime"] = "kfp"
-        pipeline_definition["pipelines"][0]["app_data"]["name"] = Path(str(path)).stem
-        pipeline_definition["pipelines"][0]["app_data"]["source"] = path
-        
-        response = await PipelineValidationManager.instance().validate(pipeline_definition)
-        
-        if not response.has_fatal:
-            pipeline = PipelineParser(root_dir=root_dir, parent=parent).parse(
-                pipeline_definition
-            )
-            await PipelineProcessorManager.instance().export(
-                pipeline, "yaml", path.replace(".pipeline", ".yaml"), True
-            )
-            pipeline_yaml = open(path.replace(".pipeline", ".yaml"), "r", encoding='utf-8')
+        response = ValidationResponse()
+        if path.endswith(".pipeline"):
+            pipeline_file = open(path, 'r', encoding='UTF-8')
+            pipeline_definition = json.load(pipeline_file)
+            pipeline_definition["pipelines"][0]["app_data"]["runtime_config"] = runtime_config
+            pipeline_definition["pipelines"][0]["app_data"]["runtime"] = "kfp"
+            pipeline_definition["pipelines"][0]["app_data"]["name"] = Path(str(path)).stem
+            pipeline_definition["pipelines"][0]["app_data"]["source"] = path
+            
+            response = await PipelineValidationManager.instance().validate(pipeline_definition)
+            
+            if not response.has_fatal:
+                pipeline = PipelineParser(root_dir=root_dir, parent=parent).parse(
+                    pipeline_definition
+                )
+                await PipelineProcessorManager.instance().export(
+                    pipeline, "yaml", path.replace(".pipeline", ".yaml"), True
+                )
+                pipeline_yaml = open(path.replace(".pipeline", ".yaml"), "r", encoding='utf-8')
+                resource = pipeline_yaml.read()
+                self.create_pipeline_template(path.replace(".pipeline", ".yaml"), resource, file_list)
+                # os.remove(path.replace(".pipeline", ".yaml"))
+        elif path.endswith(".yaml"):
+            pipeline_yaml = open(path, "r", encoding='utf-8')
             resource = pipeline_yaml.read()
-            self.create_pipeline_template(path.replace(".pipeline", ".yaml"), resource, file_list)
-            os.remove(path.replace(".pipeline", ".yaml"))
-
+            self.create_pipeline_template(path, resource, file_list)
+        
         return response
 
     @staticmethod
@@ -97,7 +103,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     async def _component_parse(self, root_dir, parent, node_json: dict, runtime_config, export_path, file_list):
         # key: catalog type
         # value: workflow.yaml field
-        response = ValidationResponse()
+        response = ValidationResponse(runtime="WORKFLOW")
         init_field = {}
         exit_field = {}
         event_field = {}
@@ -534,7 +540,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 zf.write(fn, arcname=name)
     
     async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool, upload: bool):
-        response = ValidationResponse()
+        response = ValidationResponse(runtime="WORKFLOW")
         zip_file_name = ""
         nodes = node_json["pipelines"][0]["nodes"]
         app_data_properties = node_json["pipelines"][0]["app_data"]["properties"]
@@ -571,7 +577,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         return zip_file_name, response
     
     async def upload(self, filePath: str, runtime_config: str, name: str, description: str):
-        response = ValidationResponse()
+        response = ValidationResponse(runtime="WORKFLOW")
         runtime_configuration = self._get_metadata_configuration(
             schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=runtime_config
         )
@@ -591,12 +597,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="uploadFailed",
                 message=message,
+                runtime="WORKFLOW",
                 data={"status_code": result.status_code}
             )
         return response
 
     def _validate(self, nodes, input_parameters):
-        response = ValidationResponse()
+        response = ValidationResponse(runtime="WORKFLOW")
         name = {}
         workflow_input_parameters = []
         for parameter in input_parameters:
@@ -605,6 +612,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="The 'Parameter Name' field of workflow input parameters cannot be empty.",
+                    runtime="WORKFLOW",
                 )
             else:
                 workflow_input_parameters.append("workflow.parameters." + parameter["name"])
@@ -653,6 +661,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Workflow input parameters do not contain '" + s3_object_prefix["value"] + "'.",
+                    runtime="WORKFLOW",
                     data={
                         "nodeType": node_type,
                         "nodeID": node_id,
@@ -666,6 +675,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Workflow input parameters do not contain '" + s3_object_suffix["value"] + "'.",
+                    runtime="WORKFLOW",
                     data={
                         "nodeType": node_type,
                         "nodeID": node_id,
@@ -679,6 +689,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": node_type,
                     "nodeID": node_id,
@@ -710,6 +721,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": node_type,
                     "nodeID": node_id,
@@ -727,6 +739,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": node_type,
                     "nodeID": node_id,
@@ -757,10 +770,22 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         pass
     
     def _validate_init(self, node, workflow_input_parameters, name, response):
-        pass
+        node_type = "Init"
+        node_id = node["id"]
+        node_name = node["app_data"]["label"]
+        if "init_parameters" not in node["app_data"]["component_parameters"]:
+            node["app_data"]["component_parameters"]["init_parameters"] = []
+        init_parameters = node["app_data"]["component_parameters"]["init_parameters"]
+        self._validate_init_exit(init_parameters, node_type, node_id, node_name, "Init Parameters", workflow_input_parameters, response)
     
     def _validate_exit(self, node, workflow_input_parameters, name, response):
-        pass
+        node_type = "Exit"
+        node_id = node["id"]
+        node_name = node["app_data"]["label"]
+        if "exit_parameters" not in node["app_data"]["component_parameters"]:
+            node["app_data"]["component_parameters"]["exit_parameters"] = []
+        exit_parameters = node["app_data"]["component_parameters"]["exit_parameters"]
+        self._validate_init_exit(exit_parameters, node_type, node_id, node_name, "Exit Parameters", workflow_input_parameters, response)
     
     def _validate_node_name(self, node, name, response):
         if node["app_data"]["label"] in name:
@@ -768,6 +793,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeName",
                 message="Workflow component name fields cannot be the same",
+                runtime="WORKFLOW",
                 data={
                     "duplicateName": node["app_data"]["label"],
                     "node1": name[node["app_data"]["label"]],
@@ -783,6 +809,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": nodeType,
                     "nodeID": nodeID,
@@ -796,6 +823,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Workflow input parameters do not contain '" + property["value"] + "'.",
+                    runtime="WORKFLOW",
                     data={
                         "nodeType": nodeType,
                         "nodeID": nodeID,
@@ -810,6 +838,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": nodeType,
                     "nodeID": nodeID,
@@ -823,6 +852,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": nodeType,
                     "nodeID": nodeID,
@@ -836,6 +866,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": nodeType,
                     "nodeID": nodeID,
@@ -850,6 +881,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Workflow input parameters do not contain '" + property["value"]["value"] + "'.",
+                    runtime="WORKFLOW",
                     data={
                         "nodeType": nodeType,
                         "nodeID": nodeID,
@@ -865,6 +897,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNode",
                 message="This trigger node has no links.",
+                runtime="WORKFLOW",
                 data={
                     "nodeType": nodeType,
                     "nodeID": nodeID,
@@ -875,7 +908,49 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_trigger_from(self):
         pass
 
-    
+    def _validate_init_exit(self, parameters, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):
+        for parameter in parameters:
+            if "name" not in parameter:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodePropertyValue",
+                    message="Node is missing a value for a required property.",
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": nodeType,
+                        "nodeID": nodeID,
+                        "nodeName": nodeName,
+                        "propertyName": "Name of " + propertyName,
+                    },
+                )
+            if "description" not in parameter:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodePropertyValue",
+                    message="Node is missing a value for a required property.",
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": nodeType,
+                        "nodeID": nodeID,
+                        "nodeName": nodeName,
+                        "propertyName": "Description of " + propertyName,
+                    },
+                )
+            if parameter["value"]["widget"] == "enum":
+                if parameter["value"]["value"] not in workflow_input_parameters:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodePropertyValue",
+                        message="Workflow input parameters do not contain '" + parameters["value"]["value"] + "'.",
+                        runtime="WORKFLOW",
+                        data={
+                            "nodeType": nodeType,
+                            "nodeID": nodeID,
+                            "nodeName": nodeName, 
+                            "propertyName": "Value of " + propertyName,
+                        },
+                    )
+            
 
 class WfpPipelineProcessorResponse(RuntimePipelineProcessorResponse):
 

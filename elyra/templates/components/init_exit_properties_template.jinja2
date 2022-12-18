@@ -2,7 +2,7 @@
     "type": "object",
     "properties": {
         "label": {
-			"title": "Name",
+			"title": "label",
 			"description": "A custom name for the node.",
 			"type": "string"
 		},
@@ -77,6 +77,9 @@
             },
             "required": ["{{component_name}}_pipeline"]
         }
+    },
+    "uihints":{
+        "label": {"ui:field": "hidden"}
     },
     "required": ["component_parameters"]
 }

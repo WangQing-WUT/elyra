@@ -153,7 +153,7 @@ class PipelineProcessorManager(SingletonConfigurable):
 
     async def get_component(self, runtime, component_id):
         processor = self.get_processor_for_runtime(runtime_name=runtime)
-
+        
         res = await asyncio.get_event_loop().run_in_executor(
             None, functools.partial(processor.get_component, component_id=component_id)
         )

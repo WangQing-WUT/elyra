@@ -52,13 +52,19 @@ class ValidationSeverity(IntEnum):
 
 
 class ValidationResponse(object):
-    def __init__(self):
+    def __init__(self, runtime: Optional[str] = "KUBEFLOW_PIPELINES"):
         self._response = {
             "title": "Elyra Pipeline Diagnostics",
             "description": "Issues discovered when parsing the pipeline",
             "issues": [],
         }
         self._has_fatal = False
+        if runtime == "WORKFLOW":
+            self._response = {
+                "title": "Workflow Diagnostics",
+                "description": "Issues discovered when parsing the workflow",
+                "issues": [],
+            }    
 
     @property
     def response(self) -> Dict:
@@ -77,6 +83,7 @@ class ValidationResponse(object):
         message_type: Optional[str] = "",
         data: Optional[Dict] = "",
         severity: ValidationSeverity = ValidationSeverity.Warning,
+        runtime: Optional[str] = "KUBEFLOW_PIPELINES"
     ):
         """
         Helper function to add a diagnostic message to the response to be sent back
@@ -94,13 +101,22 @@ class ValidationResponse(object):
         ]
 
         if severity in valid_severity_levels:
-            diagnostic = {
-                "severity": severity.value,
-                "source": "Elyra Pipeline Validation Service",
-                "type": message_type,
-                "message": message,
-                "data": data,
-            }
+            if runtime == "WORKFLOW":
+                diagnostic = {
+                    "severity": severity.value,
+                    "source": "Workflow Validation Service",
+                    "type": message_type,
+                    "message": message,
+                    "data": data,
+                }
+            else:
+                diagnostic = {
+                    "severity": severity.value,
+                    "source": "Elyra Pipeline Validation Service",
+                    "type": message_type,
+                    "message": message,
+                    "data": data,
+                }
             if diagnostic not in self._response["issues"]:
                 self._response["issues"].append(diagnostic)
 
@@ -153,12 +169,18 @@ class PipelineValidationManager(SingletonConfigurable):
         # of 'runtime' and 'runtime_type' obtained from 'runtime_config'.  We may want to move this
         # into PipelineDefinition, but then parsing tests have issues because parsing (tests) assume
         # no validation has been applied to the pipeline.
-        # runtime_config = primary_pipeline.runtime_config
-        # if runtime_config is None:
-        #     runtime_config = "local"
 
-        # pipeline_runtime = PipelineValidationManager._determine_runtime(runtime_config)
-        pipeline_runtime = "kfp"
+        runtime_config = primary_pipeline.runtime_config
+        pipeline_runtime = ""
+        pipeline_type = ""
+        if runtime_config is None:
+            runtime_config = "local"
+            pipeline_runtime = PipelineValidationManager._determine_runtime(runtime_config)
+            pipeline_type = PipelineValidationManager._determine_runtime_type(runtime_config)
+        else:
+            pipeline_runtime = "kfp"
+            pipeline_type = "KUBEFLOW_PIPELINES"
+            
         if PipelineProcessorManager.instance().is_supported_runtime(pipeline_runtime):
             # Set the runtime since its derived from runtime_config and valid
             primary_pipeline.set("runtime", pipeline_runtime)
@@ -172,8 +194,6 @@ class PipelineValidationManager(SingletonConfigurable):
 
         self._validate_pipeline_structure(pipeline_definition=pipeline_definition, response=response)
 
-        # pipeline_type = PipelineValidationManager._determine_runtime_type(runtime_config)
-        pipeline_type = "KUBEFLOW_PIPELINES"
         await self._validate_compatibility(
             pipeline_definition=pipeline_definition,
             pipeline_type=pipeline_type,
@@ -918,12 +938,14 @@ class PipelineValidationManager(SingletonConfigurable):
         # list of components associated with the pipeline runtime being used
         component_list = await PipelineProcessorManager.instance().get_components(pipeline_runtime)
         components = ComponentCache.to_canvas_palette(component_list)
-
+    
         for category in components["categories"]:
             for node_type in category["node_types"]:
                 if node_op == node_type["op"]:
-                    component = await PipelineProcessorManager.instance().get_component(pipeline_runtime, node_op)
-                    if not component:  # component is generic; retrieve using static method
+                    component = None
+                    if pipeline_runtime != "local":
+                        component = await PipelineProcessorManager.instance().get_component(pipeline_runtime, node_op)
+                    else:  # component is generic; retrieve using static method
                         component = ComponentCache.get_generic_component_from_op(node_op)
                     component_properties = ComponentCache.to_canvas_properties(component)
                     return component_properties

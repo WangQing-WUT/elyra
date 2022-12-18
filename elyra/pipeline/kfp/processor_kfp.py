@@ -692,6 +692,12 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 }
                 container_op = factory_function(**sanitized_component_params)
                 container_op.set_display_name(operation.name)
+
+                if "env_vars" in operation.elyra_params:
+                    env_vars = operation.elyra_params["env_vars"].to_dict()
+                    if env_vars:
+                        for key, value in env_vars.items():
+                            container_op.add_env_variable(V1EnvVar(name=key, value=value))
                 
                 if "cpu" in resources:
                     container_op.set_cpu_request(cpu=str(resources["cpu"]))

@@ -144,6 +144,7 @@ class PipelineParser(LoggingConfigurable):
 
         # Split properties into component- and Elyra-owned
         component_params, elyra_params = node.get("component_parameters", {}), {}
+
         for param_id in list(component_params.keys()):
             if param_id in node.elyra_owned_properties:
                 elyra_params[param_id] = node.pop_component_parameter(param_id)

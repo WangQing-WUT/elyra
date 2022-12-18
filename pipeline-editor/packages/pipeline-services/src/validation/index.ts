@@ -182,7 +182,9 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
       nodeOp.search("execute") == -1 &&
       nodeOp.search("catalog") == -1 &&
       nodeOp.search("loop") == -1 &&
-      nodeOp.search("branch") == -1
+      nodeOp.search("branch") == -1 &&
+      nodeOp.search("init") == -1 &&
+      nodeOp.search("exit") == -1
     ) {
       if (!nodeLabel) {
         problems.push({

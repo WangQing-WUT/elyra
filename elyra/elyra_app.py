@@ -134,53 +134,59 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
         SchemaManager.instance(parent=self)
 
         metadata_manager = MetadataManager(schemaspace="component-catalogs")
+        metadatas = metadata_manager.get_all()
+        metadata_names = []
+        for metadata in metadatas:
+            metadata_names.append(metadata.to_dict()["display_name"])
         for category in os.listdir(DEFAULT_WORKFLOW_COMPONENT_PATH):
-            abs_path = DEFAULT_WORKFLOW_COMPONENT_PATH + "/" + category
-            if os.path.isdir(abs_path):
-                components_list = os.listdir(abs_path)
-                for i in range (len(components_list)):
-                    components_list[i] = abs_path+ "/" + components_list[i]
-                component_json = {
-                    "display_name": category,
-                    "metadata": {
+            if category not in metadata_names:
+                abs_path = DEFAULT_WORKFLOW_COMPONENT_PATH + "/" + category
+                if os.path.isdir(abs_path):
+                    components_list = os.listdir(abs_path)
+                    for i in range (len(components_list)):
+                        components_list[i] = abs_path+ "/" + components_list[i]
+                    component_json = {
                         "display_name": category,
-                        "runtime_type": "WORKFLOW_PIPELINES",
-                        "categories": [
-                            category
-                        ],
-                        "paths": components_list
-                    },
-                    "schema_name": "local-file-catalog"
-                }
-                instance = Metadata(**component_json)
-                try:
-                    metadata_manager.create(instance.name, instance)
-                except:
-                    metadata_manager.update(instance.name, instance)
+                        "metadata": {
+                            "display_name": category,
+                            "runtime_type": "WORKFLOW_PIPELINES",
+                            "categories": [
+                                category
+                            ],
+                            "paths": components_list
+                        },
+                        "schema_name": "local-file-catalog"
+                    }
+                    instance = Metadata(**component_json)
+                    try:
+                        metadata_manager.create(instance.name, instance)
+                    except:
+                        metadata_manager.update(instance.name, instance)
 
         for category in os.listdir(DEFAULT_KUBEFLOW_COMPONENT_PATH):
-            abs_path = DEFAULT_KUBEFLOW_COMPONENT_PATH + "/" + category
-            if os.path.isdir(abs_path):
-                components_list = os.listdir(abs_path)
-                for i in range (len(components_list)):
-                    components_list[i] = abs_path+ "/" + components_list[i]
-                component_json = {
-                    "display_name": category,
-                    "metadata": {
+            if category not in metadata_names:
+                abs_path = DEFAULT_KUBEFLOW_COMPONENT_PATH + "/" + category
+                if os.path.isdir(abs_path):
+                    components_list = os.listdir(abs_path)
+                    for i in range (len(components_list)):
+                        components_list[i] = abs_path+ "/" + components_list[i]
+                    component_json = {
                         "display_name": category,
-                        "runtime_type": "KUBEFLOW_PIPELINES",
-                        "categories": [
-                            category
-                        ],
-                        "paths": components_list
-                    },
-                    "schema_name": "local-file-catalog"
-                }
-                instance = Metadata(**component_json)
-                try:
-                    metadata_manager.create(instance.name, instance)
-                except:
-                    metadata_manager.update(instance.name, instance)
+                        "metadata": {
+                            "display_name": category,
+                            "runtime_type": "KUBEFLOW_PIPELINES",
+                            "categories": [
+                                category
+                            ],
+                            "paths": components_list
+                        },
+                        "schema_name": "local-file-catalog"
+                    }
+                    instance = Metadata(**component_json)
+                    try:
+                        metadata_manager.create(instance.name, instance)
+                    except:
+                        metadata_manager.update(instance.name, instance)
         # ------ Read Components ------ 
 
     def initialize_templates(self):

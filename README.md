@@ -1,6 +1,6 @@
 
 
-# Workflow Editor
+# Elyra
 
 ## Installation
 
@@ -19,7 +19,7 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 # need restart shell
 conda -h
 ```
-### Setting up Workflow Editor environment
+### Setting up Elyra environment
 * Create a new Python environment using a version that is supported by Elyra.
 ```shell
 conda create -n <env-name> python
@@ -54,22 +54,7 @@ yarn --version
 
 ### Build & Installation
 
-Issuing a make command with no task specified will provide a list of the currently supported tasks.
-```shell
-clean                          Make a clean source tree and uninstall extensions
-container-images               Build all container images
-docs                           Build docs
-elyra-image-env                Creates a conda env consisting of the dependencies used in images
-install-all                    Build and install, including examples
-install                        Build and install
-install-examples               Install example pipeline components 
-install-server                 Build and install backend
-lint                           Run linters
-publish-container-images       Publish all container images
-release                        Build wheel file for release
-test                           Run all tests (backend, frontend and cypress integration tests)
-watch                          Watch packages. For use alongside jupyter lab --watch
-```
+
 You can build and install all Elyra packages with:
 ```shell
 make clean install

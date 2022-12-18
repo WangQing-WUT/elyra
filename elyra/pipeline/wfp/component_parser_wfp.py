@@ -151,12 +151,13 @@ class WfpComponentParser(ComponentParser):
             # If the component definition does not define a container command, log a warning.
             # See https://www.kubeflow.org/docs/components/pipelines/installation/choose-executor/#emissary-executor
             if results.get("implementation", {}).get("container", {}).get("command") is None:
-                self.log.warning(
-                    f"Component '{results['name']}' does not define a container command. "
-                    "It might fail execution on Kubeflow Pipelines installations that are "
-                    "configured to use Argo as workflow engine and emissary "
-                    "executor as workflow executor."
-                )
+                pass
+                # self.log.warning(
+                #     f"Component '{results['name']}' does not define a container command. "
+                #     "It might fail execution on Kubeflow Pipelines installations that are "
+                #     "configured to use Argo as workflow engine and emissary "
+                #     "executor as workflow executor."
+                # )
         except ValidationError as ve:
             self.log.warning(
                 f"Invalid format of YAML definition for component with identifying information: "
