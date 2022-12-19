@@ -1,6 +1,6 @@
 
 
-# Elyra
+# wfeeditor
 
 ## Installation
 
@@ -19,8 +19,8 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 # need restart shell
 conda -h
 ```
-### Setting up Elyra environment
-* Create a new Python environment using a version that is supported by Elyra.
+### Setting up wfeeditor environment
+* Create a new Python environment using a version that is supported by wfeeditor.
 ```shell
 conda create -n <env-name> python
 ```
@@ -30,12 +30,12 @@ conda activate <env-name>
 ```
 * Verify your miniconda environment
 ```shell
-python --version # should yield a version that is supported by Elyra
+python --version # should yield a version that is supported by wfeeditor
 which python     # displays current `python` path
 pip3 --version   # should be a recent version to avoid build issues
 which pip3       # displays current `pip` path
 ```
-* Install a version of Node.js that is supported by Elyra.
+* Install a version of Node.js that is supported by wfeeditor.
 ```shell
 conda install -y -c conda-forge/label/main nodejs
 ```
@@ -55,7 +55,7 @@ yarn --version
 ### Build & Installation
 
 
-You can build and install all Elyra packages with:
+You can build and install all wfeeditor packages with:
 ```shell
 make clean install
 ```
@@ -63,16 +63,16 @@ You can check that the notebook server extension was successfully installed with
 ```shell
 jupyter serverextension list
 ```
-### Starting Elyra
+### Starting wfeeditor
 Copy the runtime configuration file to the jupyter directory:
 ```shell
 cp elyra/runtime_config/* ~/.local/share/jupyter/metadata/runtime
 ```
-After verifying Elyra has been installed, start Elyra with:
+After verifying wfeeditor has been installed, start wfeeditor with:
  ```bash
 jupyter lab --allow-root
 ```
-You can use the Elyra editor according to the methods provided in the startup log below. You can use the browser to access port 8888 of the server to use the Elyra editor.For the first use, you need to enter a token, which can be obtained in the startup log.
+You can use the wfeeditor according to the methods provided in the startup log below. You can use the browser to access port 8888 of the server to use the wfeeditor.For the first use, you need to enter a token, which can be obtained in the startup log.
 ```shell
     To access the server, open this file in a browser:
         file:///root/.local/share/jupyter/runtime/jpserver-725259-open.html
