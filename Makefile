@@ -262,8 +262,8 @@ elyra-image: # Build Elyra stand-alone container image
 	cp etc/docker/elyra/requirements.txt build/docker/requirements.txt
 	@mkdir -p build/docker/elyra
 	cp dist/elyra-$(ELYRA_VERSION)-py3-none-any.whl build/docker/
-	$(CONTAINER_EXEC) buildx build \
-        --progress=plain \
+	$(CONTAINER_EXEC) build \
+     	--progress=plain \
         --output=type=docker \
 		--tag docker.io/$(ELYRA_IMAGE) \
 		--tag quay.io/$(ELYRA_IMAGE) \

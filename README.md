@@ -76,3 +76,13 @@ You can use the Elyra editor according to the methods provided in the startup lo
         http://localhost:8888/lab?token=f4315773ab321815ffe9043cd2077e12e14239d01d82f2e6
      or http://127.0.0.1:8888/lab?token=f4315773ab321815ffe9043cd2077e12e14239d01d82f2e6
 ```
+## Container image
+### Make images
+```shell
+make install
+make elyra-image
+```
+### Run images
+```shell
+chmod 777 [runtime_config.json]
+docker run -d -v [runtime_config.json]:/home/jovyan/.local/share/jupyter/metadata/runtimes -p 8888:8888 elyra/elyra:3.12.0

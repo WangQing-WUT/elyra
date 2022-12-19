@@ -26,8 +26,8 @@ ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
 COPY requirements.txt ${ELYRA_PACKAGE}* ./
 
 # Install Elyra
-RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
-
+# RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
+RUN python3 -m pip install --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
 # Install custom requirements
 RUN python3 -m pip install -r requirements.txt && rm requirements.txt
 
@@ -40,6 +40,9 @@ RUN elyra-metadata create component-catalogs \
     --categories="['examples']"
 
 # Copy Elyra entrypoint
-COPY --chmod=0755 --chown=root:root start-elyra.sh /usr/local/bin/start-elyra.sh
+COPY start-elyra.sh /usr/local/bin/start-elyra.sh
+RUN mkdir -p ~/.local/share/jupyter/metadata/runtimes
+RUN jupyter notebook --generate-config -y
+RUN echo "c.NotebookApp.token = ''" >> ~/.jupyter/jupyter_notebook_config.py
 
 CMD ["/usr/local/bin/start-elyra.sh"]
