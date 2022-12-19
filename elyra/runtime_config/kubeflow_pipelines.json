@@ -1,0 +1,21 @@
+{
+  "display_name": "Kubeflow Pipelines ",
+  "metadata": {
+    "tags": [],
+    "display_name": "Kubeflow Pipelines ",
+    "engine": "Argo",
+    "auth_type": "DEX_STATIC_PASSWORDS",
+    "api_endpoint": "http://39.104.160.208:16886/pipelines",
+    "public_api_endpoint": "http://39.104.160.208:16886/pipelines",
+    "user_namespace": "kubeflow-user-example-com",
+    "api_username": "user@example.com",
+    "api_password": "12341234",
+    "cos_auth_type": "USER_CREDENTIALS",
+    "cos_endpoint": "http://39.104.160.208:16887",
+    "cos_bucket": "test-bucket",
+    "cos_username": "minio",
+    "cos_password": "minio123",
+    "runtime_type": "KUBEFLOW_PIPELINES"
+  },
+  "schema_name": "kfp"
+}

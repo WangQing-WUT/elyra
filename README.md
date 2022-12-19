@@ -64,6 +64,10 @@ You can check that the notebook server extension was successfully installed with
 jupyter serverextension list
 ```
 ### Starting Elyra
+Copy the runtime configuration file to the jupyter directory:
+```shell
+cp elyra/runtime_config/* ~/.local/share/jupyter/metadata/runtime
+```
 After verifying Elyra has been installed, start Elyra with:
  ```bash
 jupyter lab --allow-root
@@ -84,5 +88,5 @@ make elyra-image
 ```
 ### Run images
 ```shell
-chmod 777 [runtime_config.json]
-docker run -d -v [runtime_config.json]:/home/jovyan/.local/share/jupyter/metadata/runtimes -p 8888:8888 elyra/elyra:3.12.0
+chmod 777 [runtime_config_path] [runtime_config.json]
+docker run -d -v [runtime_config_path]:/home/jovyan/.local/share/jupyter/metadata/runtimes -p 8888:8888 elyra/elyra:3.12.0
