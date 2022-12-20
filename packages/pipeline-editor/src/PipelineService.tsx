@@ -60,6 +60,10 @@ const CONTENT_TYPE_MAPPER: Map<string, ContentType> = new Map([
   ['.r', ContentType.r]
 ]);
 
+const CONTENT_TYPE_MAPPER_WORKFLOW: Map<string, ContentType> = new Map([
+  ['.pipeline', ContentType.other]
+]);
+
 export interface IRuntimeType {
   id: string;
   display_name: string;
@@ -300,10 +304,12 @@ export class PipelineService {
     });
   }
 
-  static getNodeType(filepath: string): string {
+  static getNodeType(filepath: string, runtime_type: any): string {
     const extension: string = PathExt.extname(filepath);
-    const type: string = CONTENT_TYPE_MAPPER.get(extension)!;
-
+    let type: string = CONTENT_TYPE_MAPPER.get(extension)!;
+    if (runtime_type === 'WORKFLOW_PIPELINES') {
+      type = CONTENT_TYPE_MAPPER_WORKFLOW.get(extension)!;
+    }
     // TODO: throw error when file extension is not supported?
     return type;
   }
@@ -312,8 +318,8 @@ export class PipelineService {
    * Check if a given file is allowed to be added to the pipeline
    * @param item
    */
-  static isSupportedNode(file: any): boolean {
-    if (PipelineService.getNodeType(file.path)) {
+  static isSupportedNode(file: any, type: any): boolean {
+    if (PipelineService.getNodeType(file.path, type)) {
       return true;
     } else {
       return false;

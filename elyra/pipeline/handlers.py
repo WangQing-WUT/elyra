@@ -236,6 +236,9 @@ class PipelineComponentHandler(HttpErrorMixin, APIHandler):
         # Include generic components for all runtime types
         components: List[Component] = ComponentCache.get_generic_components()
 
+        if runtime_processor_type == RuntimeProcessorType.WORKFLOW_PIPELINES:
+            components: List[Component] = []
+
         # Add additional runtime-type-specific components, if present
         components.extend(ComponentCache.instance().get_all_components(platform=runtime_processor_type))
 
@@ -285,11 +288,13 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
         with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
             if pipeline_absolute_path.endswith(".pipeline"):
                 pipeline = json.load(r)
-                pipeline_defaults = pipeline["pipelines"][0]["app_data"]["properties"]["pipeline_defaults"]
-                if "input_parameters" in pipeline_defaults:
-                    for input_parameter in pipeline_defaults["input_parameters"]:
-                        if "name" in input_parameter:
-                            result.append(input_parameter["name"])
+                properties = pipeline["pipelines"][0]["app_data"]["properties"]
+                if "pipeline_defaults" in properties:
+                    pipeline_defaults = properties["pipeline_defaults"]
+                    if "input_parameters" in pipeline_defaults:
+                        for input_parameter in pipeline_defaults["input_parameters"]:
+                            if "name" in input_parameter:
+                                result.append(input_parameter["name"])
             elif pipeline_absolute_path.endswith(".yaml"):
                 pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
                 input_parameters = pipeline["spec"]["arguments"]["parameters"]

@@ -219,13 +219,13 @@ class Component(object):
         for elyra_param in elyra_params:
             elyra_params_dict[elyra_param.property_id] = elyra_param
         sorted_list = [
-            "disable_node_caching",
             "env_vars",
             "mounted_volumes",
             "kubernetes_secrets",
             "kubernetes_tolerations",
             "kubernetes_pod_labels",
-            "kubernetes_pod_annotations"
+            "kubernetes_pod_annotations",
+            "disable_node_caching"
         ]
         elyra_params = []
         for item in sorted_list:

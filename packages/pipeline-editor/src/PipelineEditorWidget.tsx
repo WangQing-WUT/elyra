@@ -192,6 +192,8 @@ interface IProps {
   widgetId?: string;
 }
 
+let pipeline_trigger_file_path = '';
+
 const PipelineWrapper: React.FC<IProps> = ({
   context,
   browserFactory,
@@ -312,6 +314,12 @@ const PipelineWrapper: React.FC<IProps> = ({
   }, [runtimeDisplayName]);
 
   const onChange = useCallback((pipelineJson: any): void => {
+    if (pipeline_trigger_file_path) {
+      let nodes = pipelineJson?.pipelines?.[0]?.nodes;
+      let pipeline_trigger_node = nodes[nodes.length - 1];
+      pipeline_trigger_node.app_data.component_parameters.template_name = pipeline_trigger_file_path;
+      pipeline_trigger_file_path = '';
+    }
     const removeNullValues = (data: any, removeEmptyString?: boolean): void => {
       for (const key in data) {
         if (
@@ -390,14 +398,14 @@ const PipelineWrapper: React.FC<IProps> = ({
     };
     // Remove all null values from the pipeline
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
-      removeNullValues(node.app_data ?? {});
+      //removeNullValues(node.app_data ?? {});
       autoADD(node.app_data ?? {}, node.op);
-      branch(node);
+      // branch(node);
     }
-    removeNullValues(
-      pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
-        {}
-    );
+    // removeNullValues(
+    //   pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
+    //     {}
+    // );
     if (contextRef.current.isReady) {
       contextRef.current.model.fromString(
         JSON.stringify(pipelineJson, null, 2)
@@ -977,9 +985,6 @@ const PipelineWrapper: React.FC<IProps> = ({
           );
           break;
         case 'editPipeline':
-          console.log('editPipeline');
-          console.log(contextRef.current.path);
-          console.log(args);
           commands.execute(commandIDs.openDocManager, {
             path: args.payload,
             factory: 'Pipeline Editor'
@@ -1228,14 +1233,19 @@ const PipelineWrapper: React.FC<IProps> = ({
       }
 
       toArray(fileBrowser.selectedItems()).map((item: any): void => {
-        if (PipelineService.isSupportedNode(item)) {
-          item.op = PipelineService.getNodeType(item.path);
+        if (PipelineService.isSupportedNode(item, type)) {
+          item.op = PipelineService.getNodeType(item.path, type);
+          if (type === 'WORKFLOW_PIPELINES') {
+            item.op = palette.categories[0].node_types[2].op;
+          }
           item.path = PipelineService.getPipelineRelativeNodePath(
             contextRef.current.path,
             item.path
           );
           item.x = (location?.x ?? 0) + position;
           item.y = (location?.y ?? 0) + position;
+
+          pipeline_trigger_file_path = item.path;
 
           const success = ref.current?.addFile({
             nodeTemplate: {
@@ -1260,7 +1270,13 @@ const PipelineWrapper: React.FC<IProps> = ({
         setDefaultPosition(position);
       }
 
-      if (failedAdd) {
+      if (failedAdd && type === 'WORKFLOW_PIPELINES') {
+        return showDialog({
+          title: 'Unsupported File(s)',
+          body: 'Only supported file (Pipeline) can be added to a workflow.',
+          buttons: [Dialog.okButton()]
+        });
+      } else if (failedAdd) {
         return showDialog({
           title: 'Unsupported File(s)',
           body:
@@ -1271,7 +1287,15 @@ const PipelineWrapper: React.FC<IProps> = ({
 
       return;
     },
-    [browserFactory.defaultBrowser, defaultPosition, shell, widgetId]
+    [
+      browserFactory.defaultBrowser,
+      defaultPosition,
+      shell,
+      widgetId,
+      palette,
+      type,
+      pipeline
+    ]
   );
 
   const handleDrop = async (e: IDragEvent): Promise<void> => {

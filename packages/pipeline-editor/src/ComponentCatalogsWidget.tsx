@@ -30,6 +30,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { LabIcon, refreshIcon } from '@jupyterlab/ui-components';
 
 import React from 'react';
+import { PassThrough } from 'stream';
 
 import { PipelineService } from './PipelineService';
 
@@ -162,10 +163,18 @@ export class ComponentCatalogsWidget extends MetadataWidget {
         </div>
       );
     }
-
+    let filter_metadata = [];
+    let hide_metadata = ['Actions', 'Events', 'Global', 'Logic'];
+    for (let item in metadata) {
+      if (hide_metadata.includes(metadata[item].display_name)) {
+        continue;
+      } else {
+        filter_metadata.push(metadata[item]);
+      }
+    }
     return (
       <ComponentCatalogsDisplay
-        metadata={metadata}
+        metadata={filter_metadata}
         updateMetadata={this.updateMetadataAndRefresh}
         openMetadataEditor={this.openMetadataEditor}
         schemaspace={COMPONENT_CATALOGS_SCHEMASPACE}
