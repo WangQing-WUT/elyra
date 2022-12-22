@@ -214,6 +214,22 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
           });
         }
       }
+    } else if (nodeOp.search("branch") != -1 && nodeLabel) {
+      const rExp: RegExp = /^[a-z][a-z0-9-]*[a-z0-9]$/;
+      if (!rExp.test(nodeLabel)) {
+        problems.push({
+          message: `The property 'Label' on node '${node.app_data.ui_data.label}' is invalid: The field can only contain lowercase letters, numbers and '-'.`,
+          path,
+          info: {
+            type: "invalidProperty",
+            pipelineID: pipeline.id,
+            nodeID: node.id,
+            property: "Label",
+            message:
+              "The field can only contain lowercase letters, numbers and '-'"
+          }
+        });
+      }
     }
 
     const nodeProperties =

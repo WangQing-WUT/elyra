@@ -539,7 +539,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 parent_path, name = os.path.split(fn)
                 zf.write(fn, arcname=name)
     
-    async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool, upload: bool):
+    async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool):
         response = ValidationResponse(runtime="WORKFLOW")
         zip_file_name = ""
         nodes = node_json["pipelines"][0]["nodes"]

@@ -25,6 +25,12 @@ ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
 
 COPY requirements.txt ${ELYRA_PACKAGE}* ./
 
+USER root
+RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
+USER jovyan
+
+RUN ls -al /home/jovyan
+
 # Install Elyra
 # RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
 RUN python3 -m pip install --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
@@ -33,11 +39,11 @@ RUN python3 -m pip install -r requirements.txt && rm requirements.txt
 
 # Install component examples catalogs
 #  - this wail fail if the 'kfp-examples' pip extra is not installed
-RUN elyra-metadata create component-catalogs \
-    --schema_name=elyra-kfp-examples-catalog  \
-    --display_name="Kubeflow Pipelines examples" \
-    --runtime_type=KUBEFLOW_PIPELINES \
-    --categories="['examples']"
+# RUN elyra-metadata create component-catalogs \
+#     --schema_name=elyra-kfp-examples-catalog  \
+#     --display_name="Kubeflow Pipelines examples" \
+#     --runtime_type=KUBEFLOW_PIPELINES \
+#     --categories="['examples']"
 
 # Copy Elyra entrypoint
 COPY start-elyra.sh /usr/local/bin/start-elyra.sh

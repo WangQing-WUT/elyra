@@ -429,6 +429,17 @@ class Node(AppDataBase):
                 self.set_component_parameter(param_id, converted_value)
 
 
+def is_float(text):
+    # check for nan/infinity etc.
+    if text.isalpha():
+        return False
+    try:
+        float(text)
+        return True
+    except ValueError:
+        return False
+
+
 class PipelineDefinition(object):
     """
     Represents a helper class to manipulate pipeline json structure
@@ -596,6 +607,12 @@ class PipelineDefinition(object):
                                 if input_parameter["name"] in input_parameter_names:
                                     validation_issues.append("The 'Parameter Name' field of pipeline input parameters cannot be duplicate.")
                                 else:
+                                    if input_parameter["type"] == "Integer":
+                                        if not input_parameter["value"].isdigit():
+                                            validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Integer).")
+                                    elif input_parameter["type"] == "Float":
+                                        if not is_float(input_parameter["value"]):
+                                            validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Float).")
                                     input_parameter_names.append(input_parameter["name"])
                             
 

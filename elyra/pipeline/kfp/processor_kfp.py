@@ -447,9 +447,19 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             if "input_parameters" in pipeline.pipeline_parameters:
                 for item in pipeline.pipeline_parameters["input_parameters"]:
                     if "value" in item:
-                        input_parameters[item["name"]] = item["value"]
+                        value = ""
+                        if item["type"] == "String":
+                            value = item["value"]
+                        elif item["type"] == "Integer":
+                            value = int(item["value"])
+                        elif item["type"] == "Float":
+                            value = float(item["value"])
+                        input_parameters[item["name"]] = value
                     else:
-                        input_parameters[item["name"]] = ""
+                        if item["type"] == "String":
+                            input_parameters[item["name"]] = ""
+                        else:
+                            input_parameters[item["name"]] = 0
             
             pipeline_function = gen_function(input_parameters)
             # pipeline_function = lambda: self._cc_pipeline(
@@ -897,6 +907,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     ):
         operation = pipeline.operations[node]
         name = operation.name
+        if name == "Pipeline Branch":
+            name = ""
         target_ops[operation.id] = "branch"
         component_params = operation.component_params
         branch_parameter1 = self._parse_branch_parameter(
