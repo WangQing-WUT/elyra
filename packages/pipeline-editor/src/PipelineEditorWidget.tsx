@@ -543,7 +543,6 @@ const PipelineWrapper: React.FC<IProps> = ({
             if (args.filters?.File === undefined) {
               return true;
             }
-
             const ext = PathExt.extname(model.path);
             return args.filters.File.includes(ext);
           }
@@ -572,6 +571,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       {
         startPath: PathExt.dirname(filename),
         filter: (model: any): boolean => {
+          console.log(model.type);
           const ext = PathExt.extname(model.path);
           return ['.pipeline'].includes(ext);
         }

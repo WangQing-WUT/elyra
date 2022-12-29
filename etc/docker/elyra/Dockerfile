@@ -17,7 +17,8 @@
 
 # Ubuntu 20.04.2 LTS (Focal Fossa)
 # Repository: https://hub.docker.com/r/jupyterhub/k8s-singleuser-sample/tags
-FROM jupyterhub/k8s-singleuser-sample:1.2.0
+# FROM jupyterhub/k8s-singleuser-sample:1.2.0
+FROM jupyter/scipy-notebook:latest
 
 ARG TAG="dev"
 ARG ELYRA_VERSION
@@ -25,11 +26,11 @@ ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
 
 COPY requirements.txt ${ELYRA_PACKAGE}* ./
 
-USER root
-RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
-USER jovyan
+#USER root
+#RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
+#USER jovyan
 
-RUN ls -al /home/jovyan
+#RUN ls -al /home/jovyan
 
 # Install Elyra
 # RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE

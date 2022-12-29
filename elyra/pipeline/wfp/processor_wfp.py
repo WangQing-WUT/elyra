@@ -162,7 +162,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 trigger_field["pipeline"][node["app_data"]["label"].lstrip()] = {
                     "condition": self._get_condition(node_json, node),
                     # TODO operation
-                    "operation": node["app_data"]["component_parameters"]["operation"],
+                    "operation": "create",
                     "pipeline": {
                         "pipelineTemplate": Path(str(node["app_data"]["component_parameters"]["template_name"])).stem,
                         # TODO parameters

@@ -88,7 +88,7 @@ async function pipelineTriggerParameters(template_name: any): Promise<any> {
 
 let para: string[] = [];
 let template_name_global: string = "";
-let id_global: string = "";
+//let id_global: string = "";
 
 function NodeProperties({
   data,
@@ -164,6 +164,8 @@ function NodeProperties({
         }
         setPipelinePara(!pipelinePara);
       });
+    } else {
+      para = [];
     }
   }
 
@@ -291,12 +293,21 @@ function NodeProperties({
           }
         }
 
-        const s3_object =
-          draft.properties.component_parameters?.properties?.object?.properties;
-        if (s3_object && filters.length > 0) {
-          s3_object.prefix.oneOf[2].properties.value.enum = filters;
-          s3_object.suffix.oneOf[2].properties.value.enum = filters;
-          s3_object.bucket_name.oneOf[2].properties.value.enum = filters;
+        const s3_prefix =
+          draft.properties.component_parameters?.properties?.prefix?.oneOf;
+        const s3_suffix =
+          draft.properties.component_parameters?.properties?.suffix?.oneOf;
+        const s3_bucket_name =
+          draft.properties.component_parameters?.properties?.bucket_name?.oneOf;
+
+        if (s3_prefix && s3_suffix && s3_bucket_name && filters.length > 0) {
+          console.log("dd");
+          s3_prefix[1].properties.value.enum = filters;
+          s3_suffix[1].properties.value.enum = filters;
+          s3_bucket_name[1].properties.value.enum = filters;
+          console.log(JSON.parse(JSON.stringify(s3_prefix)));
+          console.log(JSON.parse(JSON.stringify(s3_suffix)));
+          console.log(JSON.parse(JSON.stringify(s3_bucket_name)));
         }
 
         const dataset_oneOf =
