@@ -118,7 +118,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const pipelineEditorFactory = new PipelineEditorFactory({
       name: PIPELINE_EDITOR,
       fileTypes: [PIPELINE, WORKFLOW],
-      defaultFor: [PIPELINE],
+      defaultFor: [PIPELINE, WORKFLOW],
       shell: app.shell,
       commands: app.commands,
       browserFactory: browserFactory,
@@ -131,7 +131,16 @@ const extension: JupyterFrontEndPlugin<void> = {
       {
         name: PIPELINE,
         displayName: 'Pipeline',
-        extensions: ['.pipeline', '.workflow'],
+        extensions: ['.pipeline'],
+        icon: pipelineIcon
+      },
+      ['JSON']
+    );
+    app.docRegistry.addFileType(
+      {
+        name: WORKFLOW,
+        displayName: 'Workflow',
+        extensions: ['.workflow'],
         icon: pipelineIcon
       },
       ['JSON']

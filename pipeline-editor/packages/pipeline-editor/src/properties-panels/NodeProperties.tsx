@@ -44,6 +44,13 @@ const Heading = styled.div`
   opacity: 0.5;
 `;
 
+const Href = styled.div`
+  padding: 0 61px;
+  font-family: ${({ theme }) => theme.typography.fontFamily};
+  font-weight: ${({ theme }) => theme.typography.fontWeight};
+  opacity: 0.5;
+`;
+
 function getOneOfValue(value: string, option: string, label: string) {
   return {
     label: label,
@@ -293,23 +300,6 @@ function NodeProperties({
           }
         }
 
-        const s3_prefix =
-          draft.properties.component_parameters?.properties?.prefix?.oneOf;
-        const s3_suffix =
-          draft.properties.component_parameters?.properties?.suffix?.oneOf;
-        const s3_bucket_name =
-          draft.properties.component_parameters?.properties?.bucket_name?.oneOf;
-
-        if (s3_prefix && s3_suffix && s3_bucket_name && filters.length > 0) {
-          console.log("dd");
-          s3_prefix[1].properties.value.enum = filters;
-          s3_suffix[1].properties.value.enum = filters;
-          s3_bucket_name[1].properties.value.enum = filters;
-          console.log(JSON.parse(JSON.stringify(s3_prefix)));
-          console.log(JSON.parse(JSON.stringify(s3_suffix)));
-          console.log(JSON.parse(JSON.stringify(s3_bucket_name)));
-        }
-
         const dataset_oneOf =
           draft.properties.component_parameters?.properties?.dataset_name?.items
             ?.oneOf;
@@ -389,9 +379,15 @@ function NodeProperties({
                 component_properties[prop].oneOf[i].properties.widget
                   .default === "enum"
               ) {
-                component_properties[prop].oneOf[
-                  i
-                ].properties.value.enum = pipeline_input_parameters;
+                if (pipeline_input_parameters.length == 1) {
+                  component_properties[prop].oneOf[
+                    i
+                  ].properties.value.enum = filters;
+                } else {
+                  component_properties[prop].oneOf[
+                    i
+                  ].properties.value.enum = pipeline_input_parameters;
+                }
               } else if (
                 component_properties[prop].oneOf[i].properties.widget
                   .default === "inputpath"
@@ -414,6 +410,32 @@ function NodeProperties({
       }
     );
   };
+
+  if (selectedNode.op.indexOf("calendar_event") != -1) {
+    return (
+      <div>
+        <Heading>{nodePropertiesSchema.label}</Heading>
+        <span className="nodeDescription">
+          {nodePropertiesSchema.description}
+        </span>
+        <PropertiesPanel
+          key={selectedNode.id}
+          schema={getNodeProperties()}
+          data={selectedNode.app_data}
+          onChange={(data: any) => {
+            onChange?.(selectedNode.id, data);
+          }}
+          onFileRequested={onFileRequested}
+          onPropertiesUpdateRequested={onPropertiesUpdateRequested}
+        />
+        <Href>
+          <a href="http://www.cronmaker.com/" target="_blank">
+            cronmaker.com
+          </a>
+        </Href>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -439,6 +439,11 @@ def is_float(text):
     except ValueError:
         return False
 
+def is_bool(text):
+    if text.lower() == 'true' or text.lower() == 'false':
+        return True
+    else:
+        return False
 
 class PipelineDefinition(object):
     """
@@ -613,6 +618,10 @@ class PipelineDefinition(object):
                                     elif input_parameter["type"] == "Float":
                                         if not is_float(input_parameter["value"]):
                                             validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Float).")
+                                    elif input_parameter["type"] == "Bool":
+                                        if not is_bool(input_parameter["value"]):
+                                            validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Bool).")
+                                    
                                     input_parameter_names.append(input_parameter["name"])
                             
 

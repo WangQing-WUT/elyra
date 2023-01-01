@@ -75,6 +75,8 @@ from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.util.cos import join_paths
 from elyra.util.path import get_absolute_path
 
+def str_to_bool(str):
+    return True if str.lower() == 'true' else False
 
 class KfpPipelineProcessor(RuntimePipelineProcessor):
     _type = RuntimeProcessorType.KUBEFLOW_PIPELINES
@@ -454,10 +456,14 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                             value = int(item["value"])
                         elif item["type"] == "Float":
                             value = float(item["value"])
+                        elif item["type"] == "Bool":
+                            value = str_to_bool(item["value"])
                         input_parameters[item["name"]] = value
                     else:
                         if item["type"] == "String":
                             input_parameters[item["name"]] = ""
+                        elif item["type"] == "Bool":
+                            input_parameters[item["name"]] = True
                         else:
                             input_parameters[item["name"]] = 0
             
