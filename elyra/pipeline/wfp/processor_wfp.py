@@ -18,6 +18,7 @@ import re
 import os
 import zipfile
 import requests
+from elyra.util.validation_type import *
 
 
 class WfpPipelineProcessor(RuntimePipelineProcessor):
@@ -129,17 +130,14 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     }
                 }
             elif node_type == "s3_event":
-                # TODO insecure true or false?
                 if "s3" not in event_field:
                     event_field["s3"] = {}
                 event_field["s3"][node["app_data"]["label"].lstrip()] = {
                     "bucket": {
-                        "name": self._widget_value_str(node["app_data"]["component_parameters"]["object"]["bucket_name"])
+                        "name": self._widget_value_str(node["app_data"]["component_parameters"]["bucket_name"])
                     },
                     "eventFilter": {
-                        "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"]["object"],
-                                                                node["app_data"]["component_parameters"]["event_filter"],
-                                                                node["app_data"]["component_parameters"]["expression"])
+                        "expression": self._get_s3_event_filter(node["app_data"]["component_parameters"])
                     }
                 }
             elif node_type == "calendar_event":
@@ -161,11 +159,9 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     trigger_field["pipeline"] = {}
                 trigger_field["pipeline"][node["app_data"]["label"].lstrip()] = {
                     "condition": self._get_condition(node_json, node),
-                    # TODO operation
                     "operation": "create",
                     "pipeline": {
                         "pipelineTemplate": Path(str(node["app_data"]["component_parameters"]["template_name"])).stem,
-                        # TODO parameters
                         "parameters": self._parse_trigger_parameters(
                                         node["app_data"]["component_parameters"]["trigger_parameters"],
                                         node_json)
@@ -219,13 +215,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                         init_parameters = []
                         for init_item in node["app_data"]["component_parameters"][key]:
                             temp_value = init_item["value"]["value"]
-                            # if init_item["value"]["value"].isdigit():
-                            #     temp_value = int(init_item["value"]["value"])
                             if "workflow.parameters" in init_item["value"]["value"]:
                                 temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
 
-                            temp_init = {"name": init_item["name"], "value": temp_value,
-                                         "description": init_item["description"]}
+                            temp_init = {
+                                "name": init_item["name"], 
+                                "value": temp_value
+                            }
+                            if "description" in init_item:
+                                temp_init["description"] = init_item["description"]
                             init_parameters.append(temp_init)
                         init_pipeline_field["parameters"] = init_parameters
                     else:
@@ -258,8 +256,12 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                             elif "workflow.parameters" in exit_item["value"]["value"]:
                                 temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
 
-                            temp_exit = {"name": exit_item["name"], "value": temp_value,
-                                         "description": exit_item["description"]}
+                            temp_exit = {
+                                "name": exit_item["name"], 
+                                "value": temp_value
+                            }
+                            if "description" in exit_item:
+                                temp_exit["description"] = exit_item["description"]
                             exit_parameters.append(temp_exit)
                         exit_pipeline_field["parameters"] = exit_parameters
                     else:
@@ -342,52 +344,35 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         else:
             return ""
 
-    def _get_s3_event_filter(self, object: dict, event_filter: list[dict], expression: str):
-        expression = expression.replace(' ', '')
-        stack_expression = ""
-        expression_id = 0
-        prefix = self._widget_value_str(object["prefix"])
-        suffix = self._widget_value_str(object["suffix"])
+    def _get_s3_event_filter(self, component_parameters: dict):
+        expression = ""
+        prefix = self._widget_value_str(component_parameters["prefix"])
+        suffix = self._widget_value_str(component_parameters["suffix"])
+        event_filter = component_parameters["event_filter"]
         if prefix:
-            stack_expression += "object prefix '" + prefix + "'"
+            expression += "object prefix '" + prefix + "'"
         if suffix:
-            if stack_expression == "":
-                stack_expression += "object suffix '" + suffix + "'"
+            if expression == "":
+                expression += "object suffix '" + suffix + "'"
             else:
-                stack_expression = "(" + stack_expression + ") && " + \
-                                    "(object suffix '" + suffix + "')"
+                expression = "(" + expression + ") && " + \
+                                "(object suffix '" + suffix + "')"
         filter_expression = ""
-        for char in expression:
-            if char.isdigit():
-                expression_id = 10 * expression_id + int(char)
-            else:
-                expression_item = ""
-                if expression_id in range(1, len(event_filter) + 1):
-                    expression_item = self._get_expression_item(expression_id, event_filter)
-                if expression_item == "":
-                    filter_expression += char
-                else:
-                    if filter_expression:
-                        filter_expression += " (" + expression_item + ") " + char
-                    else:
-                        filter_expression += "(" + expression_item + ") " + char
-                    expression_id = 0
-        if expression_id != 0:
-            expression_item = self._get_expression_item(expression_id, event_filter)
-            if "&&" not in stack_expression and stack_expression:
-                stack_expression = "(" + stack_expression + ")"
+        for item in event_filter:
+            value = self._widget_value_str(item["value"])
             if filter_expression == "":
-                if stack_expression == "":
-                    stack_expression += expression_item
-                else:
-                    stack_expression = stack_expression + " && (" + expression_item + ")"
+                filter_expression = item["name"] + " " + item["operate"] + " '" + value + "'"
             else:
-                if stack_expression == "":
-                    stack_expression = filter_expression + " (" + expression_item + ")"
-                else:
-                    stack_expression = stack_expression + " && (" + filter_expression + \
-                                    " (" + expression_item + "))"
-        return stack_expression
+                filter_expression = "(" + filter_expression + ") || (" + \
+                                        item["name"] + " " + item["operate"] + " '" + value + "')"
+        if "&&" not in expression and expression:
+            expression = "(" + expression + ")"
+        if expression == "":
+            expression = filter_expression
+        else:
+            expression = expression + " && (" + filter_expression + ")"
+        
+        return expression
 
     @staticmethod
     def _get_expression_item(expression_id: int, event_filter: list):
@@ -428,10 +413,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     @staticmethod
     def _parameters_parse(input_parameters: list):
-        # for index in range(0, len(input_parameters)):
-        #     if input_parameters[index]["value"].isdigit():
-        #         input_parameters[index]["value"] = int(input_parameters[index]["value"])
-        return input_parameters
+        format_input_parameters = []
+        for item in input_parameters:
+            input_parameter = {}
+            input_parameter["name"] = item["name"]
+            input_parameter["type"] = item["type"]
+            if "value" in item:
+                input_parameter["value"] = item["value"]
+            if "description" in item:
+                input_parameter["description"] = item["description"]
+            format_input_parameters.append(input_parameter)
+        return format_input_parameters
 
     @staticmethod
     def _parse_trigger_parameters(trigger_parameters: dict, node_json: dict):
@@ -651,9 +643,9 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_id = node["id"]
         node_name = node["app_data"]["label"]
         self._validate_node_name(node, name, response)
-        bucket_name = node["app_data"]["component_parameters"]["object"]["bucket_name"]
-        s3_object_prefix = node["app_data"]["component_parameters"]["object"]["prefix"]
-        s3_object_suffix = node["app_data"]["component_parameters"]["object"]["suffix"]
+        bucket_name = node["app_data"]["component_parameters"]["bucket_name"]
+        s3_object_prefix = node["app_data"]["component_parameters"]["prefix"]
+        s3_object_suffix = node["app_data"]["component_parameters"]["suffix"]
         self._validate_node_property_value(bucket_name, node_type, node_id, node_name, "Bucket Name", workflow_input_parameters, response)
         if s3_object_prefix["widget"] == "enum":
             if s3_object_prefix["value"] not in workflow_input_parameters:
@@ -861,7 +853,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "filterID": property["id"]
                 },
             )
-        if property["value"]["value"].strip() == "":
+        if property["value"]["value"] == "":
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
@@ -923,7 +915,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                         "propertyName": "Name of " + propertyName,
                     },
                 )
-            if "description" not in parameter:
+            if parameter["value"]["value"] == "":
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
@@ -932,8 +924,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     data={
                         "nodeType": nodeType,
                         "nodeID": nodeID,
-                        "nodeName": nodeName,
-                        "propertyName": "Description of " + propertyName,
+                        "nodeName": nodeName, 
+                        "propertyName": "Value of " + propertyName,
                     },
                 )
             if parameter["value"]["widget"] == "enum":

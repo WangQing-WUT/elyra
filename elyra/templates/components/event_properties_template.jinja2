@@ -596,6 +596,23 @@
                     "title": "S3 Object Prefix",
                     "description": "S3 object prefix.",
                     "oneOf":[
+						{
+							"label": " ",
+							"properties": {
+								"value": {
+									"type": "string",
+									"default": ""
+								},
+								"widget": {
+									"type": "string",
+									"default": ""
+								}
+							},
+							"uihints":{
+								"widget": {"ui:field": "hidden"},
+								"value": {"ui:field": "hidden"}
+							}
+						},
                         {
                             "label": "Enter a value manually",
                             "properties": {
@@ -635,6 +652,23 @@
                     "title": "S3 Object Suffix",
                     "description": "S3 object suffix.",
                     "oneOf":[
+						{
+							"label": " ",
+							"properties": {
+								"value": {
+									"type": "string",
+									"default": ""
+								},
+								"widget": {
+									"type": "string",
+									"default": ""
+								}
+							},
+							"uihints":{
+								"widget": {"ui:field": "hidden"},
+								"value": {"ui:field": "hidden"}
+							}
+						},
                         {
                             "label": "Enter a value manually",
                             "properties": {
@@ -1202,7 +1236,7 @@
 				}
 				{% endif %}
 			},
-			"required": ["expression"]
+			"required": ["expression", "bucket_name", "event_filter", "dataset_name", "calendar"]
 		}
 	},
 	"required": ["label", "component_parameters"]

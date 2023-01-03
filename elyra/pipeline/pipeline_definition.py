@@ -36,6 +36,7 @@ from elyra.pipeline.pipeline_constants import KUBERNETES_SECRETS
 from elyra.pipeline.pipeline_constants import PIPELINE_DEFAULTS
 from elyra.pipeline.pipeline_constants import PIPELINE_META_PROPERTIES
 from elyra.pipeline.runtime_type import RuntimeProcessorType
+from elyra.util.validation_type import *
 
 
 class AppDataBase(object):  # ABC
@@ -428,22 +429,6 @@ class Node(AppDataBase):
             else:
                 self.set_component_parameter(param_id, converted_value)
 
-
-def is_float(text):
-    # check for nan/infinity etc.
-    if text.isalpha():
-        return False
-    try:
-        float(text)
-        return True
-    except ValueError:
-        return False
-
-def is_bool(text):
-    if text.lower() == 'true' or text.lower() == 'false':
-        return True
-    else:
-        return False
 
 class PipelineDefinition(object):
     """
