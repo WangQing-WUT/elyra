@@ -906,6 +906,7 @@ class WorkflowEvent(Enum):
     s3 = "S3 Event"
     model = "Model Event"
     pipeline = "Pipeline Event"
+    monitor = "Model Monitor Event"
 
     def is_exist(event_type: str) -> bool :
         for v in WorkflowEvent:

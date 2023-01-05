@@ -159,7 +159,7 @@
           								"operate": {
             								"type": "string",
 											"title": "Operate",
-											"enum": [">", ">=", "==", "%" ]
+											"enum": [">", ">=", "==", "%", "delta"]
          								},
 										"value": {
 											"title": "Value",
@@ -1228,11 +1228,164 @@
 					]
 				}
 				{% endif %}
-				{% if  component.name != "Calendar Event" and component.name != "S3 Event"%}
+				{% if  component.name != "Calendar Event" and component.name != "S3 Event" and component.name != "Model Monitor Event" %}
 				"expression": {
 					"type": "string",
 					"title": "Expression",
 					"description": "{{component.name}} expression."
+				}
+				{% endif %}
+				{% if  component.name == "Model Monitor Event" %}
+				"alert_name": {
+					"type": "string",
+					"title": "Alert Name",
+					"description": "Alert Name.",
+					"enum": [
+						"model_mon_ap50",
+						"model_mon_ap",
+						"model_mon_ap_small",
+						"model_mon_ar_small",
+						"model_mon_confidence_mean",
+						"model_mon_ap75",
+						"model_mon_ap_medium",
+						"model_mon_ap_large",
+						"model_mon_ar1",
+						"model_mon_ar10",
+						"model_mon_ar100",
+						"model_mon_ar_medium",
+						"model_mon_ar_large"
+					],
+					"default": "model_mon_ap50"
+				},
+				"event_filter": {
+					"type": "array",
+					"title": "Model Configuration",
+					"description": "Model configuration.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string",
+								"title": "Id"
+							},
+							"app_name": {
+								"title": "App Name",
+								"oneOf":[
+									{
+										"label": " ",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": ""
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"},
+											"value": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Enter a value manually",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+												},
+											"widget": {
+												"type": "string",
+												"default": "string"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the workflow input parameters",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [""],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									}
+								]
+							},
+							"model_name": {
+								"title": "Model Name",
+								"oneOf":[
+									{
+										"label": " ",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": ""
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"},
+											"value": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Enter a value manually",
+										"properties": {
+											"value": {
+												"type": "string",
+												"default": ""
+												},
+											"widget": {
+												"type": "string",
+												"default": "string"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the workflow input parameters",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [""],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									}
+								]
+							}
+						}
+					},
+					"uihints":{
+						"items": {
+							"id": { "ui:readonly": "true" },
+							"name": {"ui:field": "hidden"}
+						}
+					}
 				}
 				{% endif %}
 			},

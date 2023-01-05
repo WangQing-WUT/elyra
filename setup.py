@@ -47,7 +47,7 @@ runtime_extras = {
     ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
     # Kubeflow Pipelines example components
     # (https://github.com/elyra-ai/examples/tree/main/component-catalog-connectors/kfp-example-components-connector)
-    "kfp-examples": ["elyra-examples-kfp-catalog"],
+    # "kfp-examples": ["elyra-examples-kfp-catalog"],
     # Use gitlab as Airflow DAG repository
     "gitlab": ["python-gitlab"],
 }
@@ -73,8 +73,10 @@ setup_args = dict(
         "jsonschema>=3.2.0,<4.0",  # Cap from kfp
         "jupyter_core>=4.6.0",
         "jupyter_client>=6.1.7",
+        "jupyter-events~=0.4.0",
         "jupyter-packaging>=0.10",
         "jupyter_server>=1.7.0",
+        "jupyterlab-server>=2.0,<2.11"
         "jupyterlab>=3.4.6",  # comment out to use local jupyterlab
         "jupyterlab-lsp>=3.8.0",  # comment out to use local jupyterlab
         "jupyterlab-git~=0.32",  # Avoid breaking 1.x changes
@@ -105,7 +107,7 @@ setup_args = dict(
         "black<=21.12b0",  # Cap due to psf/black#2846
     ],
     extras_require={
-        "test": ["elyra-examples-kfp-catalog", "pytest", "pytest-tornasync"],
+        # "test": ["elyra-examples-kfp-catalog", "pytest", "pytest-tornasync"],
         **runtime_extras,
     },
     include_package_data=True,
@@ -148,8 +150,10 @@ setup_args = dict(
             "wfp = elyra.pipeline.wfp.processor_wfp:WfpPipelineProcessor",
         ],
         "elyra.component.catalog_types": [
+            "url-catalog = elyra.pipeline.catalog_connector:UrlComponentCatalogConnector",
             "local-file-catalog = elyra.pipeline.catalog_connector:FilesystemComponentCatalogConnector",
             "local-directory-catalog = elyra.pipeline.catalog_connector:DirectoryComponentCatalogConnector",
+            "new-component = elyra.pipeline.catalog_connector:NewComponentConnector",
         ],
         "papermill.engine": [
             "ElyraEngine = elyra.pipeline.elyra_engine:ElyraEngine",

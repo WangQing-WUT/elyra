@@ -49,6 +49,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     
     async def export_pipeline(self, path, runtime_config, root_dir, parent, file_list):
         response = ValidationResponse()
+        pipeline_input_parameters = []
+        resource = ""
         if path.endswith(".pipeline"):
             pipeline_file = open(path, 'r', encoding='UTF-8')
             pipeline_definition = json.load(pipeline_file)
@@ -75,7 +77,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             resource = pipeline_yaml.read()
             self.create_pipeline_template(path, resource, file_list)
         
-        return response
+        export_pipeline_yaml = yaml.load(resource, Loader=yaml.FullLoader)
+        pipeline_spec_dict = json.loads(export_pipeline_yaml["metadata"]["annotations"]["pipelines.kubeflow.org/pipeline_spec"])
+        for item in pipeline_spec_dict["inputs"]:
+            pipeline_input_parameter = {}
+            pipeline_input_parameter["name"] = item["name"]
+            pipeline_input_parameter["value"] = item["default"]
+            pipeline_input_parameters.append(pipeline_input_parameter)
+        
+        return response, pipeline_input_parameters
 
     @staticmethod
     def _sepc_parse(init: dict, exit_parameters: dict, parameters: list, events: dict, triggers: dict):
@@ -157,25 +167,33 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             elif node_type == "pipeline_trigger":
                 if "pipeline" not in trigger_field:
                     trigger_field["pipeline"] = {}
+                parameters = self._parse_trigger_parameters(
+                                node["app_data"]["component_parameters"]["trigger_parameters"],
+                                node_json
+                            )
+                path = node["app_data"]["component_parameters"]["template_name"]
+                response, pipeline_input_parameters = await self.export_pipeline(path, runtime_config, root_dir, parent, file_list)
+                if response.has_fatal:
+                    response.update_message(data)
+                    return [init_field, event_field, trigger_field, exit_field, response]
+                for parameter in parameters:
+                    for pipeline_input_parameter in pipeline_input_parameters:
+                        if pipeline_input_parameter["name"] == parameter["name"]:
+                            pipeline_input_parameters.remove(pipeline_input_parameter)
+                            break
+                parameters += pipeline_input_parameters
                 trigger_field["pipeline"][node["app_data"]["label"].lstrip()] = {
                     "condition": self._get_condition(node_json, node),
                     "operation": "create",
                     "pipeline": {
                         "pipelineTemplate": Path(str(node["app_data"]["component_parameters"]["template_name"])).stem,
-                        "parameters": self._parse_trigger_parameters(
-                                        node["app_data"]["component_parameters"]["trigger_parameters"],
-                                        node_json)
+                        "parameters": parameters
                     }
                 }
-                path = node["app_data"]["component_parameters"]["template_name"]
-                response = await self.export_pipeline(path, runtime_config, root_dir, parent, file_list)
                 data = {
                     "workflowSource": "Pipeline Trigger",
                     "pipelineTriggerName": node["app_data"]["label"].lstrip()
                 }
-                if response.has_fatal:
-                    response.update_message(data)
-                    return [init_field, event_field, trigger_field, exit_field, response]
             elif node_type == "k8s_object_trigger":
                 if "k8sobj" not in trigger_field:
                     trigger_field["k8sobj"] = {}
@@ -199,35 +217,40 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 }
             elif node_type == "init":
                 init_pipeline_field = {}
-                for key in node["app_data"]["component_parameters"]:
-                    if key == "init_pipeline":
-                        pipeline_path = node["app_data"]["component_parameters"][key]
-                        path_name = Path(str(pipeline_path)).stem
-                        init_pipeline_field["pipelineTemplate"] = path_name
-                        response = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                        data = {
-                            "workflowSource": "Init"
-                        }
-                        if response.has_fatal:
-                            response.update_message(data)
-                            return [init_field, event_field, trigger_field, exit_field, response]
-                    elif key == "init_parameters":
-                        init_parameters = []
-                        for init_item in node["app_data"]["component_parameters"][key]:
-                            temp_value = init_item["value"]["value"]
-                            if "workflow.parameters" in init_item["value"]["value"]:
-                                temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
+                pipeline_input_parameters = {}
 
-                            temp_init = {
-                                "name": init_item["name"], 
-                                "value": temp_value
-                            }
-                            if "description" in init_item:
-                                temp_init["description"] = init_item["description"]
-                            init_parameters.append(temp_init)
-                        init_pipeline_field["parameters"] = init_parameters
-                    else:
-                        pass
+                pipeline_path = node["app_data"]["component_parameters"]["init_pipeline"]
+                path_name = Path(str(pipeline_path)).stem
+                init_pipeline_field["pipelineTemplate"] = path_name
+                response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+                data = {
+                    "workflowSource": "Init"
+                }
+                if response.has_fatal:
+                    response.update_message(data)
+                    return [init_field, event_field, trigger_field, exit_field, response]
+
+                init_parameters = []
+                for init_item in node["app_data"]["component_parameters"]["init_parameters"]:
+                    temp_value = init_item["value"]["value"]
+                    if "workflow.parameters" in init_item["value"]["value"]:
+                        temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
+
+                    temp_init = {
+                        "name": init_item["name"], 
+                        "value": temp_value
+                    }
+                    if "description" in init_item:
+                        temp_init["description"] = init_item["description"]
+                    init_parameters.append(temp_init)
+                for init_parameter in init_parameters:
+                    for pipeline_input_parameter in pipeline_input_parameters:
+                        if pipeline_input_parameter["name"] == init_parameter["name"]:
+                            pipeline_input_parameters.remove(pipeline_input_parameter)
+                            break
+                init_parameters += pipeline_input_parameters
+                init_pipeline_field["parameters"] = init_parameters
+
                 # pipelineTemplate first
                 init_pipeline_field = dict(sorted(init_pipeline_field.items(), key=lambda x: x[0], reverse=True))
                 init_field = {
@@ -235,37 +258,42 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 }
             elif node_type == "exit":
                 exit_pipeline_field = {}
-                for key in node["app_data"]["component_parameters"]:
-                    if key == "exit_pipeline":
-                        pipeline_path = node["app_data"]["component_parameters"][key]
-                        path_name = Path(str(pipeline_path)).stem
-                        exit_pipeline_field["pipelineTemplate"] = path_name
-                        response = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                        data = {
-                            "workflowSource": "Exit"
-                        }
-                        if response.has_fatal:
-                            response.update_message(data)
-                            return [init_field, event_field, trigger_field, exit_field, response]
-                    elif key == "exit_parameters":
-                        exit_parameters = []
-                        for exit_item in node["app_data"]["component_parameters"][key]:
-                            temp_value = exit_item["value"]["value"]
-                            if exit_item["value"]["value"].isdigit():
-                                temp_value = int(exit_item["value"]["value"])
-                            elif "workflow.parameters" in exit_item["value"]["value"]:
-                                temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
+                pipeline_input_parameters = {}
 
-                            temp_exit = {
-                                "name": exit_item["name"], 
-                                "value": temp_value
-                            }
-                            if "description" in exit_item:
-                                temp_exit["description"] = exit_item["description"]
-                            exit_parameters.append(temp_exit)
-                        exit_pipeline_field["parameters"] = exit_parameters
-                    else:
-                        pass
+                pipeline_path = node["app_data"]["component_parameters"]["exit_pipeline"]
+                path_name = Path(str(pipeline_path)).stem
+                exit_pipeline_field["pipelineTemplate"] = path_name
+                response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+                data = {
+                    "workflowSource": "Exit"
+                }
+                if response.has_fatal:
+                    response.update_message(data)
+                    return [init_field, event_field, trigger_field, exit_field, response]
+
+                exit_parameters = []
+                for exit_item in node["app_data"]["component_parameters"]["exit_parameters"]:
+                    temp_value = exit_item["value"]["value"]
+                    if exit_item["value"]["value"].isdigit():
+                        temp_value = int(exit_item["value"]["value"])
+                    elif "workflow.parameters" in exit_item["value"]["value"]:
+                        temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
+
+                    temp_exit = {
+                        "name": exit_item["name"], 
+                        "value": temp_value
+                    }
+                    if "description" in exit_item:
+                        temp_exit["description"] = exit_item["description"]
+                    exit_parameters.append(temp_exit)
+                for exit_parameter in exit_parameters:
+                    for pipeline_input_parameter in pipeline_input_parameters:
+                        if pipeline_input_parameter["name"] == exit_parameter["name"]:
+                            pipeline_input_parameters.remove(pipeline_input_parameter)
+                            break
+                exit_parameters += pipeline_input_parameters
+                exit_pipeline_field["parameters"] = exit_parameters
+
                 # pipelineTemplate first
                 exit_pipeline_field = dict(sorted(exit_pipeline_field.items(), key=lambda x: x[0], reverse=True))
                 exit_field = {

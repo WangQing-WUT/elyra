@@ -707,3 +707,7 @@ class UrlComponentCatalogConnector(ComponentCatalogConnector):
         single catalog entry
         """
         return ["url"]
+
+
+class NewComponentConnector(ComponentCatalogConnector):
+    pass

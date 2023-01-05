@@ -282,6 +282,17 @@ function NodeProperties({
           }
         }
 
+        const app_name =
+          draft.properties.component_parameters?.properties?.event_filter?.items
+            ?.properties?.app_name;
+        const model_name =
+          draft.properties.component_parameters?.properties?.event_filter?.items
+            ?.properties?.model_name;
+        if (app_name && model_name && filters.length > 0) {
+          app_name.oneOf[2].properties.value.enum = filters;
+          model_name.oneOf[2].properties.value.enum = filters;
+        }
+
         const oneOf =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.properties?.value?.oneOf;

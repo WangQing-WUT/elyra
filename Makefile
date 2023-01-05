@@ -180,7 +180,7 @@ uninstall-server-package:
 	@$(PYTHON_PIP) uninstall elyra -y
 
 install-server-package: uninstall-server-package
-	$(PYTHON_PIP) install --upgrade --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "elyra-*-py3-none-any.whl")[kfp-tekton]"
+	$(PYTHON_PIP) install --upgrade --use-deprecated=legacy-resolver --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "elyra-*-py3-none-any.whl")[all]"
 
 install-server: build-dependencies build-server install-server-package ## Build and install backend
 
