@@ -540,11 +540,13 @@ const PipelineWrapper: React.FC<IProps> = ({
         {
           startPath: PathExt.dirname(filename),
           filter: (model: any): boolean => {
-            if (args.filters?.File === undefined) {
-              return true;
-            }
-            const ext = PathExt.extname(model.path);
-            return args.filters.File.includes(ext);
+            return model.path !== filename;
+            //TODO
+            // if (args.filters?.File === undefined) {
+            //   return true;
+            // }
+            // const ext = PathExt.extname(model.path);
+            // return args.filters.File.includes(ext);
           }
         }
       );
@@ -571,9 +573,10 @@ const PipelineWrapper: React.FC<IProps> = ({
       {
         startPath: PathExt.dirname(filename),
         filter: (model: any): boolean => {
-          console.log(model.type);
-          const ext = PathExt.extname(model.path);
-          return ['.pipeline'].includes(ext);
+          return model.path !== filename;
+          //TODO
+          // const ext = PathExt.extname(model.path);
+          // return ['.pipeline'].includes(ext);
         }
       }
     );

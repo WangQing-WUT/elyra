@@ -42,14 +42,14 @@ data_files_spec = [
 ]
 
 runtime_extras = {
-    "kfp-tekton": [
-        "kfp-tekton~=1.3.0",
-    ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
+    # "kfp-tekton": [
+    #     "kfp-tekton~=1.3.0",
+    # ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
     # Kubeflow Pipelines example components
     # (https://github.com/elyra-ai/examples/tree/main/component-catalog-connectors/kfp-example-components-connector)
     # "kfp-examples": ["elyra-examples-kfp-catalog"],
     # Use gitlab as Airflow DAG repository
-    "gitlab": ["python-gitlab"],
+    # "gitlab": ["python-gitlab"],
 }
 runtime_extras["all"] = list(set(sum(runtime_extras.values(), [])))
 
@@ -75,7 +75,7 @@ setup_args = dict(
         "jupyter_client>=6.1.7",
         "jupyter-events~=0.4.0",
         "jupyter-packaging>=0.10",
-        "jupyter_server>=1.7.0",
+        "jupyter_server~=1.23.4",
         "jupyterlab-server>=2.0,<2.11"
         "jupyterlab>=3.4.6",  # comment out to use local jupyterlab
         "jupyterlab-lsp>=3.8.0",  # comment out to use local jupyterlab
