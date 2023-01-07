@@ -527,6 +527,93 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         self._get_next(link_dict, pipeline_operations)
         return link_dict
 
+    def _filter_special_node(
+        self, 
+        pipeline_operations: dict, 
+        link_dict: dict, 
+        special_node_links: dict,
+        special_node_subnodes: dict,
+        subnodes: list,
+        is_sorted: list
+    ):
+        for node_id in link_dict:
+            if pipeline_operations[node_id].classifier.startswith("branch"):
+                special_node_subnodes[node_id] = []
+                special_node_links[node_id] = {}
+                self._filter_special_node(
+                    pipeline_operations, 
+                    link_dict[node_id], 
+                    special_node_links[node_id],
+                    special_node_subnodes,
+                    special_node_subnodes[node_id],
+                    is_sorted
+                )
+            else:
+                self._filter_special_node(
+                    pipeline_operations, 
+                    link_dict[node_id], 
+                    special_node_links,
+                    special_node_subnodes,
+                    subnodes,
+                    is_sorted
+                )
+            if node_id not in subnodes
+                is_sorted.append(node_id)
+                subnodes.append(node_id)
+            
+    
+    def _filter_component_node(
+        self, 
+        pipeline_operations: dict, 
+        link_dict: dict, 
+        outermost_node_ids: list,
+        special_node_links: dict,
+        special_node_subnodes: dict,
+        is_sorted: list
+    ):
+        for node_id in link_dict:
+            if node_id not in is_sorted:
+                if pipeline_operations[node_id].classifier.startswith("branch"):
+                    special_node_subnodes[node_id] = []
+                    special_node_links[node_id] = {}
+                    outermost_node_ids.append(node_id)
+                    self._filter_special_node(
+                        pipeline_operations, 
+                        link_dict[node_id],
+                        special_node_links[node_id],
+                        special_node_subnodes,
+                        special_node_subnodes[node_id],
+                        is_sorted
+                    )
+                else:
+                    outermost_node_ids.append(node_id)
+                    self._filter_component_node(
+                        pipeline_operations, 
+                        link_dict[node_id], 
+                        outermost_node_ids,
+                        special_node_links,
+                        special_node_subnodes,
+                        is_sorted
+                    )
+                
+                is_sorted.append(node_id)
+            else:
+                continue
+
+    def _sorted_opreation_list(self, node_ids: list, pipeline):
+        node_operations = {}
+        for node_id in node_ids:
+            node_operations[node_id] = pipeline.operations[node_id]
+        sorted_node_operations = PipelineProcessor._sort_operations(node_operations)
+        temp_operations = []
+        for sorted_node_operation in sorted_node_operations:
+            if sorted_node_operation.classifier.startswith("branch"):
+                temp_operations.append(sorted_node_operation)
+        for temp_operation in temp_operations:
+            sorted_node_operations.remove(temp_operation)
+        sorted_node_operations += temp_operations
+        return sorted_node_operations
+
     def _process_component(
         self,
         args,
@@ -1050,6 +1137,63 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         #         break
 
         link_ref = self._gen_link_ref_dict(pipeline.operations)
+        name_link_ref = {}
+        outermost_node_ids = []
+        special_node_links = {}
+        special_node_subnodes = {}
+        is_sorted = []
+        def loop(result: dict, node_dict: dict):
+            for node in node_dict:
+                result[pipeline.operations[node].name] = {}
+                loop(result[pipeline.operations[node].name], node_dict[node])
+        def loop2(result: list, node_list: list):
+            for node in node_list:
+                result.append(pipeline.operations[node].name)
+        def loop3(result: dict, node_dict: dict):
+            for node in node_dict:
+                result[pipeline.operations[node].name] = []
+                loop2(result[pipeline.operations[node].name], node_dict[node])
+        self._filter_component_node(
+            pipeline.operations, 
+            link_ref, 
+            outermost_node_ids, 
+            special_node_links,
+            special_node_subnodes, 
+            is_sorted
+        )
+        result1 = []
+        result2 = {}
+        result3 = {}
+        loop(name_link_ref, link_ref)
+        loop2(result1, outermost_node_ids)
+        loop(result2, special_node_links)
+        loop3(result3, special_node_subnodes)
+        print(name_link_ref)
+        print(result1)
+        print(result2)
+        print(result3)
+
+        sorted_outermost_node_ids = []
+        sorted_special_node_links = {}
+
+        sorted_outermost_node_operations = self._sorted_opreation_list(outermost_node_ids, pipeline)
+        for node_id in special_node_subnodes:
+            sorted_node_operations = self._sorted_opreation_list(special_node_subnodes[node_id], pipeline)
+            special_node_subnodes[node_id] = sorted_node_operations
+
+        for sorted_outermost_node_operation in sorted_outermost_node_operations:
+            sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
+        for node_id in special_node_subnodes:
+            temp_node_id = []
+            for operation in special_node_subnodes[node_id]:
+                temp_node_id.append(operation.name)
+            sorted_special_node_links[node_id] = temp_node_id
+
+        print("==============")
+        print(sorted_special_node_links)
+        print(sorted_outermost_node_ids)
+
+        return target_ops
         # All previous operation outputs should be propagated throughout the pipeline.
         # In order to process this recursively, the current operation's inputs should be combined
         # from its parent's inputs (which, themselves are derived from the outputs of their parent)

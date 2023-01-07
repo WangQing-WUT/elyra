@@ -360,11 +360,12 @@ class PipelineProcessor(LoggingConfigurable):  # ABC
         if operation not in ordered_operations:
             # process each of the dependencies that needs to be executed first
             for parent_operation_id in operation.parent_operation_ids:
-                parent_operation = operations_by_id[parent_operation_id]
-                if parent_operation not in ordered_operations:
-                    PipelineProcessor._sort_operation_dependencies(
-                        operations_by_id, ordered_operations, parent_operation
-                    )
+                if parent_operation_id in operations_by_id:
+                    parent_operation = operations_by_id[parent_operation_id]
+                    if parent_operation not in ordered_operations:
+                        PipelineProcessor._sort_operation_dependencies(
+                            operations_by_id, ordered_operations, parent_operation
+                        )
             ordered_operations.append(operation)
 
 

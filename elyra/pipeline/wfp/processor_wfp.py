@@ -78,12 +78,14 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             self.create_pipeline_template(path, resource, file_list)
         
         export_pipeline_yaml = yaml.load(resource, Loader=yaml.FullLoader)
-        pipeline_spec_dict = json.loads(export_pipeline_yaml["metadata"]["annotations"]["pipelines.kubeflow.org/pipeline_spec"])
-        for item in pipeline_spec_dict["inputs"]:
-            pipeline_input_parameter = {}
-            pipeline_input_parameter["name"] = item["name"]
-            pipeline_input_parameter["value"] = item["default"]
-            pipeline_input_parameters.append(pipeline_input_parameter)
+        if "pipelines.kubeflow.org/pipeline_spec" in export_pipeline_yaml["metadata"]["annotations"]:
+            pipeline_spec_dict = json.loads(export_pipeline_yaml["metadata"]["annotations"]["pipelines.kubeflow.org/pipeline_spec"])
+            if "inputs" in pipeline_spec_dict:
+                for item in pipeline_spec_dict["inputs"]:
+                    pipeline_input_parameter = {}
+                    pipeline_input_parameter["name"] = item["name"]
+                    pipeline_input_parameter["value"] = item["default"]
+                    pipeline_input_parameters.append(pipeline_input_parameter)
         
         return response, pipeline_input_parameters
 

@@ -20,17 +20,20 @@ RUN ~/miniconda3/bin/conda create -n elyra python
 RUN echo ". ~/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate elyra" >> ~/.bashrc
 
-RUN /bin/bash . ~/miniconda3/etc/profile.d/conda.sh && \
+RUN . ~/miniconda3/etc/profile.d/conda.sh && \
     conda activate elyra && \
     conda install -y -c conda-forge/label/main nodejs && \
     node --version && \
     conda install -y -c conda-forge/label/main yarn && \
     yarn --version 
 
-RUN wget https://github.com/WangQing-WUT/elyra/archive/refs/heads/workflow.zip && \
-    unzip workflow.zip -d wfeeditor
+RUN cd ~ && \
+    wget https://github.com/WangQing-WUT/elyra/archive/refs/heads/workflow.zip && \
+    unzip workflow.zip
 
-RUN cd wfeeditor && \
+WORKDIR /root/elyra-workflow
+RUN . ~/miniconda3/etc/profile.d/conda.sh && \
+    conda activate elyra && \
     make install
 
 # COPY requirements.yml requirements.yml
