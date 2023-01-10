@@ -557,8 +557,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     subnodes,
                     is_sorted
                 )
-            if node_id not in subnodes
-                is_sorted.append(node_id)
+            
+            is_sorted.append(node_id)
+            if node_id not in subnodes:
                 subnodes.append(node_id)
             
     
@@ -600,6 +601,20 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             else:
                 continue
 
+    def _filter_duplicate_nodes(self, special_node_links: dict, special_node_subnodes: dict, is_sorted: list):
+        for node in special_node_links:
+            self._filter_duplicate_nodes(special_node_links[node], special_node_subnodes, is_sorted)
+            if node not in is_sorted:
+                temp_remove_nodes = []
+                for subnode in special_node_subnodes[node]:
+                    if subnode not in is_sorted:
+                        is_sorted.append(subnode)
+                    else:
+                        temp_remove_nodes.append(subnode)
+                for remove_node in temp_remove_nodes:
+                    special_node_subnodes[node].remove(remove_node)
+            
+
     def _sorted_opreation_list(self, node_ids: list, pipeline):
         node_operations = {}
         for node_id in node_ids:
@@ -617,9 +632,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _process_component(
         self,
         args,
-        node,
-        parent_node,
-        sub_node_dict,
+        operation,
         pipeline,
         container_runtime,
         emptydir_volume_size,
@@ -637,7 +650,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         runtime_configuration,
         target_ops
     ):
-        operation = pipeline.operations[node]
         if container_runtime:
             # Volume size to create when using CRI-o, NOTE: IBM Cloud minimum is 20Gi
             emptydir_volume_size = "20Gi"
@@ -832,41 +844,18 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 value.add_to_execution_object(runtime_processor=self, execution_object=container_op)
 
         # Add ContainerOp to target_ops dict
-        if operation.id not in target_ops:
-            target_ops[operation.id] = container_op
-        
-        if parent_node:
-            op = target_ops[operation.id]
-            parent_op = target_ops[parent_node]
-            op.after(parent_op)
+        target_ops[operation.id] = container_op
 
-        self._loop(
-            args,
-            node,
-            sub_node_dict,
-            pipeline,
-            container_runtime,
-            emptydir_volume_size,
-            cos_secret,
-            cos_username,
-            cos_password,
-            cos_endpoint,
-            cos_bucket,
-            pipeline_name,
-            experiment_name,
-            artifact_object_prefix,
-            pipeline_version,
-            engine,
-            export,
-            runtime_configuration,
-            target_ops
-        )
+        for parent_operation_id in operation.parent_operation_ids:
+            parent_op = target_ops[parent_operation_id]
+            if not isinstance(parent_op, str):
+                container_op.after(parent_op)
     
     def _loop(
         self,
         args,
-        parent_node,
-        node_dict,
+        sorted_node_operations,
+        sorted_special_node_subnodes,
         pipeline,
         container_runtime,
         emptydir_volume_size,
@@ -884,12 +873,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         runtime_configuration,
         target_ops
     ):
-        for node in node_dict:
-            if pipeline.operations[node].classifier.startswith("branch"):
+        for operation in sorted_node_operations:
+            if operation.classifier.startswith("branch"):
                 self._process_branch(
                     args,
-                    node,
-                    node_dict[node],
+                    operation,
+                    sorted_special_node_subnodes[operation.id],
+                    sorted_special_node_subnodes,
                     pipeline,
                     container_runtime,
                     emptydir_volume_size,
@@ -907,11 +897,12 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime_configuration,
                     target_ops
                 )
-            elif pipeline.operations[node].classifier.startswith("loop"):
+            elif operation.classifier.startswith("loop"):
                 self._process_loop(
                     args,
-                    node,
-                    node_dict[node],
+                    operation,
+                    sorted_special_node_subnodes[operation.id],
+                    sorted_special_node_subnodes,
                     pipeline,
                     container_runtime,
                     emptydir_volume_size,
@@ -932,9 +923,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             else:
                 self._process_component(
                     args,
-                    node,
-                    parent_node,
-                    node_dict[node],
+                    operation,
                     pipeline,
                     container_runtime,
                     emptydir_volume_size,
@@ -979,8 +968,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _process_branch(
         self,
         args,
-        node,
-        sub_node_dict,
+        operation,
+        sorted_node_operations,
+        sorted_special_node_subnodes,
         pipeline,
         container_runtime,
         emptydir_volume_size,
@@ -998,10 +988,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         runtime_configuration,
         target_ops
     ):
-        operation = pipeline.operations[node]
         name = operation.name
         if name == "Pipeline Branch":
-            name = ""
+            name = None
         target_ops[operation.id] = "branch"
         component_params = operation.component_params
         branch_parameter1 = self._parse_branch_parameter(
@@ -1019,8 +1008,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
             self._loop(
                 args,
-                "",
-                sub_node_dict,
+                sorted_special_node_subnodes[operation.id],
+                sorted_special_node_subnodes,
                 pipeline,
                 container_runtime,
                 emptydir_volume_size,
@@ -1042,8 +1031,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _process_loop(
         self,
         args,
-        node,
-        sub_node_dict,
+        operation,
+        sorted_node_operations,
+        sorted_special_node_subnodes,
         pipeline,
         container_runtime,
         emptydir_volume_size,
@@ -1062,12 +1052,28 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops
     ):
 
-        target_ops[branch_operation.id] = "loop"
-        with dsl.Condition(target_ops[branch_operation.parent_operation_ids[0]].outputs["output1"] == "test"):
+        name = operation.name
+        if name == "Pipeline Loop":
+            name = None
+        target_ops[operation.id] = "Loop"
+        component_params = operation.component_params
+        branch_parameter1 = self._parse_branch_parameter(
+            component_params["branch_conditions"]["branch_parameter1"],
+            args,
+            target_ops
+        )
+        branch_parameter2 = self._parse_branch_parameter(
+            component_params["branch_conditions"]["branch_parameter2"],
+            args,
+            target_ops
+        )
+        operate = component_params["branch_conditions"]["operate"]
+
+        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
             self._loop(
                 args,
-                "",
-                sub_node_dict,
+                sorted_special_node_subnodes[operation.id],
+                sorted_special_node_subnodes,
                 pipeline,
                 container_runtime,
                 emptydir_volume_size,
@@ -1130,7 +1136,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         sorted_operations = PipelineProcessor._sort_operations(pipeline.operations)
 
         # Determine whether access to cloud storage is required
-        #TODO:delete
+        # TODO:delete
         # for operation in sorted_operations:
         #     if isinstance(operation, GenericOperation):
         #         self._verify_cos_connectivity(runtime_configuration)
@@ -1142,17 +1148,17 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         special_node_links = {}
         special_node_subnodes = {}
         is_sorted = []
-        def loop(result: dict, node_dict: dict):
-            for node in node_dict:
-                result[pipeline.operations[node].name] = {}
-                loop(result[pipeline.operations[node].name], node_dict[node])
-        def loop2(result: list, node_list: list):
-            for node in node_list:
-                result.append(pipeline.operations[node].name)
-        def loop3(result: dict, node_dict: dict):
-            for node in node_dict:
-                result[pipeline.operations[node].name] = []
-                loop2(result[pipeline.operations[node].name], node_dict[node])
+        # def loop(result: dict, node_dict: dict):
+        #     for node in node_dict:
+        #         result[pipeline.operations[node].name] = {}
+        #         loop(result[pipeline.operations[node].name], node_dict[node])
+        # def loop2(result: list, node_list: list):
+        #     for node in node_list:
+        #         result.append(pipeline.operations[node].name)
+        # def loop3(result: dict, node_dict: dict):
+        #     for node in node_dict:
+        #         result[pipeline.operations[node].name] = []
+        #         loop2(result[pipeline.operations[node].name], node_dict[node])
         self._filter_component_node(
             pipeline.operations, 
             link_ref, 
@@ -1161,39 +1167,47 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             special_node_subnodes, 
             is_sorted
         )
-        result1 = []
-        result2 = {}
-        result3 = {}
-        loop(name_link_ref, link_ref)
-        loop2(result1, outermost_node_ids)
-        loop(result2, special_node_links)
-        loop3(result3, special_node_subnodes)
-        print(name_link_ref)
-        print(result1)
-        print(result2)
-        print(result3)
-
-        sorted_outermost_node_ids = []
-        sorted_special_node_links = {}
+        # result1 = []
+        # result2 = {}
+        # result3 = {}
+        # loop(name_link_ref, link_ref)
+        # loop2(result1, outermost_node_ids)
+        # loop(result2, special_node_links)
+        # loop3(result3, special_node_subnodes)
+        # print(name_link_ref)
+        # print(result1)
+        # print(result2)
+        # print(result3)
+        is_sorted = []
+        self._filter_duplicate_nodes(special_node_links, special_node_subnodes, is_sorted)
+        temp_remove_nodes = []
+        for outermost_node_id in outermost_node_ids:
+            if outermost_node_id in is_sorted:
+                temp_remove_nodes.append(outermost_node_id)
+        for remove_node in temp_remove_nodes:
+            outermost_node_ids.remove(remove_node)
 
         sorted_outermost_node_operations = self._sorted_opreation_list(outermost_node_ids, pipeline)
+        sorted_special_node_subnodes = {}
         for node_id in special_node_subnodes:
             sorted_node_operations = self._sorted_opreation_list(special_node_subnodes[node_id], pipeline)
-            special_node_subnodes[node_id] = sorted_node_operations
+            sorted_special_node_subnodes[node_id] = sorted_node_operations
 
-        for sorted_outermost_node_operation in sorted_outermost_node_operations:
-            sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
-        for node_id in special_node_subnodes:
-            temp_node_id = []
-            for operation in special_node_subnodes[node_id]:
-                temp_node_id.append(operation.name)
-            sorted_special_node_links[node_id] = temp_node_id
+        # sorted_outermost_node_ids = []
+        # sorted_special_node_links = {}
+        # for sorted_outermost_node_operation in sorted_outermost_node_operations:
+        #     sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
+        # for node_id in sorted_special_node_subnodes:
+        #     temp_node_id = []
+        #     for operation in sorted_special_node_subnodes[node_id]:
+        #         temp_node_id.append(operation.name)
+        #     sorted_special_node_links[node_id] = temp_node_id
 
-        print("==============")
-        print(sorted_special_node_links)
-        print(sorted_outermost_node_ids)
+        # print("==============")
+        # print(sorted_special_node_links)
+        # print(sorted_outermost_node_ids)
+        # return target_ops
 
-        return target_ops
         # All previous operation outputs should be propagated throughout the pipeline.
         # In order to process this recursively, the current operation's inputs should be combined
         # from its parent's inputs (which, themselves are derived from the outputs of their parent)
@@ -1203,8 +1217,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
         self._loop(
             args,
-            "",
-            link_ref,
+            sorted_outermost_node_operations,
+            sorted_special_node_subnodes,
             pipeline,
             container_runtime,
             emptydir_volume_size,
