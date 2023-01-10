@@ -58,21 +58,21 @@ function getOneOfValue(value: string, option: string, label: string) {
     properties: {
       value: {
         type: "string",
-        default: value
+        default: value,
       },
       option: {
         type: "string",
-        default: option
-      }
+        default: option,
+      },
     },
     uihints: {
       value: {
-        "ui:field": "hidden"
+        "ui:field": "hidden",
       },
       option: {
-        "ui:field": "hidden"
-      }
-    }
+        "ui:field": "hidden",
+      },
+    },
   };
 }
 
@@ -80,9 +80,9 @@ function getInitPipelineTriggerPara(name: string) {
   return {
     from: {
       value: "",
-      widget: "string"
+      widget: "string",
     },
-    name: name
+    name: name,
   };
 }
 
@@ -105,7 +105,7 @@ function NodeProperties({
   upstreamNodes,
   onFileRequested,
   onPropertiesUpdateRequested,
-  onChange
+  onChange,
 }: Props) {
   const [pipelinePara, setPipelinePara] = useState(false);
 
@@ -134,7 +134,7 @@ function NodeProperties({
     );
   }
 
-  const nodePropertiesSchema = nodes.find(n => n.op === selectedNode.op);
+  const nodePropertiesSchema = nodes.find((n) => n.op === selectedNode.op);
 
   if (nodePropertiesSchema === undefined) {
     return (
@@ -197,7 +197,7 @@ function NodeProperties({
 
     // add each upstream node to the data list
     for (const upstreamNode of upstreamNodes ?? []) {
-      const nodeDef = nodes.find(n => n.op === upstreamNode.op);
+      const nodeDef = nodes.find((n) => n.op === upstreamNode.op);
       const prevLen = oneOfValuesNoOpt.length;
 
       const nodeProperties =
@@ -254,9 +254,9 @@ function NodeProperties({
           label: {
             title: "Label",
             description: "A custom label for the node.",
-            type: "string"
+            type: "string",
           },
-          ...draft.properties
+          ...draft.properties,
         };
         const oneOfValue =
           draft.properties.component_parameters?.properties?.trigger_parameters
@@ -282,17 +282,6 @@ function NodeProperties({
           }
         }
 
-        const app_name =
-          draft.properties.component_parameters?.properties?.event_filter?.items
-            ?.properties?.app_name;
-        const model_name =
-          draft.properties.component_parameters?.properties?.event_filter?.items
-            ?.properties?.model_name;
-        if (app_name && model_name && filters.length > 0) {
-          app_name.oneOf[2].properties.value.enum = filters;
-          model_name.oneOf[2].properties.value.enum = filters;
-        }
-
         const oneOf =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.properties?.value?.oneOf;
@@ -316,6 +305,17 @@ function NodeProperties({
             ?.oneOf;
         if (dataset_oneOf && filters) {
           dataset_oneOf[1].properties.value.enum = filters;
+        }
+
+        const app_name =
+          draft.properties.component_parameters?.properties?.event_filter?.items
+            ?.properties?.app_name;
+        const model_name =
+          draft.properties.component_parameters?.properties?.event_filter?.items
+            ?.properties?.model_name;
+        if (app_name && model_name && filters.length > 0) {
+          app_name.oneOf[2].properties.value.enum = filters;
+          model_name.oneOf[2].properties.value.enum = filters;
         }
 
         const branch_parameter1 =

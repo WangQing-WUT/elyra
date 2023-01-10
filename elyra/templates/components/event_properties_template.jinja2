@@ -1237,25 +1237,58 @@
 				{% endif %}
 				{% if  component.name == "Model Monitor Event" %}
 				"alert_name": {
-					"type": "string",
 					"title": "Alert Name",
 					"description": "Alert Name.",
-					"enum": [
-						"model_mon_ap50",
-						"model_mon_ap",
-						"model_mon_ap_small",
-						"model_mon_ar_small",
-						"model_mon_confidence_mean",
-						"model_mon_ap75",
-						"model_mon_ap_medium",
-						"model_mon_ap_large",
-						"model_mon_ar1",
-						"model_mon_ar10",
-						"model_mon_ar100",
-						"model_mon_ar_medium",
-						"model_mon_ar_large"
-					],
-					"default": "model_mon_ap50"
+					"oneOf":[
+                        {
+                            "label": "Enter a value manually",
+                            "properties": {
+                                "value": {
+                                    "type": "string",
+                                    "enum": [
+										"model_mon_ap50",
+										"model_mon_ap",
+										"model_mon_ap_small",
+										"model_mon_ar_small",
+										"model_mon_confidence_mean",
+										"model_mon_ap75",
+										"model_mon_ap_medium",
+										"model_mon_ap_large",
+										"model_mon_ar1",
+										"model_mon_ar10",
+										"model_mon_ar100",
+										"model_mon_ar_medium",
+										"model_mon_ar_large"
+									],
+									"default": "model_mon_ap50"
+                                },
+                                "widget": {
+                                    "type": "string",
+                                    "default": "string"
+                                }
+                            },
+                            "uihints":{
+                                "widget": {"ui:field": "hidden"}
+                            }
+                        },
+                        {
+                            "label": "Select one of the workflow input parameters",
+                            "properties": {
+                                "value": {
+                                    "type": "string",
+                                    "enum": [""],
+                                    "default": ""
+                                },
+                                "widget": {
+                                    "type": "string",
+                                    "default": "enum"
+                                }
+                            },
+                            "uihints":{
+                                "widget": {"ui:field": "hidden"}
+                            }
+                        }
+                    ]
 				},
 				"event_filter": {
 					"type": "array",
@@ -1382,14 +1415,13 @@
 					},
 					"uihints":{
 						"items": {
-							"id": { "ui:readonly": "true" },
-							"name": {"ui:field": "hidden"}
+							"id": { "ui:readonly": "true" }
 						}
 					}
 				}
 				{% endif %}
 			},
-			"required": ["expression", "bucket_name", "event_filter", "dataset_name", "calendar"]
+			"required": ["expression", "bucket_name", "event_filter", "dataset_name", "calendar", "alert_name"]
 		}
 	},
 	"required": ["label", "component_parameters"]

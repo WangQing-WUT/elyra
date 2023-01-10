@@ -105,13 +105,22 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         spec_field["parameters"] = parameters
         return spec_field
     
-    def _get_dataset_names(self, dataset_names: dict):
+    def _get_dataset_names(self, dataset_names: list):
         dataset_names_list = []
         for item in dataset_names:
             value = self._widget_value_str(item)
             if value:
                 dataset_names_list.append(value)
         return dataset_names_list
+    
+    def _get_model_monitor_event_filter(self, event_filter: list):
+        eventFilter = []
+        for item in event_filter:
+            temp_filter = {}
+            temp_filter["AppName"] = self._widget_value_str(item["app_name"])
+            temp_filter["ModelName"] = self._widget_value_str(item["model_name"])
+            eventFilter.append(temp_filter)
+        return eventFilter
 
     async def _component_parse(self, root_dir, parent, node_json: dict, runtime_config, export_path, file_list):
         # key: catalog type
@@ -166,6 +175,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                                                              node["app_data"]["component_parameters"]["expression"])
                     }
                 }
+            elif node_type == "model_monitor_event":
+                if "modelMonitor" not in event_field:
+                    event_field["modelMonitor"] = {}
+                event_field["modelMonitor"][node["app_data"]["label"].lstrip()] = {
+                    "alertName": self._widget_value_str(node["app_data"]["component_parameters"]["alert_name"]),
+                    "eventFilter": self._get_model_monitor_event_filter(node["app_data"]["component_parameters"]["event_filter"])
+                }  
             elif node_type == "pipeline_trigger":
                 if "pipeline" not in trigger_field:
                     trigger_field["pipeline"] = {}
@@ -650,6 +666,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 self._validate_calendar_event(node, workflow_input_parameters, name, response)
             elif node_type == "dataset_event":
                 self._validate_dataset_event(node, workflow_input_parameters, name, response)
+            elif node_type == "model_monitor_event":
+                self._validate_model_monitor_event(node, workflow_input_parameters, name, response)
             elif node_type == "pipeline_trigger":
                 self._validate_pipeline_trigger(node, workflow_input_parameters, name, response)
             elif node_type == "k8s_object_trigger":
@@ -773,8 +791,30 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             event_filters = node["app_data"]["component_parameters"]["event_filter"]
             for event_filter in event_filters:
                 self._validate_event_filter(event_filter, node_type, node_id, node_name, "Dataset Event Filter", workflow_input_parameters, response)
-
     
+    def _validate_model_monitor_event(self, node, workflow_input_parameters, name, response):
+        node_type = "Model Monitor Event"
+        node_id = node["id"]
+        node_name = node["app_data"]["label"]
+        if ("event_filter" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["event_filter"]) == 0):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodePropertyValue",
+                message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
+                data={
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name, 
+                    "propertyName": "Model Configuration"
+                },
+            )
+        else:
+            event_filters = node["app_data"]["component_parameters"]["event_filter"]
+            for event_filter in event_filters:
+                self._validate_node_property_value(event_filter["app_name"], node_type, node_id, node_name, "App Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response)
+                self._validate_node_property_value(event_filter["model_name"], node_type, node_id, node_name, "Model Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response)
+
     def _validate_pipeline_trigger(self, node, workflow_input_parameters, name, response):
         node_type = "Pipeline Trigger"
         node_id = node["id"]
@@ -826,7 +866,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             name[node["app_data"]["label"]] = node["id"]
     
     def _validate_node_property_value(self, property, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):        
-        if property["value"].strip() == "":
+        if ("value" not in property) or (property["value"].strip() == ""):
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",

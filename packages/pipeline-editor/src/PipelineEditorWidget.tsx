@@ -517,7 +517,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
-
+    console.log(filename)
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
         browserFactory.defaultBrowser.model.manager,
@@ -540,7 +540,7 @@ const PipelineWrapper: React.FC<IProps> = ({
         {
           startPath: PathExt.dirname(filename),
           filter: (model: any): boolean => {
-            return model.path !== filename;
+            return true;
             //TODO
             // if (args.filters?.File === undefined) {
             //   return true;
@@ -989,8 +989,10 @@ const PipelineWrapper: React.FC<IProps> = ({
           break;
         case 'editPipeline':
           commands.execute(commandIDs.openDocManager, {
-            path: args.payload,
-            factory: 'Pipeline Editor'
+            path: PipelineService.getWorkspaceRelativeNodePath(
+              contextRef.current.path,
+              args.payload
+            )
           });
           break;
         case 'openFile':
