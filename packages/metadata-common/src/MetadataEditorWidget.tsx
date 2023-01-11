@@ -27,7 +27,6 @@ import {
 import { IEditorServices } from '@jupyterlab/codeeditor';
 import { TranslationBundle } from '@jupyterlab/translation';
 import { IFormComponentRegistry } from '@jupyterlab/ui-components';
-
 import { find } from '@lumino/algorithm';
 import { Message } from '@lumino/messaging';
 
@@ -70,6 +69,8 @@ export interface IMetadataEditorProps {
    * Translator for internationalization.
    */
   translator: TranslationBundle;
+
+  browserFactory: any;
 
   /**
    * Status for handling unsaved changes through JupyterLab

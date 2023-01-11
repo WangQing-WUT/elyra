@@ -65,6 +65,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
   editorServices,
   schemaspace,
   onSave,
+  browserFactory,
   schemaName,
   schemaTop,
   initialMetadata,
@@ -181,6 +182,7 @@ export const MetadataEditor: React.FC<IMetadataEditorComponentProps> = ({
           }}
           componentRegistry={componentRegistry}
           translator={translator}
+          browserFactory={browserFactory}
           editorServices={editorServices}
           originalData={metadata}
           allTags={allTags}

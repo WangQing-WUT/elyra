@@ -74,7 +74,8 @@
           "description": "A list of paths to individual component specification files in the local filesystem",
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "format": "file"
           },
           "uihints": {
             "category": "Configuration"

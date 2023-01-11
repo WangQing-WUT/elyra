@@ -44,6 +44,7 @@ import {
 
 import { find } from '@lumino/algorithm';
 import { Widget } from '@lumino/widgets';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
 const METADATA_EDITOR_ID = 'elyra-metadata-editor';
 const METADATA_WIDGET_ID = 'elyra-metadata';
@@ -64,7 +65,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     IEditorServices,
     ILabStatus,
     IFormComponentRegistry,
-    ITranslator
+    ITranslator,
+    IFileBrowserFactory
   ],
   optional: [IThemeManager],
   activate: async (
@@ -74,6 +76,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     status: ILabStatus,
     componentRegistry: IFormComponentRegistry,
     translator: ITranslator,
+    browserFactory: IFileBrowserFactory,
     themeManager?: IThemeManager
   ) => {
     console.log('Elyra - metadata extension is activated!');
@@ -117,6 +120,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         status,
         themeManager,
         translator: translator.load('jupyterlab'),
+        browserFactory: browserFactory,
         componentRegistry
       });
       const main = new MainAreaWidget({ content: metadataEditorWidget });

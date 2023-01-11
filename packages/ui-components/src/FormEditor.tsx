@@ -20,8 +20,12 @@ import { IFormComponentRegistry } from '@jupyterlab/ui-components';
 import Form, {
   ArrayFieldTemplateProps,
   FieldTemplateProps,
-  IChangeEvent
+  IChangeEvent,
+  Widget
 } from '@rjsf/core';
+
+import { showBrowseFileDialog } from './BrowseFileDialog';
+import { PathExt } from '@jupyterlab/coreutils';
 import * as React from 'react';
 
 /**
@@ -67,6 +71,8 @@ interface IFormEditorProps {
    * All existing languages to give as options.
    */
   languageOptions?: string[];
+
+  browserFactory: any;
 }
 
 /**
@@ -132,6 +138,57 @@ const CustomFieldTemplate: React.FC<FieldTemplateProps> = props => {
   );
 };
 
+const FileWidget: Widget = props => {
+  const handleChooseFile = React.useCallback(async () => {
+    const values = await props.formContext.onFileRequested({
+      canSelectMany: false,
+      defaultUri: props.value,
+      filters: { File: props.uiSchema.extensions },
+      propertyID: props.id.replace('root_component_parameters_', '')
+    });
+    if (values?.[0]) {
+      props.onChange(values[0]);
+    }
+  }, [props]);
+
+  return (
+    <div id={props.id} style={{ display: 'flex' }}>
+      <input
+        type="text"
+        className="form-control"
+        value={props.value ?? ''}
+        placeholder={props.uiSchema?.['ui:placeholder']}
+        onChange={e => {
+          console.log(e);
+        }}
+        disabled
+      />
+      <button
+        className="form-control"
+        style={{ width: 'fit-content' }}
+        onClick={handleChooseFile}
+      >
+        Browse
+      </button>
+    </div>
+  );
+};
+
+const widgets: { [id: string]: Widget } = {
+  file: FileWidget
+};
+
+function getPipelineRelativeNodePath(
+  pipelinePath: string,
+  nodePath: string
+): string {
+  const relativePath: string = PathExt.relative(
+    PathExt.dirname(pipelinePath),
+    nodePath
+  );
+  return relativePath;
+}
+
 /**
  * React component that wraps the RJSF form editor component.
  * Creates a uiSchema from given uihints and passes relevant information
@@ -145,7 +202,8 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
   translator,
   originalData,
   allTags,
-  languageOptions
+  languageOptions,
+  browserFactory
 }) => {
   const [formData, setFormData] = React.useState(originalData ?? ({} as any));
 
@@ -164,17 +222,40 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     }
   }
 
+  const onFileRequested = async (): Promise<string[] | undefined> => {
+    const res = await showBrowseFileDialog(
+      browserFactory.defaultBrowser.model.manager,
+      {
+        startPath: '',
+        filter: (model: any): boolean => {
+          return true;
+        }
+      }
+    );
+
+    if (res.button.accept && res.value.length) {
+      const file = getPipelineRelativeNodePath('/', res.value[0].path);
+      return [file];
+    }
+    return undefined;
+  };
+
   return (
     <Form
       schema={schema}
       formData={formData}
       formContext={{
+        onFileRequested: async (args: any) => {
+          console.log('===+===');
+          return await onFileRequested?.();
+        },
         editorServices: editorServices,
         language: formData?.['Source']?.language ?? '',
         allTags: allTags,
         languageOptions: languageOptions,
         trans: translator
       }}
+      widgets={widgets}
       fields={componentRegistry?.renderers}
       ArrayFieldTemplate={ArrayTemplate}
       FieldTemplate={CustomFieldTemplate}
