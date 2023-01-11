@@ -70,25 +70,32 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
   }
   // render catalog entries
   renderExpandableContent(metadata: IDictionary<any>): JSX.Element {
-    let category_output = <li key="No category">No category</li>;
-    if (metadata.metadata.categories) {
-      category_output = metadata.metadata.categories.map((category: string) => (
-        <li key={category}>{category}</li>
+    // let category_output = <li key="No category">No category</li>;
+    // if (metadata.metadata.categories) {
+    //   category_output = metadata.metadata.categories.map((category: string) => (
+    //     <li key={category}>{category}</li>
+    //   ));
+    // }
+
+    let component_output = <li key="No category">No category</li>;
+    if (metadata.metadata.paths) {
+      component_output = metadata.metadata.paths.map((path: string) => (
+        <li key={path}>{path}</li>
       ));
     }
 
     return (
       <div>
-        <h6>Runtime Type</h6>
+        {/* <h6>Runtime Type</h6>
         {metadata.metadata.runtime_type}
         <br />
-        <br />
+        <br /> */}
         <h6>Description</h6>
         {metadata.metadata.description ?? 'No description'}
         <br />
         <br />
-        <h6>Categories</h6>
-        <ul>{category_output}</ul>
+        <h6>Components</h6>
+        <ul>{component_output}</ul>
       </div>
     );
   }

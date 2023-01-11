@@ -246,7 +246,6 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
       formData={formData}
       formContext={{
         onFileRequested: async (args: any) => {
-          console.log('===+===');
           return await onFileRequested?.();
         },
         editorServices: editorServices,
