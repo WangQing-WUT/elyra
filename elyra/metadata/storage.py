@@ -246,7 +246,6 @@ class FileMetadataStore(MetadataStore):
         if name:
             if name in resources.keys():  # check if we have a match.
                 return [resources[name]]
-
             # If we're looking for a single metadata and we're here, then its not found
             raise MetadataNotFoundError(self.schemaspace, name)
 

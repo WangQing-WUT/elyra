@@ -603,9 +603,9 @@ class PipelineDefinition(object):
                                     elif input_parameter["type"] == "Float":
                                         if not is_float(input_parameter["value"]):
                                             validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Float).")
-                                    elif input_parameter["type"] == "Bool":
+                                    elif input_parameter["type"] == "Boolean":
                                         if not is_bool(input_parameter["value"]):
-                                            validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Bool).")
+                                            validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Boolean).")
                                     
                                     input_parameter_names.append(input_parameter["name"])
                             

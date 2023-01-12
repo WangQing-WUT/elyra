@@ -93,10 +93,10 @@
                 "title": "Type",
                 "description": "The type of input parameter.",
                 "type": "string",
-                "enum": ["String", "Integer", "Float", "Bool"],
+                "enum": ["String", "Integer", "Float", "Boolean"],
                 "default": "String"
               },
-              "value": {
+              "default": {
                 "type": "string",
                 "title": "Default Value"
               },
@@ -126,7 +126,7 @@
                 "title": "Type",
                 "description": "The type of input parameter.",
                 "type": "string",
-                "enum": ["String", "Integer", "Float", "Bool"],
+                "enum": ["String", "Integer", "Float", "Boolean"],
                 "default": "String"
               },
               "description": {
@@ -166,12 +166,34 @@
               "format": "textarea"
             }
           },
+          "required": ["image_name", "command"],
           "uihints": {
             "category": "Component Properties"
           }
+        },
+        "file_name": {
+          "title": "File Name",
+          "description": "File name of this Component yaml",
+          "type": "string",
+          "uihints": {
+            "category": "File Info"
+          }
+        },
+        "save_path": {
+          "title": "Save Path",
+          "description": "Save path of this Component yaml",
+          "type": "string",
+          "uihints": {
+            "category": "File Info"
+          }
         }
       },
-      "required": ["runtime_type"]
+      "required": [
+        "runtime_type",
+        "categories",
+        "component_name",
+        "implementation"
+      ]
     }
   },
   "required": ["schema_name", "display_name", "metadata"]

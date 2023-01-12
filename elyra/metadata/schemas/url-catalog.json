@@ -57,7 +57,8 @@
           "default": "KUBEFLOW_PIPELINES",
           "uihints": {
             "category": "Runtime",
-            "ui:readonly": true
+            "ui:readonly": true,
+            "hidden": true
           }
         },
         "paths": {

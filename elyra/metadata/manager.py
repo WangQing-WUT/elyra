@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 import re
+import json
+import yaml
+import os
 from typing import Any
 from typing import Dict
 from typing import List
@@ -27,6 +30,11 @@ from elyra.metadata.metadata import Metadata
 from elyra.metadata.schema import SchemaManager
 from elyra.metadata.storage import FileMetadataStore
 from elyra.metadata.storage import MetadataStore
+from elyra.metadata.error import MetadataNotFoundError
+
+from yaml.resolver import BaseResolver
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import PreservedScalarString as pss
 
 
 class MetadataManager(LoggingConfigurable):
@@ -100,6 +108,8 @@ class MetadataManager(LoggingConfigurable):
         if name is None:
             raise ValueError("The 'name' parameter requires a value.")
         instance_list = self.metadata_store.fetch_instances(name=name)
+        if not instance_list:
+            return None
         metadata_dict = instance_list[0]
         metadata = Metadata.from_dict(self.schemaspace, metadata_dict)
 
@@ -211,9 +221,74 @@ class MetadataManager(LoggingConfigurable):
 
         # Validate the metadata prior to storage then store the instance.
         self.validate(name, metadata)
+        metadata_dict = metadata.to_dict()
+
+        if (metadata_dict["schema_name"] == "new-component"):
+            new_metadata = metadata_dict["metadata"]
+            save_path = new_metadata["save_path"]
+            file_name = new_metadata["file_name"]
+            component_yaml = {}
+            component_yaml["name"] = new_metadata["component_name"]
+            if "component_description" in new_metadata:
+                component_yaml["description"] = new_metadata["component_description"]
+            if "input_parameters" in new_metadata:
+                component_yaml["inputs"] = new_metadata["input_parameters"]
+            if "output_parameters" in new_metadata:
+                component_yaml["outputs"] = new_metadata["output_parameters"]
+            implementation = new_metadata["implementation"]
+            command = yaml.load(implementation["command"], Loader=yaml.FullLoader)
+            yaml_loader = YAML()
+            pss_command = []
+            for item in command:
+                str_yaml = item
+                if "\n" in item:
+                    str_yaml = pss(item)
+                pss_command.append(str_yaml)
+            component_yaml["implementation"] = {
+                "container": {
+                    "image": implementation["image_name"],
+                    "command": pss_command
+                }
+            }
+            if "entrypoint" in implementation:
+                component_yaml["implementation"]["container"]["entrypoint"] = implementation["entrypoint"]
+            if "args" in implementation:
+                args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
+                component_yaml["implementation"]["container"]["args"] = args
+            
+            file_path = os.path.join(save_path, file_name + ".yaml")
+            with open(file_path, "w") as file:
+                yaml_loader.dump(component_yaml, file)
+            try:
+                update_metadata = self.get(new_metadata["categories"][0])
+                update_metadata_dict = update_metadata.to_dict()
+                name = update_metadata_dict["name"]
+                update_metadata_dict["metadata"]["paths"].append(os.path.relpath(file_path, update_metadata_dict["metadata"]["base_path"]))
+                for_update = True
+                metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
+            except MetadataNotFoundError:
+                new_metadata_dict = {
+                    "display_name": metadata_dict["display_name"],
+                    "metadata": {
+                        "categories": [
+                            new_metadata["categories"][0]
+                        ],
+                        "paths": [
+                            os.path.relpath(file_path, new_metadata["root_dir"])
+                        ],
+                        "base_path": new_metadata["root_dir"],
+                        "runtime_type": "KUBEFLOW_PIPELINES"
+                    },
+                    "schema_name": "local-file-catalog"
+                }
+                if "description" in new_metadata:
+                    new_metadata_dict["metadata"]["description"] = new_metadata["description"]
+                metadata = Metadata.from_dict(self.schemaspace, new_metadata_dict)
+                metadata.pre_save(for_update=for_update)
+                self._apply_defaults(metadata)
+                self.validate(name, metadata)
 
         metadata_dict = self.metadata_store.store_instance(name, metadata.prepare_write(), for_update=for_update)
-
         metadata_post_op = Metadata.from_dict(self.schemaspace, metadata_dict)
 
         # Allow class instances to handle post-save tasks (e.g., cache updates, etc.)

@@ -456,13 +456,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                             value = int(item["value"])
                         elif item["type"] == "Float":
                             value = float(item["value"])
-                        elif item["type"] == "Bool":
+                        elif item["type"] == "Boolean":
                             value = str_to_bool(item["value"])
                         input_parameters[item["name"]] = value
                     else:
                         if item["type"] == "String":
                             input_parameters[item["name"]] = ""
-                        elif item["type"] == "Bool":
+                        elif item["type"] == "Boolean":
                             input_parameters[item["name"]] = True
                         else:
                             input_parameters[item["name"]] = 0
