@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: wfeeditor
+    spec:
+      type: NodePort
+      selector:
+        app: wfeeditor
+      ports:
+        - name: http
+          port: 8888
+          protocol: TCP
+          targetPort: 8888
+          nodePort: 30088
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wfeeditor
+    spec:
+      selector:
+        matchLabels:
+          app: wfeeditor
+      template:
+        metadata:
+          labels:
+            app: wfeeditor
+        spec:
+          containers:
+            - image: 1442459023/wfeeditor:1.2.0
+              name: wfeeditor
+              imagePullPolicy: IfNotPresent
+              ports:
+                - name: http
+                  containerPort: 8888
+                  protocol: TCP
+              volumeMounts:
+                - mountPath: /home/jovyan/.local/share/jupyter/metadata
+                  name: metadata
+                - mountPath: /home/jovyan/work
+                  name: work
+          volumes:
+          - name: metadata
+            hostPath:
+              path: /root/metadata
+              type: Directory
+          - name: work
+            hostPath:
+              path: /root/wfeeditor-work
+              type: Directory
