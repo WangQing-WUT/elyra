@@ -320,12 +320,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         return [init_field, event_field, trigger_field, exit_field, response]
 
     def _get_condition(self, node_json: dict, node: dict):
-        filed_map = {
+        field_map = {
             "pipeline_event": "pipeline",
             "model_event": "model",
             "s3_event": "s3",
             "calendar_event": "calendar",
             "dataset_event": "dataset",
+            "model_monitor_event": "modelMonitor",
             "pipeline_trigger": "pipeline",
             "k8s_object_trigger": "k8sobj",
             "http_trigger": "http"
@@ -334,16 +335,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         condition_num = 0
         for link in node["inputs"][0]["links"]:
             if condition_num == 0:
-                condition = "events." + filed_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
+                condition = "events." + field_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
                             self._get_name(node_json, link['node_id_ref'])
                 condition_num += 1
             elif condition_num == 1:
-                condition = "(" + condition + ")" + " && (events." + filed_map[
+                condition = "(" + condition + ")" + " && (events." + field_map[
                     self._get_type(node_json, link['node_id_ref'])] + \
                             "." + self._get_name(node_json, link['node_id_ref']) + ")"
                 condition_num += 1
             else:
-                condition += " && (events." + filed_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
+                condition += " && (events." + field_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
                              self._get_name(node_json, link['node_id_ref']) + ")"
         return condition
 
@@ -479,6 +480,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "s3_event": "s3",
             "calendar_event": "calendar",
             "dataset_event": "dataset",
+            "model_monitor_event": "modelMonitor",
             "pipeline_trigger": "pipeline",
             "k8s_object_trigger": "k8sobj",
             "http_trigger": "http",
@@ -526,6 +528,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "s3_event": "s3",
             "calendar_event": "calendar",
             "dataset_event": "dataset",
+            "model_monitor_event": "modelMonitor",
             "pipeline_trigger": "pipeline",
             "k8s_object_trigger": "k8sobj",
             "http_trigger": "http",
@@ -591,11 +594,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
         response = self._validate(nodes, parameters_field)
         if not response.has_fatal:
-            para_filed = await self._component_parse(root, parent, nodes, runtime_config, export_path, file_list)
-            response = para_filed[4]
+            para_field = await self._component_parse(root, parent, nodes, runtime_config, export_path, file_list)
+            response = para_field[4]
             if not response.has_fatal:
-                spec_field = self._sepc_parse(para_filed[0], para_filed[3], parameters_field, para_filed[1],
-                                            para_filed[2])
+                spec_field = self._sepc_parse(para_field[0], para_field[3], parameters_field, para_field[1],
+                                            para_field[2])
                 workflow_yaml = {
                     "apiVersion": "wfe.hiascend.com/v1",
                     "kind": "Feature",

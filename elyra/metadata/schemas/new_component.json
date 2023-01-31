@@ -183,6 +183,7 @@
           "title": "Save Path",
           "description": "Save path of this Component yaml",
           "type": "string",
+          "format": "file",
           "uihints": {
             "category": "File Info"
           }

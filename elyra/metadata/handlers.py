@@ -57,13 +57,20 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
         try:
             instance = self._validate_body(schemaspace)
             instance_dict = instance.to_dict()
-            if (instance_dict["schema_name"] == "new-component"):
+            if instance_dict["schema_name"] == "new-component":
                 if "save_path" not in instance_dict["metadata"]:
                     instance_dict["metadata"]["save_path"] = self.settings["server_root_dir"]
+                else:
+                    dirname = os.path.dirname(instance_dict["metadata"]["save_path"])
+                    instance_dict["metadata"]["save_path"] = os.path.join(self.settings["server_root_dir"], dirname)
                 if "file_name" not in instance_dict["metadata"]:
                     instance_dict["metadata"]["file_name"] = instance_dict["metadata"]["component_name"]
                 instance_dict["metadata"]["root_dir"] = self.settings["server_root_dir"]
                 instance = Metadata.from_dict(schemaspace, instance_dict)
+            elif instance_dict["schema_name"] == "local-file-catalog":
+                instance_dict["metadata"]["base_path"] = self.settings["server_root_dir"]
+                instance = Metadata.from_dict(schemaspace, instance_dict)
+
             self.log.debug(
                 f"MetadataHandler: Creating metadata instance '{instance.name}' in schemaspace '{schemaspace}'..."
             )
