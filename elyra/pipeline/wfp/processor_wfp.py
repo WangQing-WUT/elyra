@@ -130,16 +130,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         trigger_field = {}
         for node in node_json:
             node_type = node["op"].split(":")[0]
-            if node_type == "pipeline_event":
-                if "pipeline" not in event_field:
-                    event_field["pipeline"] = {}
-                event_field["pipeline"][node["app_data"]["label"].lstrip()] = {
-                    "eventFilter": {
-                        "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
-                                                             node["app_data"]["component_parameters"]["expression"])
-                    }
-                }
-            elif node_type == "model_event":
+            if node_type == "model_event":
                 if "model" not in event_field:
                     event_field["model"] = {}
                 event_field["model"][node["app_data"]["label"].lstrip()] = {
@@ -322,7 +313,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _get_condition(self, node_json: dict, node: dict):
         field_map = {
-            "pipeline_event": "pipeline",
             "model_event": "model",
             "s3_event": "s3",
             "calendar_event": "calendar",
@@ -476,7 +466,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     @staticmethod
     def _parse_trigger_parameters(trigger_parameters: dict, node_json: dict):
         field_map = {
-            "pipeline_event": "pipeline",
             "model_event": "model",
             "s3_event": "s3",
             "calendar_event": "calendar",
@@ -524,7 +513,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     @staticmethod
     def _get_k8s_agruments(parameters: list, node_json: dict):
         field_map = {
-            "pipeline_event": "pipeline",
             "model_event": "model",
             "s3_event": "s3",
             "calendar_event": "calendar",
@@ -660,9 +648,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 workflow_input_parameters.append("workflow.parameters." + parameter["name"])
         for node in nodes:
             node_type = node["op"].split(":")[0]
-            if node_type == "pipeline_event":
-                self._validate_pipeline_event(node, workflow_input_parameters, name, response)
-            elif node_type == "model_event":
+            if node_type == "model_event":
                 self._validate_model_event(node, workflow_input_parameters, name, response)
             elif node_type == "s3_event":
                 self._validate_s3_event(node, workflow_input_parameters, name, response)
@@ -683,9 +669,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             elif node_type == "exit":
                 self._validate_exit(node, workflow_input_parameters, name, response)
         return response
-
-    def _validate_pipeline_event(self, node, workflow_input_parameters, name, response):
-        pass
 
     def _validate_model_event(self, node, workflow_input_parameters, name, response):
         pass

@@ -161,7 +161,6 @@ const customIcons: Map<string, string> = new Map([
   ['Dataset Event', 'dataset_event.svg'],
   ['S3 Event', 's3_event.svg'],
   ['Model Event', 'model_event.svg'],
-  ['Pipeline Event', 'pipeline_event.svg'],
   ['HTTP Trigger', 'http_trigger.svg'],
   ['K8s Object Trigger', 'k8sobj_trigger.svg'],
   ['Pipeline Trigger', 'pipeline_trigger.svg'],
