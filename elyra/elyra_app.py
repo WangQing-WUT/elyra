@@ -23,6 +23,7 @@ from elyra.api.handlers import YamlSpecHandler
 from elyra.contents.handlers import ContentHandler
 from elyra.metadata.handlers import MetadataHandler
 from elyra.metadata.handlers import MetadataResourceHandler
+from elyra.metadata.handlers import ComponentEditorHandler
 from elyra.metadata.handlers import SchemaHandler
 from elyra.metadata.handlers import SchemaResourceHandler
 from elyra.metadata.handlers import SchemaspaceHandler
@@ -86,7 +87,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
         processor_regex = r"(?P<runtime_type>[\w]+)"
         component_regex = r"(?P<component_id>[\w\.\-:%]+)"
         catalog_regex = r"(?P<catalog>[\w\.\-:]+)"
-        pipeline_path = r"(.*)"
+        path = r"(.*)"
 
         self.handlers.extend(
             [
@@ -95,6 +96,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 # Content
                 (f"/{self.name}/contents/properties{path_regex}", ContentHandler),
                 # Metadata
+                (f"/{self.name}/component-editor/{path}", ComponentEditorHandler),
                 (f"/{self.name}/metadata/{schemaspace_regex}", MetadataHandler),
                 (f"/{self.name}/metadata/{schemaspace_regex}/{resource_regex}", MetadataResourceHandler),
                 (f"/{self.name}/schema/{schemaspace_regex}", SchemaHandler),
@@ -118,7 +120,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 (f"/{self.name}/pipeline/runtimes/types", PipelineRuntimeTypesHandler),
                 (f"/{self.name}/pipeline/schedule", PipelineSchedulerHandler),
                 (f"/{self.name}/pipeline/validate", PipelineValidationHandler),
-                (f"/{self.name}/pipeline/pipeline_trigger/{pipeline_path}", PipelineTriggerParametersHandler)
+                (f"/{self.name}/pipeline/pipeline_trigger/{path}", PipelineTriggerParametersHandler)
             ]
         )
 

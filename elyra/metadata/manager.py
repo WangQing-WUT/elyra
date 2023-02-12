@@ -250,8 +250,8 @@ class MetadataManager(LoggingConfigurable):
                     "command": pss_command
                 }
             }
-            if "entrypoint" in implementation:
-                component_yaml["implementation"]["container"]["entrypoint"] = implementation["entrypoint"]
+            # if "entrypoint" in implementation:
+            #     component_yaml["implementation"]["container"]["entrypoint"] = implementation["entrypoint"]
             if "args" in implementation:
                 args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
                 component_yaml["implementation"]["container"]["args"] = args

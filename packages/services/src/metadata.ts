@@ -18,6 +18,7 @@ import { IDictionary } from './parsing';
 import { RequestHandler } from './requests';
 
 const ELYRA_METADATA_API_ENDPOINT = 'elyra/metadata/';
+const ELYRA_COMPONENTEDITOR_API_ENDPOINT = 'elyra/component-editor/';
 const ELYRA_SCHEMA_API_ENDPOINT = 'elyra/schema/';
 const ELYRA_SCHEMASPACE_API_ENDPOINT = 'elyra/schemaspace';
 
@@ -75,6 +76,36 @@ export class MetadataService {
   ): Promise<any> {
     return RequestHandler.makePutRequest(
       `${ELYRA_METADATA_API_ENDPOINT}${schemaspace}/${name}`,
+      requestBody
+    );
+  }
+
+  /**
+   * Service function for making GET calls to the elyra component API.
+   *
+   * @param path - the path of the component yaml
+   *
+   * @returns a promise that resolves with the requested component or
+   * an error dialog result
+   */
+  static async getComponent(path: string): Promise<any> {
+    return RequestHandler.makeGetRequest(
+      ELYRA_COMPONENTEDITOR_API_ENDPOINT + path
+    ).then(metadataResponse => metadataResponse[path]);
+  }
+
+  /**
+   * Service function for making PUT calls to the elyra component API.
+   *
+   * @param path - the path of the component yaml
+   * @param requestBody - the body of the request
+   *
+   * @returns a promise that resolves with the updated component or
+   * an error dialog result
+   */
+  static async putComponent(path: string, requestBody: any): Promise<any> {
+    return RequestHandler.makePutRequest(
+      `${ELYRA_COMPONENTEDITOR_API_ENDPOINT}${path}`,
       requestBody
     );
   }

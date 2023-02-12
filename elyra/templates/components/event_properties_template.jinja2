@@ -230,6 +230,49 @@
 				},
 				{% endif %}
 			    {% if  component.name == "Model Event" %}
+				"model_name": {
+					"type": "array",
+					"title": "Model Names",
+					"description": "Model name.",
+					"items": {
+						"type": "object",
+						"oneOf":[
+							{
+								"label": "Enter a value manually",
+								"properties": {
+									"value": {
+										"type": "string",
+										"default": ""
+									},
+									"widget": {
+										"type": "string",
+										"default": "string"
+									}
+								},
+								"uihints":{
+									"widget": {"ui:field": "hidden"}
+								}
+							},
+							{
+								"label": "Select one of the workflow input parameters",
+								"properties": {
+									"value": {
+										"type": "string",
+										"enum": [""],
+										"default": ""
+									},
+									"widget": {
+										"type": "string",
+										"default": "enum"
+									}
+								},
+								"uihints":{
+									"widget": {"ui:field": "hidden"}
+								}
+							}
+						]
+					}
+				},
 				"event_filter": {
 					"type": "array",
 					"title": "Model Event Filters",
@@ -244,83 +287,11 @@
 							"name": {
 								"type": "string",
 								"title": "Property Name",
-								"enum": ["name", "operate", "version", "create_at", "update_at"]
+								"enum": ["operate"],
+								"default": "operate"
 							}
 						},
 						"allOf": [
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "name"
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="]
-         								},
-										"value": {
-											"title": "Value",
-											"oneOf":[
-												{
-													"label": " ",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": ""
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"},
-														"value": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Enter a value manually",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "string"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Select one of the workflow input parameters",
-													"properties": {
-														"value": {
-															"type": "string",
-															"enum": [""],
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "enum"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												}
-											]
-										}
-       								}
-								}
-							},
 							{
 								"if": {
         							"properties": {
@@ -334,7 +305,8 @@
           								"operate": {
             								"type": "string",
 											"title": "Operate",
-											"enum": ["=="]
+											"enum": ["=="],
+											"default": "=="
          								},
 										"value": {
 											"title": "Value",
@@ -363,153 +335,6 @@
 															"type": "string",
 															"enum": ["create", "delete"],
 															"default": "create"
-														},
-														"widget": {
-															"type": "string",
-															"default": "string"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Select one of the workflow input parameters",
-													"properties": {
-														"value": {
-															"type": "string",
-															"enum": [""],
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "enum"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												}
-											]
-										}
-       								}
-								}
-							},
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "version"
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="]
-         								},
-										"value": {
-											"title": "Value",
-											"oneOf":[
-												{
-													"label": " ",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": ""
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"},
-														"value": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Enter a value manually",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "string"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Select one of the workflow input parameters",
-													"properties": {
-														"value": {
-															"type": "string",
-															"enum": [""],
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": "enum"
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"}
-													}
-												}
-											]
-										}
-       								}
-								}
-							},
-							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"enum": ["create_at", "update_at"]
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["before", "after"]
-         								},
-										"value": {
-											"title": "Value",
-											"oneOf":[
-												{
-													"label": " ",
-													"properties": {
-														"value": {
-															"type": "string",
-															"default": ""
-														},
-														"widget": {
-															"type": "string",
-															"default": ""
-														}
-													},
-													"uihints":{
-														"widget": {"ui:field": "hidden"},
-														"value": {"ui:field": "hidden"}
-													}
-												},
-												{
-													"label": "Enter a value manually",
-													"properties": {
-														"value": {
-															"type": "string",
-															"format": "datetime",
-															"default": ""
 														},
 														"widget": {
 															"type": "string",

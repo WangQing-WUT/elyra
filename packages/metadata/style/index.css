@@ -75,3 +75,7 @@
 .elyra-metadata-editor {
   overflow-y: auto;
 }
+
+.elyra-component-editor {
+  overflow-y: auto;
+}

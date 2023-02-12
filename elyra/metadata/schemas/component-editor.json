@@ -1,0 +1,152 @@
+{
+  "$schema": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/elyra-ai/elyra/main/elyra/metadata/schemas/local-file-catalog.json",
+  "title": "Component Editor",
+  "name": "component-editor",
+  "display_name": "Component editor",
+  "schemaspace": "component-catalogs",
+  "schemaspace_id": "8dc89ca3-4b90-41fd-adb9-9510ad346620",
+  "metadata_class_name": " ",
+  "uihints": {
+    "icon": "",
+    "reference_url": ""
+  },
+  "properties": {
+    "schema_name": {
+      "title": "Schema Name",
+      "description": "The schema associated with this instance",
+      "type": "string",
+      "const": "component-editor"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "description": "Display name of this Component Catalog",
+      "type": "string",
+      "minLength": 1
+    },
+    "metadata": {
+      "description": "Additional data specific to this metadata",
+      "type": "object",
+      "properties": {
+        "runtime_type": {
+          "title": "Runtime Type",
+          "description": "The type of runtime associated with this Component Catalog",
+          "type": "string",
+          "default": "KUBEFLOW_PIPELINES",
+          "uihints": {
+            "category": "Runtime",
+            "ui:readonly": true,
+            "hidden": true
+          }
+        },
+        "component_name": {
+          "title": "Name",
+          "description": "The name of this component.",
+          "type": "string",
+          "uihints": {
+            "category": "Component Properties"
+          }
+        },
+        "component_description": {
+          "title": "Description",
+          "description": "The description of this component.",
+          "type": "string",
+          "uihints": {
+            "category": "Component Properties"
+          }
+        },
+        "input_parameters": {
+          "title": "Input Parameters",
+          "description": "The input parameters of this component.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "title": "Name",
+                "description": "The name of input parameter.",
+                "type": "string"
+              },
+              "type": {
+                "title": "Type",
+                "description": "The type of input parameter.",
+                "type": "string",
+                "enum": ["String", "Integer", "Float", "Boolean"],
+                "default": "String"
+              },
+              "default": {
+                "type": "string",
+                "title": "Default Value"
+              },
+              "description": {
+                "type": "string",
+                "title": "Description"
+              }
+            }
+          },
+          "uihints": {
+            "category": "Component Properties"
+          }
+        },
+        "output_parameters": {
+          "title": "Output Parameters",
+          "description": "The output parameters of this component.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "title": "Name",
+                "description": "The name of input parameter.",
+                "type": "string"
+              },
+              "type": {
+                "title": "Type",
+                "description": "The type of input parameter.",
+                "type": "string",
+                "enum": ["String", "Integer", "Float", "Boolean"],
+                "default": "String"
+              },
+              "description": {
+                "type": "string",
+                "title": "Description"
+              }
+            }
+          },
+          "uihints": {
+            "category": "Component Properties"
+          }
+        },
+        "implementation": {
+          "description": "The implementation of this component.",
+          "type": "object",
+          "properties": {
+            "image_name": {
+              "title": "Image Name",
+              "description": "The image name of the implementation.",
+              "type": "string"
+            },
+            "command": {
+              "title": "Command",
+              "description": "The command of the implementation.",
+              "type": "string",
+              "format": "textarea"
+            },
+            "args": {
+              "title": "Args",
+              "description": "The args of the implementation.",
+              "type": "string",
+              "format": "textarea"
+            }
+          },
+          "required": ["image_name", "command"],
+          "uihints": {
+            "category": "Component Properties"
+          }
+        }
+      },
+      "required": ["runtime_type", "component_name", "implementation"]
+    }
+  },
+  "required": ["schema_name", "display_name", "metadata"]
+}

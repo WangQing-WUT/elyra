@@ -27,24 +27,33 @@ import {
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
-  ILayoutRestorer
+  ILayoutRestorer,
+  ILabStatus
 } from '@jupyterlab/application';
 import {
   ICommandPalette,
   IThemeManager,
+  MainAreaWidget,
   WidgetTracker
 } from '@jupyterlab/apputils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IMainMenu } from '@jupyterlab/mainmenu';
+import { IEditorServices } from '@jupyterlab/codeeditor';
+import { ITranslator } from '@jupyterlab/translation';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   addIcon,
+  IFormComponentRegistry,
   IRankedMenu,
   LabIcon,
-  refreshIcon
+  refreshIcon,
+  textEditorIcon
 } from '@jupyterlab/ui-components';
+
+import { find } from '@lumino/algorithm';
+import { Widget } from '@lumino/widgets';
 
 import {
   COMPONENT_CATALOGS_SCHEMASPACE,
@@ -58,6 +67,7 @@ import {
 } from './RuntimeImagesWidget';
 import { RuntimesWidget } from './RuntimesWidget';
 import { SubmitFileButtonExtension } from './SubmitFileButtonExtension';
+import { ComponentEditorWidget } from './ComponentEditorWidget';
 
 import '../style/index.css';
 
@@ -67,6 +77,7 @@ const PIPELINE = 'pipeline';
 const WORKFLOW = 'workflow';
 const PIPELINE_EDITOR_NAMESPACE = 'elyra-pipeline-editor-extension';
 const PLUGIN_ID = '@elyra/pipeline-editor-extension:plugin';
+const COMPONENT_EDITOR_ID = 'elyra-component-editor';
 
 const createRemoteIcon = async ({
   name,
@@ -94,7 +105,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     IFileBrowserFactory,
     ILayoutRestorer,
     IMainMenu,
-    ISettingRegistry
+    ISettingRegistry,
+    IEditorServices,
+    ITranslator,
+    IFormComponentRegistry,
+    ILabStatus
   ],
   optional: [IThemeManager],
   activate: async (
@@ -105,6 +120,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     restorer: ILayoutRestorer,
     menu: IMainMenu,
     registry: ISettingRegistry,
+    editorServices: IEditorServices,
+    translator: ITranslator,
+    componentRegistry: IFormComponentRegistry,
+    status: ILabStatus,
     themeManager?: IThemeManager
   ) => {
     console.log('Elyra - pipeline-editor extension is activated!');
@@ -427,6 +446,51 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     restorer.add(componentCatalogWidget, componentCatalogWidgetID);
     app.shell.add(componentCatalogWidget, 'left', { rank: 961 });
+
+    const openComponentEditor = (args: {
+      schema: string;
+      schemaspace: string;
+      path: string;
+      onSave: () => void;
+    }): void => {
+      let widgetLabel = args.path;
+      const widgetId = `${COMPONENT_EDITOR_ID}:${args.schemaspace}:${args.schema}:${args.path}`;
+
+      const openWidget = find(
+        app.shell.widgets('main'),
+        (widget: Widget, index: number) => {
+          return widget.id === widgetId;
+        }
+      );
+      if (openWidget) {
+        app.shell.activateById(widgetId);
+        return;
+      }
+
+      const componentEditorWidget = new ComponentEditorWidget({
+        ...args,
+        schemaName: args.schema,
+        editorServices,
+        status,
+        themeManager,
+        translator: translator.load('jupyterlab'),
+        browserFactory: browserFactory,
+        componentRegistry
+      });
+      const main = new MainAreaWidget({ content: componentEditorWidget });
+      main.title.label = widgetLabel;
+      main.id = widgetId;
+      main.title.closable = true;
+      main.title.icon = textEditorIcon;
+      componentEditorWidget.addClass(COMPONENT_EDITOR_ID);
+      app.shell.add(main, 'main');
+    };
+
+    app.commands.addCommand(`${COMPONENT_EDITOR_ID}:open`, {
+      execute: (args: any) => {
+        openComponentEditor(args);
+      }
+    });
   }
 };
 export default extension;

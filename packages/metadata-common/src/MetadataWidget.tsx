@@ -80,6 +80,7 @@ export interface IMetadataDisplayProps {
   titleContext?: string;
   labelName?: (args: any) => string;
   omitTags?: boolean;
+  commands?: any;
 }
 
 /**

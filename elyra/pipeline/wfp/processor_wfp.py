@@ -91,9 +91,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     @staticmethod
     def _sepc_parse(init: dict, exit_parameters: dict, parameters: list, events: dict, triggers: dict):
-        spec_field = {
-
-        }
+        spec_field = {}
         if init and init["pipeline"]:
             spec_field["init"] = init
         if exit_parameters and exit_parameters["pipeline"]:
@@ -105,13 +103,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         spec_field["parameters"] = parameters
         return spec_field
     
-    def _get_dataset_names(self, dataset_names: list):
-        dataset_names_list = []
-        for item in dataset_names:
+    def _get_dataset_or_model_names(self, names: list):
+        names_list = []
+        for item in names:
             value = self._widget_value_str(item)
             if value:
-                dataset_names_list.append(value)
-        return dataset_names_list
+                names_list.append(value)
+        return names_list
     
     def _get_model_monitor_event_filter(self, event_filter: list):
         eventFilter = []
@@ -146,6 +144,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     event_field["model"] = {}
                 event_field["model"][node["app_data"]["label"].lstrip()] = {
                     "eventFilter": {
+                        "modelNames": self._get_dataset_or_model_names(node["app_data"]["component_parameters"]["model_name"]),
                         "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                              node["app_data"]["component_parameters"]["expression"])
                     }
@@ -169,7 +168,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if "dataset" not in event_field:
                     event_field["dataset"] = {}
                 event_field["dataset"][node["app_data"]["label"].lstrip()] = {
-                    "datasets": self._get_dataset_names(node["app_data"]["component_parameters"]["dataset_name"]),
+                    "datasets": self._get_dataset_or_model_names(node["app_data"]["component_parameters"]["dataset_name"]),
                     "eventFilter": {
                         "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                              node["app_data"]["component_parameters"]["expression"])
@@ -217,6 +216,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     trigger_field["k8sobj"] = {}
                 trigger_field["k8sobj"][node["app_data"]["label"].lstrip()] = {
                     "condition": self._get_condition(node_json, node),
+                    "operation": node["app_data"]["component_parameters"]["operation"],
                     "source": self._get_k8s_source(node["app_data"]["component_parameters"]["source"]),
                     "arguments": self._get_k8s_agruments(
                         node["app_data"]["component_parameters"]["trigger_parameters"], node_json)
@@ -228,10 +228,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "condition": self._get_condition(node_json, node),
                     "url": node["app_data"]["component_parameters"]["url"],
                     "method": node["app_data"]["component_parameters"]["method"],
-                    "timeout": node["app_data"]["component_parameters"]["timeout"],
+                    "timeout": str(node["app_data"]["component_parameters"]["timeout"]) + 's',
                     "payload": self._parse_trigger_parameters(
                                         node["app_data"]["component_parameters"]["trigger_parameters"],
-                                        node_json),
+                                        node_json
+                                    ),
                 }
             elif node_type == "init":
                 init_pipeline_field = {}
@@ -743,8 +744,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         else:
             event_filters = node["app_data"]["component_parameters"]["event_filter"]
             for event_filter in event_filters:
-                self._validate_event_filter(event_filter, node_type, node_id, node_name, "Dataset Event Filter", workflow_input_parameters, response)
-
+                self._validate_event_filter(event_filter, node_type, node_id, node_name, "S3 Event Filter", workflow_input_parameters, response)
     
     def _validate_calendar_event(self, node, workflow_input_parameters, name, response):
         node_type = "Calendar Event"
@@ -791,9 +791,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 },
             )
         else:
-            event_filters = node["app_data"]["component_parameters"]["event_filter"]
+            component_parameters = node["app_data"]["component_parameters"]
+            event_filters = component_parameters["event_filter"]
+            filter_id = 1
+            expression = "1"
             for event_filter in event_filters:
                 self._validate_event_filter(event_filter, node_type, node_id, node_name, "Dataset Event Filter", workflow_input_parameters, response)
+                if filter_id > 1:
+                    expression += "&&" + str(filter_id)
+                filter_id += 1
+            if "expression" not in component_parameters or component_parameters["expression"].replace(" ", "") == "":
+                component_parameters["expression"] = expression
     
     def _validate_model_monitor_event(self, node, workflow_input_parameters, name, response):
         node_type = "Model Monitor Event"

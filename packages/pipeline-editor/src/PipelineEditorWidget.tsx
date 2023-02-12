@@ -398,14 +398,14 @@ const PipelineWrapper: React.FC<IProps> = ({
     };
     // Remove all null values from the pipeline
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
-      //removeNullValues(node.app_data ?? {});
+      removeNullValues(node.app_data ?? {});
       autoADD(node.app_data ?? {}, node.op);
       // branch(node);
     }
-    // removeNullValues(
-    //   pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
-    //     {}
-    // );
+    removeNullValues(
+      pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
+        {}
+    );
     if (contextRef.current.isReady) {
       contextRef.current.model.fromString(
         JSON.stringify(pipelineJson, null, 2)
@@ -517,7 +517,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
-    console.log(filename)
+    console.log(filename);
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
         browserFactory.defaultBrowser.model.manager,
@@ -842,8 +842,36 @@ const PipelineWrapper: React.FC<IProps> = ({
         return;
       }
 
+      // const removeNullValues = (data: any, removeEmptyString?: boolean): void => {
+      //   for (const key in data) {
+      //     if (
+      //       data[key] === null ||
+      //       data[key] === undefined ||
+      //       (removeEmptyString && data[key] === '')
+      //     ) {
+      //       delete data[key];
+      //     } else if (Array.isArray(data[key])) {
+      //       const newArray = [];
+      //       for (const i in data[key]) {
+      //         if (typeof data[key][i] === 'object') {
+      //           removeNullValues(data[key][i], true);
+      //           if (Object.keys(data[key][i]).length > 0) {
+      //             newArray.push(data[key][i]);
+      //           }
+      //         } else if (data[key][i] !== null && data[key][i] !== '') {
+      //           newArray.push(data[key][i]);
+      //         }
+      //       }
+      //       data[key] = newArray;
+      //     } else if (typeof data[key] === 'object') {
+      //       removeNullValues(data[key]);
+      //     }
+      //   }
+      // };
+
       // Clean null properties
       for (const node of pipelineJson.pipelines[0].nodes) {
+        // removeNullValues(node.app_data ?? {});
         if (node.app_data.component_parameters.cpu === null) {
           delete node.app_data.component_parameters.cpu;
         }
@@ -860,6 +888,11 @@ const PipelineWrapper: React.FC<IProps> = ({
           delete node.app_data.component_parameters.gpu;
         }
       }
+
+      // removeNullValues(
+      //   pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
+      //     {}
+      // );
 
       const configDetails = getConfigDetails(
         runtimeData,

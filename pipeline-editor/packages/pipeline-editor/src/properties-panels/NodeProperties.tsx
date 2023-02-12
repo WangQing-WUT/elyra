@@ -58,21 +58,21 @@ function getOneOfValue(value: string, option: string, label: string) {
     properties: {
       value: {
         type: "string",
-        default: value,
+        default: value
       },
       option: {
         type: "string",
-        default: option,
-      },
+        default: option
+      }
     },
     uihints: {
       value: {
-        "ui:field": "hidden",
+        "ui:field": "hidden"
       },
       option: {
-        "ui:field": "hidden",
-      },
-    },
+        "ui:field": "hidden"
+      }
+    }
   };
 }
 
@@ -80,9 +80,9 @@ function getInitPipelineTriggerPara(name: string) {
   return {
     from: {
       value: "",
-      widget: "string",
+      widget: "string"
     },
-    name: name,
+    name: name
   };
 }
 
@@ -105,7 +105,7 @@ function NodeProperties({
   upstreamNodes,
   onFileRequested,
   onPropertiesUpdateRequested,
-  onChange,
+  onChange
 }: Props) {
   const [pipelinePara, setPipelinePara] = useState(false);
 
@@ -134,7 +134,7 @@ function NodeProperties({
     );
   }
 
-  const nodePropertiesSchema = nodes.find((n) => n.op === selectedNode.op);
+  const nodePropertiesSchema = nodes.find(n => n.op === selectedNode.op);
 
   if (nodePropertiesSchema === undefined) {
     return (
@@ -197,7 +197,7 @@ function NodeProperties({
 
     // add each upstream node to the data list
     for (const upstreamNode of upstreamNodes ?? []) {
-      const nodeDef = nodes.find((n) => n.op === upstreamNode.op);
+      const nodeDef = nodes.find(n => n.op === upstreamNode.op);
       const prevLen = oneOfValuesNoOpt.length;
 
       const nodeProperties =
@@ -254,9 +254,9 @@ function NodeProperties({
           label: {
             title: "Label",
             description: "A custom label for the node.",
-            type: "string",
+            type: "string"
           },
-          ...draft.properties,
+          ...draft.properties
         };
         const oneOfValue =
           draft.properties.component_parameters?.properties?.trigger_parameters
@@ -300,11 +300,13 @@ function NodeProperties({
           }
         }
 
-        const dataset_oneOf =
+        const dataset_or_model_oneOf =
           draft.properties.component_parameters?.properties?.dataset_name?.items
+            ?.oneOf ||
+          draft.properties.component_parameters?.properties?.model_name?.items
             ?.oneOf;
-        if (dataset_oneOf && filters) {
-          dataset_oneOf[1].properties.value.enum = filters;
+        if (dataset_or_model_oneOf && filters) {
+          dataset_or_model_oneOf[1].properties.value.enum = filters;
         }
 
         const app_name =

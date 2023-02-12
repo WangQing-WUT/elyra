@@ -111,22 +111,26 @@ export const MetadataHeaderButtons = (
         <Paper>
           <ClickAwayListener onClickAway={handleClose}>
             <MenuList id="split-button-menu">
-              {sortedSchema?.map((schema: IDictionary<any>) => (
-                <MenuItem
-                  key={schema.title}
-                  title={`New ${schema.title} ${
-                    props.appendToTitle ? props.titleContext : ''
-                  }`}
-                  onClick={(event: any): void => {
-                    props.addMetadata(schema.name, props.titleContext);
-                    handleClose(event);
-                  }}
-                >
-                  {`New ${schema.title} ${
-                    props.appendToTitle ? props.titleContext : ''
-                  }`}
-                </MenuItem>
-              ))}
+              {sortedSchema?.map((schema: IDictionary<any>) =>
+                schema.title != 'Component Editor' ? (
+                  <MenuItem
+                    key={schema.title}
+                    title={`New ${schema.title} ${
+                      props.appendToTitle ? props.titleContext : ''
+                    }`}
+                    onClick={(event: any): void => {
+                      props.addMetadata(schema.name, props.titleContext);
+                      handleClose(event);
+                    }}
+                  >
+                    {`New ${schema.title} ${
+                      props.appendToTitle ? props.titleContext : ''
+                    }`}
+                  </MenuItem>
+                ) : (
+                  ''
+                )
+              )}
             </MenuList>
           </ClickAwayListener>
         </Paper>

@@ -70,7 +70,7 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
             elif instance_dict["schema_name"] == "local-file-catalog":
                 instance_dict["metadata"]["base_path"] = self.settings["server_root_dir"]
                 instance = Metadata.from_dict(schemaspace, instance_dict)
-
+            
             self.log.debug(
                 f"MetadataHandler: Creating metadata instance '{instance.name}' in schemaspace '{schemaspace}'..."
             )
@@ -190,6 +190,40 @@ class MetadataResourceHandler(HttpErrorMixin, APIHandler):
         self.set_status(204)
         self.finish()
 
+class ComponentEditorHandler(HttpErrorMixin, APIHandler):
+    """Handler for component editor."""
+
+    @web.authenticated
+    async def put(self, path):
+        path = url_unescape(path)
+        parent = self.settings.get("elyra")
+        payload = self.get_json_body()
+
+        try:
+            print(payload)
+        except (ValidationError, ValueError, NotImplementedError) as err:
+            raise web.HTTPError(400, str(err)) from err
+        except MetadataNotFoundError as err:
+            raise web.HTTPError(404, str(err)) from err
+        except Exception as err:
+            raise web.HTTPError(500, repr(err)) from err
+
+        self.set_status(200)
+        self.set_header("Content-Type", "application/json")
+        self.finish(payload)
+    
+    @web.authenticated
+    async def get(self, path):
+        path = url_unescape(path)
+        try:
+            print("test")
+        except (ValidationError, ValueError, SchemaNotFoundError) as err:
+            raise web.HTTPError(404, str(err)) from err
+        except Exception as err:
+            raise web.HTTPError(500, repr(err)) from err
+
+        self.set_header("Content-Type", "application/json")
+        self.finish(path)
 
 class SchemaHandler(HttpErrorMixin, APIHandler):
     """Handler for schemaspace schemas."""

@@ -818,8 +818,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     container_op.set_cpu_request(cpu=str(resources["cpu"]))
                 if "npu310" in resources:
                     container_op.add_resource_request('huawei.com/Ascend310', str(resources["npu310"]))
+                    container_op.add_resource_limit('huawei.com/Ascend310', str(resources["npu310"]))
                 if "npu910" in resources:
                     container_op.add_resource_request('huawei.com/Ascend910', str(resources["npu910"]))
+                    container_op.add_resource_limit('huawei.com/Ascend910', str(resources["npu910"]))
                 if "memory" in resources:
                     container_op.set_memory_request(memory=str(resources["memory"]) + "G")
                 if "gpu" in resources:

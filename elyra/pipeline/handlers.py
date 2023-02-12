@@ -285,22 +285,25 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
     async def get(self, pipeline_path):
         result = []
         pipeline_absolute_path = os.path.join(os.getcwd(), pipeline_path)
-        with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
-            if pipeline_absolute_path.endswith(".pipeline"):
-                pipeline = json.load(r)
-                properties = pipeline["pipelines"][0]["app_data"]["properties"]
-                if "pipeline_defaults" in properties:
-                    pipeline_defaults = properties["pipeline_defaults"]
-                    if "input_parameters" in pipeline_defaults:
-                        for input_parameter in pipeline_defaults["input_parameters"]:
-                            if "name" in input_parameter:
-                                result.append(input_parameter["name"])
-            elif pipeline_absolute_path.endswith(".yaml"):
-                pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
-                input_parameters = pipeline["spec"]["arguments"]["parameters"]
-                for input_parameter in input_parameters:
-                    if "name" in input_parameter:
-                        result.append(input_parameter["name"])
+        try:
+            with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
+                if pipeline_absolute_path.endswith(".pipeline"):
+                    pipeline = json.load(r)
+                    properties = pipeline["pipelines"][0]["app_data"]["properties"]
+                    if "pipeline_defaults" in properties:
+                        pipeline_defaults = properties["pipeline_defaults"]
+                        if "input_parameters" in pipeline_defaults:
+                            for input_parameter in pipeline_defaults["input_parameters"]:
+                                if "name" in input_parameter:
+                                    result.append(input_parameter["name"])
+                elif pipeline_absolute_path.endswith(".yaml"):
+                    pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
+                    input_parameters = pipeline["spec"]["arguments"]["parameters"]
+                    for input_parameter in input_parameters:
+                        if "name" in input_parameter:
+                            result.append(input_parameter["name"])
+        except Exception as err:
+            raise web.HTTPError(500, repr(err)) from err
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
