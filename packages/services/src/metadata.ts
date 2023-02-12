@@ -91,7 +91,7 @@ export class MetadataService {
   static async getComponent(path: string): Promise<any> {
     return RequestHandler.makeGetRequest(
       ELYRA_COMPONENTEDITOR_API_ENDPOINT + path
-    ).then(metadataResponse => metadataResponse[path]);
+    ).then(metadataResponse => metadataResponse);
   }
 
   /**

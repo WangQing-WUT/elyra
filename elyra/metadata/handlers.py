@@ -27,6 +27,9 @@ from elyra.metadata.metadata import Metadata
 from elyra.metadata.schema import SchemaManager
 from elyra.util.http import HttpErrorMixin
 
+import os
+import yaml
+
 
 class MetadataHandler(HttpErrorMixin, APIHandler):
     """Handler for metadata configurations collection."""
@@ -198,9 +201,9 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         path = url_unescape(path)
         parent = self.settings.get("elyra")
         payload = self.get_json_body()
-
         try:
-            print(payload)
+            metadata_manager = MetadataManager(schemaspace="component-catalogs", parent=parent)
+            metadata_manager.save_component(payload["metadata"], path)
         except (ValidationError, ValueError, NotImplementedError) as err:
             raise web.HTTPError(400, str(err)) from err
         except MetadataNotFoundError as err:
@@ -215,15 +218,81 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
     @web.authenticated
     async def get(self, path):
         path = url_unescape(path)
+        component_metadata = {
+            "schema_name": "component-editor",
+            "metadata": {}
+        }
+        component_absolute_path = os.path.join(os.getcwd(), path)
+
         try:
-            print("test")
+            with open(component_absolute_path, "r", encoding='utf-8') as r:
+                component_yaml = yaml.load(r.read(), Loader=yaml.FullLoader)
+                metadata = component_metadata["metadata"]
+                input_parameters_placeholder = {}
+                if "name" in component_yaml:
+                    metadata["component_name"] = component_yaml["name"]
+                if "description" in component_yaml:
+                    metadata["component_description"] = component_yaml["description"]
+                if "implementation" in component_yaml:
+                    if "container" in component_yaml["implementation"]:
+                        container = component_yaml["implementation"]["container"]
+                        metadata["implementation"] = {}
+                        if "image" in container:
+                            metadata["implementation"]["image_name"] = container["image"]
+                        if "command" in container:
+                            command_str = ""
+                            for item in container["command"]:
+                                if "\n" in item:
+                                    command_str += "- |\n  " + item.replace("\n", "\n  ").rstrip() + "\n"
+                                else:
+                                    command_str += "- " + str(item) + "\n"
+                                if type(item) is dict:
+                                    for i in item:
+                                        input_parameters_placeholder[item[i]] = i
+                            metadata["implementation"]["command"] = command_str
+                        if "args" in container:
+                            args_str = ""
+                            for item in container["args"]:
+                                args_str += "- " + str(item) + "\n"
+                            metadata["implementation"]["args"] = args_str
+                if "inputs" in component_yaml:
+                    metadata["input_parameters"] = []
+                    for input_parameter in component_yaml["inputs"]:
+                        temp_input_parameter = {}
+                        if "name" in input_parameter:
+                            temp_input_parameter["name"] = input_parameter["name"]
+                            if input_parameter["name"] in input_parameters_placeholder:
+                                temp_input_parameter["placeholder_type"] = input_parameters_placeholder[input_parameter["name"]]
+                            else:
+                                temp_input_parameter["placeholder_type"] = "inputValue"
+                        if "type" in input_parameter:
+                            temp_input_parameter["value_type"] = input_parameter["type"]
+                        if "default" in input_parameter:
+                            temp_input_parameter["default"] = input_parameter["default"]
+                        if "description" in input_parameter:
+                            temp_input_parameter["description"] = input_parameter["description"]
+                        metadata["input_parameters"].append(temp_input_parameter)
+                if "outputs" in component_yaml:
+                    metadata["output_parameters"] = []
+                    for output_parameter in component_yaml["inputs"]:
+                        temp_output_parameter = {}
+                        if "name" in output_parameter:
+                            temp_output_parameter["name"] = output_parameter["name"]
+                        if "type" in output_parameter:
+                            temp_output_parameter["value_type"] = output_parameter["type"]
+                        else:
+                            temp_output_parameter["value_type"] = "String"
+                        if "description" in output_parameter:
+                            temp_output_parameter["description"] = output_parameter["description"]
+                        temp_output_parameter["placeholder_type"] = "outputPath"
+                        metadata["output_parameters"].append(temp_output_parameter)
         except (ValidationError, ValueError, SchemaNotFoundError) as err:
             raise web.HTTPError(404, str(err)) from err
         except Exception as err:
             raise web.HTTPError(500, repr(err)) from err
 
         self.set_header("Content-Type", "application/json")
-        self.finish(path)
+        self.finish(component_metadata)
 
 class SchemaHandler(HttpErrorMixin, APIHandler):
     """Handler for schemaspace schemas."""

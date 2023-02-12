@@ -111,7 +111,8 @@
                 "type": "string",
                 "title": "Description"
               }
-            }
+            },
+            "required": ["name", "placeholder_type", "value_type"]
           },
           "uihints": {
             "category": "Component Properties"
@@ -136,9 +137,9 @@
                 "enum": ["outputPath"],
                 "default": "outputPath"
               },
-              "type": {
-                "title": "Type",
-                "description": "The type of output parameter.",
+              "value_type": {
+                "title": "Value Type",
+                "description": "The value type of output parameter.",
                 "type": "string",
                 "enum": ["String", "Integer", "Float", "Boolean"],
                 "default": "String"
@@ -147,7 +148,8 @@
                 "type": "string",
                 "title": "Description"
               }
-            }
+            },
+            "required": ["name", "placeholder_type", "value_type"]
           },
           "uihints": {
             "category": "Component Properties"

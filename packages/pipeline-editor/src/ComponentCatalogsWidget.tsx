@@ -97,8 +97,6 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
                 title="Edit from editor"
                 className="elyra-feedbackButton elyra-button elyra-expandableContainer-button elyra-expandableContainer-actionButton"
                 onClick={() => {
-                  console.log('Edit from editor');
-                  console.log(path);
                   this.props.commands.execute('docmanager:open', {
                     path: path
                   });
@@ -145,11 +143,8 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
                 title="Edit from page"
                 className="elyra-feedbackButton elyra-button elyra-expandableContainer-button elyra-expandableContainer-actionButton"
                 onClick={() => {
-                  console.log('Edit from page');
                   this.openComponentEditor({
-                    onSave: () => {
-                      console.log(path);
-                    },
+                    onSave: () => {},
                     schemaspace: 'component-catalogs',
                     schema: 'component-editor',
                     path: path

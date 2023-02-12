@@ -183,6 +183,109 @@ class MetadataManager(LoggingConfigurable):
         if not name[-1].isalnum():
             name = name + "_0"
         return name
+    
+    def _parse_component_parameters(self, new_metadata: Dict):
+        input_parameters = []
+        output_parameters = []
+        parameters_placeholder = {}
+        def getValue(name: str, parameter: Dict):
+            if name in parameter:
+                return parameter[name]
+            else:
+                return ""
+
+        if "input_parameters" in new_metadata:
+            for input_parameter in new_metadata["input_parameters"]:
+                temp_input_parameter = {
+                    "name": input_parameter["name"],
+                    "type": input_parameter["value_type"],
+                    "default": getValue("default", input_parameter),
+                    "description": getValue("description", input_parameter)
+                }
+                input_parameters.append(temp_input_parameter)
+                parameters_placeholder[input_parameter["name"]] = input_parameter["placeholder_type"]
+
+        if "output_parameters" in new_metadata:
+            for output_parameter in new_metadata["output_parameters"]:
+                temp_output_parameter = {
+                    "name": output_parameter["name"],
+                    "type": output_parameter["value_type"],
+                    "description": getValue("description", output_parameter)
+                }
+                output_parameters.append(temp_output_parameter)
+                parameters_placeholder[output_parameter["name"]] = output_parameter["placeholder_type"]
+        return input_parameters, output_parameters, parameters_placeholder
+
+    def _metedata_to_component(self, new_metadata: Dict):
+        implementation = new_metadata["implementation"]
+        component_yaml = {
+            "name": new_metadata["component_name"],
+            "description": "",
+            "inputs": [],
+            "outputs": [],
+            "implementation": {
+                "container": {
+                    "image": implementation["image_name"],
+                    "command": [],
+                    "args": []
+                }
+            }
+        }
+        if "component_description" in new_metadata:
+            component_yaml["description"] = new_metadata["component_description"]
+        else:
+            del component_yaml["description"]
+        
+        input_parameters, output_parameters, parameters_placeholder = self._parse_component_parameters(new_metadata)
+
+        component_yaml["inputs"] = input_parameters
+        component_yaml["outputs"] = output_parameters
+        command = yaml.load(implementation["command"], Loader=yaml.FullLoader)
+        pss_command = []
+        for item in command:
+            if type(item) is dict:
+                temp_item = {}
+                for para in item:
+                    if item[para] == None:
+                        if para in parameters_placeholder:
+                            temp_item[parameters_placeholder[para]] = para
+                        else:
+                            raise Exception("Command parameter {" + para + "} is not defined.")
+                    else:
+                        temp_item = item
+                pss_command.append(temp_item)
+            elif type(item) is str:
+                if "\n" in item:
+                    pss_command.append(pss(item))
+                else:
+                    pss_command.append(item)
+        component_yaml["implementation"]["container"]["command"] = pss_command
+        args = []
+        if "args" in implementation:
+            args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
+            temp_args = []
+            for item in args:
+                if type(item) is dict:
+                    temp_item = {}
+                    for para in item:
+                        if item[para] == None:
+                            if para in parameters_placeholder:
+                                temp_item[parameters_placeholder[para]] = para
+                            else:
+                                raise Exception("Command parameter {" + para + "} is not defined.")
+                        else:
+                            temp_item = item
+                    temp_args.append(temp_item)
+                elif type(item) is str:
+                    temp_args.append(item)
+            component_yaml["implementation"]["container"]["args"] = temp_args
+        return component_yaml
+    
+    def save_component(self, component_metadata, path):
+        component_yaml = self._metedata_to_component(component_metadata)
+        yaml_loader = YAML()
+        with open(path, "w") as file:
+            yaml_loader.dump(component_yaml, file)
 
     def _save(self, name: str, metadata: Metadata, for_update: bool = False, for_migration: bool = False) -> Metadata:
         if not metadata:
@@ -227,35 +330,8 @@ class MetadataManager(LoggingConfigurable):
             new_metadata = metadata_dict["metadata"]
             save_path = new_metadata["save_path"]
             file_name = new_metadata["file_name"]
-            component_yaml = {}
-            component_yaml["name"] = new_metadata["component_name"]
-            if "component_description" in new_metadata:
-                component_yaml["description"] = new_metadata["component_description"]
-            if "input_parameters" in new_metadata:
-                component_yaml["inputs"] = new_metadata["input_parameters"]
-            if "output_parameters" in new_metadata:
-                component_yaml["outputs"] = new_metadata["output_parameters"]
-            implementation = new_metadata["implementation"]
-            command = yaml.load(implementation["command"], Loader=yaml.FullLoader)
+            component_yaml = self._metedata_to_component(new_metadata)
             yaml_loader = YAML()
-            pss_command = []
-            for item in command:
-                str_yaml = item
-                if "\n" in item:
-                    str_yaml = pss(item)
-                pss_command.append(str_yaml)
-            component_yaml["implementation"] = {
-                "container": {
-                    "image": implementation["image_name"],
-                    "command": pss_command
-                }
-            }
-            # if "entrypoint" in implementation:
-            #     component_yaml["implementation"]["container"]["entrypoint"] = implementation["entrypoint"]
-            if "args" in implementation:
-                args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
-                component_yaml["implementation"]["container"]["args"] = args
-            
             file_path = os.path.join(save_path, file_name + ".yaml")
             with open(file_path, "w") as file:
                 yaml_loader.dump(component_yaml, file)

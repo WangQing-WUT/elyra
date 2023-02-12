@@ -67,8 +67,15 @@
                 "description": "The name of input parameter.",
                 "type": "string"
               },
-              "type": {
-                "title": "Type",
+              "placeholder_type": {
+                "title": "Placeholder Type",
+                "description": "The placeholder type of input parameter.",
+                "type": "string",
+                "enum": ["inputValue", "inputPath"],
+                "default": "inputValue"
+              },
+              "value_type": {
+                "title": "Value Type",
                 "description": "The type of input parameter.",
                 "type": "string",
                 "enum": ["String", "Integer", "Float", "Boolean"],
@@ -82,7 +89,8 @@
                 "type": "string",
                 "title": "Description"
               }
-            }
+            },
+            "required": ["name", "placeholder_type", "value_type"]
           },
           "uihints": {
             "category": "Component Properties"
@@ -100,9 +108,16 @@
                 "description": "The name of input parameter.",
                 "type": "string"
               },
-              "type": {
-                "title": "Type",
-                "description": "The type of input parameter.",
+              "placeholder_type": {
+                "title": "Placeholder Type",
+                "description": "The placeholder type of output parameter.",
+                "type": "string",
+                "enum": ["outputPath"],
+                "default": "outputPath"
+              },
+              "value_type": {
+                "title": "Value Type",
+                "description": "The value type of output parameter.",
                 "type": "string",
                 "enum": ["String", "Integer", "Float", "Boolean"],
                 "default": "String"
@@ -111,7 +126,8 @@
                 "type": "string",
                 "title": "Description"
               }
-            }
+            },
+            "required": ["name", "placeholder_type", "value_type"]
           },
           "uihints": {
             "category": "Component Properties"

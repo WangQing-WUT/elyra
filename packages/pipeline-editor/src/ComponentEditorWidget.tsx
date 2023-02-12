@@ -134,21 +134,19 @@ export class ComponentEditorWidget extends ReactWidget {
     try {
       // Load all schema and all metadata in schemaspace.
       const allSchema = await MetadataService.getSchema(this.props.schemaspace);
-      const allMetadata = (this.allMetadata = await MetadataService.getComponent(
-        this.props.schemaspace
-      ));
+      const metadata = await MetadataService.getComponent(this.props.path);
 
       // Loads all tags to display as options in the editor.
-      this.allTags = allMetadata.reduce((acc: string[], metadata: any) => {
-        if (metadata.metadata.tags) {
-          acc.push(
-            ...metadata.metadata.tags.filter((tag: string) => {
-              return !acc.includes(tag);
-            })
-          );
-        }
-        return acc;
-      }, []);
+      // this.allTags = allMetadata.reduce((acc: string[], metadata: any) => {
+      //   if (metadata.metadata.tags) {
+      //     acc.push(
+      //       ...metadata.metadata.tags.filter((tag: string) => {
+      //         return !acc.includes(tag);
+      //       })
+      //     );
+      //   }
+      //   return acc;
+      // }, []);
 
       // Finds schema based on schemaName.
       const schema =
@@ -171,7 +169,7 @@ export class ComponentEditorWidget extends ReactWidget {
         }
       }
 
-      const metadata = allMetadata.find((m: any) => m.name === this.props.path);
+      // const metadata = allMetadata.find((m: any) => m.name === this.props.path);
 
       // Adds categories as wrapper objects in the schema.
       const metadataWithCategories: { [id: string]: any } = {};
