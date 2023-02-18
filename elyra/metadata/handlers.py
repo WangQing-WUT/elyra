@@ -64,8 +64,12 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
                 if "save_path" not in instance_dict["metadata"]:
                     instance_dict["metadata"]["save_path"] = self.settings["server_root_dir"]
                 else:
+                    if "." not in instance_dict["metadata"]["save_path"]:
+                        instance_dict["metadata"]["save_path"] += "/"
                     dirname = os.path.dirname(instance_dict["metadata"]["save_path"])
                     instance_dict["metadata"]["save_path"] = os.path.join(self.settings["server_root_dir"], dirname)
+                    print(dirname)
+                    print(instance_dict["metadata"]["save_path"])
                 if "file_name" not in instance_dict["metadata"]:
                     instance_dict["metadata"]["file_name"] = instance_dict["metadata"]["component_name"]
                 instance_dict["metadata"]["root_dir"] = self.settings["server_root_dir"]
@@ -148,6 +152,7 @@ class MetadataResourceHandler(HttpErrorMixin, APIHandler):
             # Get the current resource to ensure its pre-existence
             metadata_manager = MetadataManager(schemaspace=schemaspace, parent=parent)
             metadata_manager.get(resource)
+            payload["metadata"]["base_path"] = self.settings["server_root_dir"]
             # Check if name is in the payload and varies from resource, if so, raise 400
             if "name" in payload and payload["name"] != resource:
                 raise NotImplementedError(
@@ -274,7 +279,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
                         metadata["input_parameters"].append(temp_input_parameter)
                 if "outputs" in component_yaml:
                     metadata["output_parameters"] = []
-                    for output_parameter in component_yaml["inputs"]:
+                    for output_parameter in component_yaml["outputs"]:
                         temp_output_parameter = {}
                         if "name" in output_parameter:
                             temp_output_parameter["name"] = output_parameter["name"]
@@ -289,7 +294,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         except (ValidationError, ValueError, SchemaNotFoundError) as err:
             raise web.HTTPError(404, str(err)) from err
         except Exception as err:
-            raise web.HTTPError(500, repr(err)) from err
+            raise web.HTTPError(500, str(err)) from err
 
         self.set_header("Content-Type", "application/json")
         self.finish(component_metadata)

@@ -61,7 +61,24 @@
 											},
 											"widget": {
 												"type": "string",
-												"default": "enum"
+												"default": "workflow_enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the parameters of the connected events",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "event_enum"
 											}
 										},
 										"uihints":{
@@ -172,7 +189,24 @@
 											},
 											"widget": {
 												"type": "string",
-												"default": "enum"
+												"default": "workflow_enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the parameters of the connected events",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "event_enum"
 											}
 										},
 										"uihints":{
@@ -203,8 +237,8 @@
 					"type": "string",
 					"title": "Method",
 					"description": "Http method.",
-                    "default": "",
-					"enum": [ "", "Post", "Get", "Head", "Patch", "Delete", "Connect", "Options", "Trace" ]
+                    "default": "GET",
+					"enum": [ "GET", "DELETE", "PATCH", "POST", "PUT" ]
 				},
 				"timeout": {
 					"type": "integer",
@@ -252,7 +286,24 @@
 											},
 											"widget": {
 												"type": "string",
-												"default": "enum"
+												"default": "workflow_enum"
+											}
+										},
+										"uihints":{
+											"widget": {"ui:field": "hidden"}
+										}
+									},
+									{
+										"label": "Select one of the parameters of the connected events",
+										"properties": {
+											"value": {
+												"type": "string",
+												"enum": [],
+												"default": ""
+											},
+											"widget": {
+												"type": "string",
+												"default": "event_enum"
 											}
 										},
 										"uihints":{

@@ -45,20 +45,89 @@
                 "type": "string",
                 "title": "Parameters Name"
               },
-              "value":{
-                "type": "string",
-                "title": "Default Value"
-              },
-              "type":{
-                "type": "string",
-                "title": "Value Type",
-                "enum": ["String", "Integer", "Float", "Boolean"],
-                "default": "String"
-              },
               "description": {
                 "type": "string",
                 "title": "Description"
+              },
+              "type":{
+                "title": "Type",
+                "description": "The type of this parameter.",
+                "oneOf": [
+                  {
+                    "label": "String",
+                    "properties": {
+                      "value": {
+                        "type": "string",
+                        "title": "Default Value"
+                      },
+                      "widget": {
+                        "type": "string",
+                        "default": "String"
+                      }
+                    },
+                    "uihints":{
+                      "widget": {"ui:field": "hidden"},
+                      "value": {"ui:placeholder": "default_val"}
+                    }
+                  },
+                  {
+                    "label": "Integer",
+                    "properties": {
+                      "value": {
+                        "type": "number",
+                        "title": "Default Value"
+                      },
+                      "widget": {
+                        "type": "string",
+                        "default": "Integer"
+                      }
+                    },
+                    "uihints":{
+                      "widget": {"ui:field": "hidden"}
+                    }
+                  },
+                  {
+                    "label": "Float",
+                    "properties": {
+                      "value": {
+                        "type": "number",
+                        "title": "Default Value"
+                      },
+                      "widget": {
+                        "type": "string",
+                        "default": "Float"
+                      }
+                    },
+                    "uihints":{
+                      "widget": {"ui:field": "hidden"}
+                    }
+                  },
+                  {
+                    "label": "Boolean",
+                    "properties": {
+                      "value": {
+                        "type": "string",
+                        "title": "Default Value",
+                        "enum": [true, false],
+                        "default": false
+                      },
+                      "widget": {
+                        "type": "string",
+                        "default": "Bool"
+                      }
+                    },
+                    "uihints":{
+                      "widget": {"ui:field": "hidden"}
+                    }
+                  }
+                ]
               }
+            }
+          },
+          "uniqueItems": true,
+          "uihints": {
+            "items": {
+              "name": {"ui:placeholder": "param_1"}
             }
           }
         },

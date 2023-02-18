@@ -448,22 +448,18 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             input_parameters = {}
             if "input_parameters" in pipeline.pipeline_parameters:
                 for item in pipeline.pipeline_parameters["input_parameters"]:
-                    if "value" in item:
-                        value = ""
-                        if item["type"] == "String":
-                            value = item["value"]
-                        elif item["type"] == "Integer":
-                            value = int(item["value"])
-                        elif item["type"] == "Float":
-                            value = float(item["value"])
-                        elif item["type"] == "Boolean":
-                            value = str_to_bool(item["value"])
-                        input_parameters[item["name"]] = value
+                    if "value" in item["type"]:
+                        temp_value = item["type"]["value"]
+                        if item["type"]["widget"] == "Float":
+                            temp_value = float(temp_value)
+                        elif item["type"]["widget"] == "Integer":
+                            temp_value = int(temp_value)
+                        input_parameters[item["name"]] = temp_value
                     else:
-                        if item["type"] == "String":
+                        if item["type"]["widget"] == "String":
                             input_parameters[item["name"]] = ""
-                        elif item["type"] == "Boolean":
-                            input_parameters[item["name"]] = True
+                        elif item["type"]["widget"] == "Float":
+                            input_parameters[item["name"]] = 0.0
                         else:
                             input_parameters[item["name"]] = 0
             

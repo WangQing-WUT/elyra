@@ -222,13 +222,25 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     }
   }
 
-  const onFileRequested = async (): Promise<string[] | undefined> => {
+  const onFileRequested = async (
+    flag: boolean
+  ): Promise<string[] | undefined> => {
     const res = await showBrowseFileDialog(
       browserFactory.defaultBrowser.model.manager,
       {
         startPath: '',
+        includeDir: flag,
         filter: (model: any): boolean => {
-          return true;
+          const ext = PathExt.extname(model.path);
+          if (ext == '') {
+            return true;
+          } else {
+            if (flag) {
+              return false;
+            } else {
+              return ['.yaml'].includes(ext);
+            }
+          }
         }
       }
     );
@@ -240,13 +252,18 @@ export const FormEditor: React.FC<IFormEditorProps> = ({
     return undefined;
   };
 
+  let flag = true;
+  if (schema?.properties?.Configuration) {
+    flag = false;
+  }
+
   return (
     <Form
       schema={schema}
       formData={formData}
       formContext={{
         onFileRequested: async (args: any) => {
-          return await onFileRequested?.();
+          return await onFileRequested?.(flag);
         },
         editorServices: editorServices,
         language: formData?.['Source']?.language ?? '',

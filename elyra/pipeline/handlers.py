@@ -18,6 +18,7 @@ from http.client import responses
 import json
 import os
 import yaml
+import traceback
 from pathlib import Path
 from logging import Logger
 import mimetypes
@@ -102,77 +103,79 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         pipeline_overwrite = payload["overwrite"]
         pipeline_upload = payload["upload"]
 
-        
-        if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
-            name = Path(str(pipeline_export_path)).stem
-            description = "No description yet."
-            if "description" in pipeline_definition["pipelines"][0]["app_data"]["properties"]:
-                description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
-            runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
-            WPPR = WfpPipelineProcessor()
-            zip_file, response = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
-            if not response.has_fatal:
-                if pipeline_upload:
-                    response = await WPPR.upload(zip_file, runtime_config, name, description)
-                    if not response.has_fatal:
+        try:
+            if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
+                name = Path(str(pipeline_export_path)).stem
+                description = "No description yet."
+                if "description" in pipeline_definition["pipelines"][0]["app_data"]["properties"]:
+                    description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
+                runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
+                WPPR = WfpPipelineProcessor()
+                zip_file, response = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
+                if not response.has_fatal:
+                    if pipeline_upload:
+                        response = await WPPR.upload(zip_file, runtime_config, name, description)
+                        if not response.has_fatal:
+                            json_msg = json.dumps({"export_path": zip_file})
+                            self.set_status(201)
+                            self.set_header("Content-Type", "application/json")
+                            location = url_path_join(self.base_url, "api", "contents", zip_file)
+                            self.set_header("Location", location)
+                        else:
+                            json_msg = json.dumps(
+                                {
+                                    "reason": responses.get(400),
+                                    "message": "Errors found in workflow",
+                                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                    "issues": response.to_json().get("issues"),
+                                }
+                            )
+                            self.set_status(400)
+                    else:
                         json_msg = json.dumps({"export_path": zip_file})
                         self.set_status(201)
                         self.set_header("Content-Type", "application/json")
                         location = url_path_join(self.base_url, "api", "contents", zip_file)
                         self.set_header("Location", location)
-                    else:
-                        json_msg = json.dumps(
-                            {
-                                "reason": responses.get(400),
-                                "message": "Errors found in workflow",
-                                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                "issues": response.to_json().get("issues"),
-                            }
-                        )
-                        self.set_status(400)
                 else:
-                    json_msg = json.dumps({"export_path": zip_file})
+                    json_msg = json.dumps(
+                        {
+                            "reason": responses.get(400),
+                            "message": "Errors found in workflow",
+                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "issues": response.to_json().get("issues"),
+                        }
+                    )
+                    self.set_status(400)
+            else:
+                response = await PipelineValidationManager.instance().validate(pipeline_definition)
+                self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
+
+                if not response.has_fatal:
+                    pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
+                        pipeline_definition
+                    )
+
+                    pipeline_exported_path = await PipelineProcessorManager.instance().export(
+                        pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
+                    )
+                    json_msg = json.dumps({"export_path": pipeline_export_path})
                     self.set_status(201)
                     self.set_header("Content-Type", "application/json")
-                    location = url_path_join(self.base_url, "api", "contents", zip_file)
+                    location = url_path_join(self.base_url, "api", "contents", pipeline_exported_path)
                     self.set_header("Location", location)
-            else:
-                json_msg = json.dumps(
-                    {
-                        "reason": responses.get(400),
-                        "message": "Errors found in workflow",
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "issues": response.to_json().get("issues"),
-                    }
-                )
-                self.set_status(400)
-        else:
-            response = await PipelineValidationManager.instance().validate(pipeline_definition)
-            self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
-
-            if not response.has_fatal:
-                pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
-                    pipeline_definition
-                )
-
-                pipeline_exported_path = await PipelineProcessorManager.instance().export(
-                    pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
-                )
-                json_msg = json.dumps({"export_path": pipeline_export_path})
-                self.set_status(201)
-                self.set_header("Content-Type", "application/json")
-                location = url_path_join(self.base_url, "api", "contents", pipeline_exported_path)
-                self.set_header("Location", location)
-            else:
-                json_msg = json.dumps(
-                    {
-                        "reason": responses.get(400),
-                        "message": "Errors found in pipeline",
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "issues": response.to_json().get("issues"),
-                    }
-                )
-                self.set_status(400)
+                else:
+                    json_msg = json.dumps(
+                        {
+                            "reason": responses.get(400),
+                            "message": "Errors found in pipeline",
+                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "issues": response.to_json().get("issues"),
+                        }
+                    )
+                    self.set_status(400)
+        except Exception as err:
+            raise web.HTTPError(500, traceback.format_exc()) from err
 
         self.set_header("Content-Type", "application/json")
         await self.finish(json_msg)

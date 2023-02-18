@@ -517,7 +517,7 @@ const PipelineWrapper: React.FC<IProps> = ({
       contextRef.current.path,
       args.filename ?? ''
     );
-    console.log(filename);
+
     if (args.propertyID.includes('dependencies')) {
       const res = await showBrowseFileDialog(
         browserFactory.defaultBrowser.model.manager,
@@ -540,13 +540,15 @@ const PipelineWrapper: React.FC<IProps> = ({
         {
           startPath: PathExt.dirname(filename),
           filter: (model: any): boolean => {
-            return true;
-            //TODO
-            // if (args.filters?.File === undefined) {
-            //   return true;
-            // }
-            // const ext = PathExt.extname(model.path);
-            // return args.filters.File.includes(ext);
+            if (args.filters?.File === undefined) {
+              return true;
+            }
+            const ext = PathExt.extname(model.path);
+            if (ext == '') {
+              return true;
+            } else {
+              return args.filters.File.includes(ext);
+            }
           }
         }
       );

@@ -76,14 +76,14 @@ function getOneOfValue(value: string, option: string, label: string) {
   };
 }
 
-function getInitPipelineTriggerPara(name: string) {
-  return {
-    from: {
-      value: "",
-      widget: "string"
-    },
-    name: name
-  };
+function addItem(
+  eventParameters: string[],
+  items: string[],
+  upstreamNode: any
+) {
+  for (let item of items) {
+    eventParameters.push(`${upstreamNode.app_data?.ui_data?.label}: ${item}`);
+  }
 }
 
 async function pipelineTriggerParameters(template_name: any): Promise<any> {
@@ -179,11 +179,19 @@ function NodeProperties({
   const getNodeProperties = (): any => {
     const oneOfValues: any[] = [];
     const oneOfValuesNoOpt: any[] = [];
-    const filters: string[] = [""];
+    let workflowParameters: string[] = ["", "workflow.instance_name"];
+    let eventParameters: string[] = [""];
     const pipeline_input_parameters: string[] = [""];
+    const evnetObject: { [index: string]: string[] } = {
+      calendar_event: ["time"],
+      model_event: ["operate"],
+      dataset_event: ["operate", "samples", "symbol"],
+      model_monitor_event: ["alert", "app", "model"],
+      s3_event: ["bucket", "object", "operate", "size"]
+    };
     if (data?.input_parameters) {
       for (const input_paramter of data.input_parameters) {
-        filters.push(`workflow.parameters.${input_paramter?.name}`);
+        workflowParameters.push(`workflow.parameters.${input_paramter?.name}`);
       }
     }
 
@@ -216,21 +224,9 @@ function NodeProperties({
           oneOfValuesNoOpt.push(oneOfValue);
         }
       }
-
-      const eventFilters =
-        upstreamNode.app_data?.component_parameters?.event_filter;
-      if (eventFilters) {
-        for (const filter of eventFilters) {
-          if (
-            filters.indexOf(
-              `${upstreamNode.app_data?.ui_data?.label}: ${filter.name}`
-            ) == -1
-          ) {
-            filters.push(
-              `${upstreamNode.app_data?.ui_data?.label}: ${filter.name}`
-            );
-          }
-        }
+      const nodeType: string = upstreamNode.op.split(":")[0];
+      if (nodeType in evnetObject) {
+        addItem(eventParameters, evnetObject[nodeType], upstreamNode);
       }
 
       if (oneOfValuesNoOpt.length <= prevLen) {
@@ -258,7 +254,8 @@ function NodeProperties({
           },
           ...draft.properties
         };
-        const oneOfValue =
+        // workflow input parameters placeholder of trigger parameters、init and exit
+        const workflowOneOfValue =
           draft.properties.component_parameters?.properties?.trigger_parameters
             ?.items?.properties?.from?.oneOf[1]?.properties?.value ||
           draft.properties.component_parameters?.properties?.init_parameters
@@ -266,60 +263,76 @@ function NodeProperties({
           draft.properties.component_parameters?.properties?.exit_parameters
             ?.items?.properties?.value?.oneOf[1]?.properties?.value;
 
-        if (oneOfValue && filters.length > 0) {
-          oneOfValue.enum = filters;
+        if (workflowOneOfValue) {
+          workflowOneOfValue.enum = workflowParameters;
+        } else {
+          workflowParameters.splice(1, 1);
         }
 
+        // events parameters placeholder of trigger parameters
+        const eventOneOfValue =
+          draft.properties.component_parameters?.properties?.trigger_parameters
+            ?.items?.properties?.from?.oneOf[2]?.properties?.value;
+
+        if (eventOneOfValue) {
+          eventOneOfValue.enum = eventParameters;
+        }
+
+        // const oneOf =
+        //   draft.properties.component_parameters?.properties?.event_filter?.items
+        //     ?.properties?.value?.oneOf;
+        // if (oneOf) {
+        //   oneOf[2].properties.value.enum = workflowParameters;
+        // }
+
+        // workflow input parameters placeholder of events filter
         const allOf =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.allOf;
-        if (allOf && filters.length > 0) {
+        if (allOf) {
           for (let item of allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
             if (valueOneOf) {
-              valueOneOf[2].properties.value.enum = filters;
+              valueOneOf[2].properties.value.enum = workflowParameters;
             }
           }
         }
 
-        const oneOf =
-          draft.properties.component_parameters?.properties?.event_filter?.items
-            ?.properties?.value?.oneOf;
-        if (oneOf && filters.length > 0) {
-          oneOf[2].properties.value.enum = filters;
-        }
-
+        // workflow input parameters placeholder of calendar events filter
         const calendar_allOf =
           draft.properties.component_parameters?.properties?.calendar?.allOf;
-        if (calendar_allOf && filters.length > 0) {
+        if (calendar_allOf) {
           for (let item of calendar_allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
             if (valueOneOf) {
-              valueOneOf[2].properties.value.enum = filters;
+              valueOneOf[2].properties.value.enum = workflowParameters;
             }
           }
         }
 
+        // workflow input parameters placeholder of datasets or models
         const dataset_or_model_oneOf =
           draft.properties.component_parameters?.properties?.dataset_name?.items
             ?.oneOf ||
           draft.properties.component_parameters?.properties?.model_name?.items
             ?.oneOf;
-        if (dataset_or_model_oneOf && filters) {
-          dataset_or_model_oneOf[1].properties.value.enum = filters;
+        if (dataset_or_model_oneOf) {
+          dataset_or_model_oneOf[1].properties.value.enum = workflowParameters;
         }
 
+        // workflow input parameters placeholder of appNames or modelName of model monitor event
         const app_name =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.properties?.app_name;
         const model_name =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.properties?.model_name;
-        if (app_name && model_name && filters.length > 0) {
-          app_name.oneOf[2].properties.value.enum = filters;
-          model_name.oneOf[2].properties.value.enum = filters;
+        if (app_name && model_name && workflowParameters.length > 0) {
+          app_name.oneOf[2].properties.value.enum = workflowParameters;
+          model_name.oneOf[2].properties.value.enum = workflowParameters;
         }
 
+        // pipeline input parameters placeholder of condition
         const branch_parameter1 =
           draft.properties.component_parameters?.properties?.branch_conditions
             ?.properties?.branch_parameter1;
@@ -339,6 +352,7 @@ function NodeProperties({
           delete branch_parameter2.oneOf[2].properties.value.default;
         }
 
+        // pipeline parameter names placeholder of pipeline trigger, init and exit
         const parameters_name =
           draft.properties.component_parameters?.properties?.trigger_parameters
             ?.items?.properties?.name ||
@@ -350,6 +364,7 @@ function NodeProperties({
           parameters_name.enum = para;
         }
 
+        // pipeline component parameter placeholder
         const component_properties =
           draft.properties.component_parameters?.properties ?? {};
         for (let prop in component_properties) {
@@ -395,7 +410,7 @@ function NodeProperties({
                 if (pipeline_input_parameters.length == 1) {
                   component_properties[prop].oneOf[
                     i
-                  ].properties.value.enum = filters;
+                  ].properties.value.enum = workflowParameters;
                 } else {
                   component_properties[prop].oneOf[
                     i

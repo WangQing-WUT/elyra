@@ -134,8 +134,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if "model" not in event_field:
                     event_field["model"] = {}
                 event_field["model"][node["app_data"]["label"].lstrip()] = {
+                    "models": self._get_dataset_or_model_names(node["app_data"]["component_parameters"]["model_name"]),
                     "eventFilter": {
-                        "modelNames": self._get_dataset_or_model_names(node["app_data"]["component_parameters"]["model_name"]),
                         "expression": self._get_event_filter(node["app_data"]["component_parameters"]["event_filter"],
                                                              node["app_data"]["component_parameters"]["expression"])
                     }
@@ -154,7 +154,10 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             elif node_type == "calendar_event":
                 if "calendar" not in event_field:
                     event_field["calendar"] = {}
-                event_field["calendar"][node["app_data"]["label"].lstrip()] = self._get_calendar_data(node["app_data"]["component_parameters"]["calendar"])
+                calendar = node["app_data"]["component_parameters"]["calendar"]
+                event_field["calendar"][node["app_data"]["label"].lstrip()] = {
+                    calendar["name"]: self._widget_value_str(calendar["value"])
+                }
             elif node_type == "dataset_event":
                 if "dataset" not in event_field:
                     event_field["dataset"] = {}
@@ -243,7 +246,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 init_parameters = []
                 for init_item in node["app_data"]["component_parameters"]["init_parameters"]:
                     temp_value = init_item["value"]["value"]
-                    if "workflow.parameters" in init_item["value"]["value"]:
+                    if init_item["value"]["widget"] == "enum":
                         temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
 
                     temp_init = {
@@ -284,9 +287,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 exit_parameters = []
                 for exit_item in node["app_data"]["component_parameters"]["exit_parameters"]:
                     temp_value = exit_item["value"]["value"]
-                    if exit_item["value"]["value"].isdigit():
-                        temp_value = int(exit_item["value"]["value"])
-                    elif "workflow.parameters" in exit_item["value"]["value"]:
+                    if exit_item["value"]["widget"] == "enum":
                         temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
 
                     temp_exit = {
@@ -454,10 +455,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         format_input_parameters = []
         for item in input_parameters:
             input_parameter = {}
-            input_parameter["name"] = item["name"]
-            input_parameter["type"] = item["type"]
-            if "value" in item:
-                input_parameter["value"] = item["value"]
+            if "name" in item:
+                input_parameter["name"] = item["name"]
+            input_parameter["type"] = item["type"]["widget"]
+            if "value" in item["type"]:
+                input_parameter["value"] = item["type"]["value"]
             if "description" in item:
                 input_parameter["description"] = item["description"]
             format_input_parameters.append(input_parameter)
@@ -483,32 +485,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         trigger_parameters_field = []
         for item in trigger_parameters:
             temp_item = {"name": item["name"]}
-            if item["from"]["widget"] == "enum":
-                if "workflow.parameters" in item["from"]["value"]:
-                    temp_item["value"] = "{{" + item["from"]["value"] + "}}"
-                else:
-                    name = item["from"]["value"].split(":")[0]
-                    temp_item["value"] = "{{events." + field_map[name] + "." + item["from"]["value"] + "}}"
-                    temp_item["value"] = temp_item["value"].replace(": ", ".")
+            if item["from"]["widget"] == "workflow_enum":
+                temp_item["value"] = "{{" + item["from"]["value"] + "}}"
+            elif item["from"]["widget"] == "event_enum":
+                name = item["from"]["value"].split(":")[0]
+                temp_item["value"] = "{{events." + field_map[name] + "." + item["from"]["value"] + "}}"
+                temp_item["value"] = temp_item["value"].replace(": ", ".")
             else:
                 temp_item["value"] = item["from"]["value"]
             trigger_parameters_field.append(temp_item)
         return trigger_parameters_field
-    
-    @staticmethod
-    def _get_calendar_data(parameters: dict):
-        data_field = {}
-        if parameters["name"] == "interval":
-            if parameters["value"]["widget"] == "enum":
-                data_field["interval"] = "{{" + parameters["value"]["value"] + "}}"
-            elif parameters["value"]["widget"] == "string":
-                data_field["interval"] = parameters["value"]["value"]
-        elif parameters["name"] == "schedule":
-            if parameters["value"]["widget"] == "enum":
-                data_field["schedule"] = "{{" + parameters["value"]["value"] + "}}"
-            elif parameters["value"]["widget"] == "string":
-                data_field["schedule"] = parameters["value"]["value"]
-        return data_field
 
     @staticmethod
     def _get_k8s_agruments(parameters: list, node_json: dict):
@@ -529,15 +515,14 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         arguments_list = []
         for dict_item in parameters:
             temp_argument = {}
-            if dict_item["from"]["widget"] == "string":
+            if dict_item["from"]["widget"] == "workflow_enum":
+                temp_argument["src"] = "{{" + dict_item["from"]["value"] + "}}"
+            elif dict_item["from"]["widget"] == "event_enum":
+                name = dict_item["from"]["value"].split(":")[0]
+                temp_argument["src"] = "{{events." + field_map[name] + "." + dict_item["from"]["value"] + "}}"
+                temp_argument["src"] = temp_argument["src"].replace(": ", ".")
+            else:
                 temp_argument["src"] = dict_item["from"]["value"]
-            elif dict_item["from"]["widget"] == "enum":
-                if "workflow.parameters" in dict_item["from"]["value"]:
-                    temp_argument["src"] = "{{" + dict_item["from"]["value"] + "}}"
-                else:
-                    name = dict_item["from"]["value"].split(":")[0]
-                    temp_argument["src"] = "{{events." + field_map[name] + "." + dict_item["from"]["value"] + "}}"
-                    temp_argument["src"] = temp_argument["src"].replace(": ", ".")
             temp_argument["dest"] = "{{" + str(dict_item["dest"]) + "}}"
             arguments_list.append(temp_argument)
         return arguments_list
