@@ -619,7 +619,7 @@ class RuntimePipelineProcessor(PipelineProcessor):
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         pass
 

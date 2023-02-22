@@ -481,7 +481,8 @@ class KubernetesLabel(ElyraPropertyListItem):
 
     def __init__(self, key, value, **kwargs):
         self.key = key
-        self.value = value
+        self.value = value["value"]
+        self.type = value["widget"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesLabel | None:
@@ -505,9 +506,9 @@ class KubernetesLabel(ElyraPropertyListItem):
         """Returns the value to be used when constructing a dict from a list of classes."""
         return self.value
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_pod_label(instance=self, execution_object=execution_object, **kwargs)
+        runtime_processor.add_kubernetes_pod_label(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
 
 
 class KubernetesToleration(ElyraPropertyListItem):
@@ -879,7 +880,7 @@ class InputTypeDescriptionMap(Enum):
     boolean = "Please select or deselect the checkbox:"
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
-    enum = "Please select an value from pipeline input parameters"
+    enum = "Please select one from pipeline input parameters"
     outputpath = None  # outputs are read-only and don't require a description
 
 

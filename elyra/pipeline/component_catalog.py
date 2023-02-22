@@ -62,6 +62,49 @@ WORKER_THREAD_WARNING_THRESHOLD = int(os.getenv("ELYRA_WORKER_THREAD_WARNING_THR
 # Define custom type to describe the component cache
 ComponentCacheType = Dict[str, Dict[str, Dict[str, Dict[str, Union[Component, str, List[str]]]]]]
 
+def get_oneOf(title: str):
+    oneOf = [
+        {
+            "label": "Enter a value manually",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "default": ""
+                },
+                "widget": {
+                    "type": "string",
+                    "default": "string"
+                }
+            },
+            "uihints":{
+                "widget": {"ui:field": "hidden"}
+            }
+        },
+        {
+            "label": "Select one of the pipeline input parameters",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "enum": [""],
+                    "default": ""
+                },
+                "widget": {
+                    "type": "string",
+                    "default": "enum"
+                }
+            },
+            "uihints":{
+                "widget": {"ui:field": "hidden"}
+            }
+        }
+    ]
+
+    value = {
+        "type": "object",
+        "title": title,
+        "oneOf": oneOf,
+    }
+    return value
 
 class RefreshInProgressError(Exception):
     def __init__(self):
@@ -681,6 +724,11 @@ class ComponentCache(SingletonConfigurable):
         If component_id is one of the generic set, generic template is rendered,
         otherwise, the  runtime-specific property template is rendered.
         """
+
+        template_vars = {
+            "elyra_owned_parameters": component.get_elyra_parameters(),
+            "render_parameter_details": ComponentParameter.render_parameter_details,
+        }
         if ComponentCache.get_generic_component(component.id) is not None:
             template = ComponentCache.load_jinja_template("generic_properties_template.jinja2")
         else:
@@ -696,18 +744,17 @@ class ComponentCache(SingletonConfigurable):
                 template = ComponentCache.load_jinja_template("init_exit_properties_template.jinja2")
             else:
                 template = ComponentCache.load_jinja_template("canvas_properties_template.jinja2")
-
-        template_vars = {
-            "elyra_owned_parameters": component.get_elyra_parameters(),
-            "render_parameter_details": ComponentParameter.render_parameter_details,
-        }
+                
         if (component.name == "Init"):
             template_vars["component_name"] = "init"
         elif (component.name == "Exit"):
             template_vars["component_name"] = "exit"
         template.globals.update(template_vars)
         canvas_properties = template.render(component=component)
-        return json.loads(canvas_properties)
+        result = json.loads(canvas_properties)
+        if component.id.startswith("local-file-catalog"):
+            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"]["value"] = get_oneOf("Value")
+        return result
 
 
 class ManifestFileChangeHandler(FileSystemEventHandler):

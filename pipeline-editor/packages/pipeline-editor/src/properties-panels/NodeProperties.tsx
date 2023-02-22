@@ -254,6 +254,14 @@ function NodeProperties({
           },
           ...draft.properties
         };
+
+        const kubernetes_pod_labels =
+          draft.properties.component_parameters?.properties
+            ?.kubernetes_pod_labels?.items?.properties?.value?.oneOf[1]
+            ?.properties?.value;
+        if (kubernetes_pod_labels) {
+          kubernetes_pod_labels.enum = pipeline_input_parameters;
+        }
         // workflow input parameters placeholder of trigger parameters、init and exit
         const workflowOneOfValue =
           draft.properties.component_parameters?.properties?.trigger_parameters

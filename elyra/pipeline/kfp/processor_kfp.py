@@ -839,6 +839,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # Process Elyra-owned properties as required for each type
         for value in operation.elyra_params.values():
             if isinstance(value, (ElyraProperty, ElyraPropertyList)):
+                if isinstance(value, KubernetesLabel):
+                    value.add_to_execution_object(runtime_processor=self, execution_object=container_op, pipeline_input_parameters=args) 
                 value.add_to_execution_object(runtime_processor=self, execution_object=container_op)
 
         # Add ContainerOp to target_ops dict
@@ -1354,10 +1356,16 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         if instance.key not in execution_object.pod_annotations:
             execution_object.add_pod_annotation(instance.key, instance.value or "")
 
-    def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         if instance.key not in execution_object.pod_labels:
-            execution_object.add_pod_label(instance.key, instance.value or "")
+            print(instance.type)
+            if instance.type == "enum":
+                for pipeline_input_parameter in pipeline_input_parameters:
+                    if pipeline_input_parameter.name == instance.value:
+                        execution_object.add_pod_label(instance.key, pipeline_input_parameter or "")
+            else:
+                execution_object.add_pod_label(instance.key, instance.value or "")
 
     def add_kubernetes_toleration(self, instance: KubernetesToleration, execution_object: Any, **kwargs) -> None:
         """Add KubernetesToleration instance to the execution object for the given runtime processor"""
