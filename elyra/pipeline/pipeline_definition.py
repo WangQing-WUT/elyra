@@ -750,9 +750,9 @@ class PipelineDefinition(object):
             "env_vars",
             "mounted_volumes",
             "kubernetes_secrets",
-            "kubernetes_tolerations",
             "kubernetes_pod_labels",
-            "kubernetes_pod_annotations"
+            "kubernetes_pod_annotations",
+            "kubernetes_tolerations"
         ]
         elyra_params = []
         for item in sorted_list:

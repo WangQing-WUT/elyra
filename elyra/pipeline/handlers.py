@@ -44,6 +44,7 @@ from elyra.pipeline.wfp.processor_wfp import WfpPipelineProcessor
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.pipeline.runtime_type import RuntimeTypeResources
 from elyra.pipeline.validation import PipelineValidationManager
+from elyra.pipeline.component_catalog import get_oneOf
 from elyra.util.http import HttpErrorMixin
 
 
@@ -175,7 +176,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                     )
                     self.set_status(400)
         except Exception as err:
-            raise web.HTTPError(500, traceback.format_exc()) from err
+            raise web.HTTPError(500, repr(err)) from err
 
         self.set_header("Content-Type", "application/json")
         await self.finish(json_msg)
@@ -275,6 +276,12 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
                 template_name="pipeline_properties_template.jinja2",
                 runtime_type=runtime_processor_type.name,
             )
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_labels"]["items"]["properties"]["value"] = get_oneOf("Value")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_annotations"]["items"]["properties"]["value"] = get_oneOf("Value")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["mounted_volumes"]["items"]["properties"]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"]["properties"]["key"] = get_oneOf("Secret Key")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"]["properties"]["name"] = get_oneOf("Secret Name")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["env_vars"]["items"]["properties"]["value"] = get_oneOf("Value")
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")

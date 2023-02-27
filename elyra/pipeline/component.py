@@ -222,9 +222,9 @@ class Component(object):
             "env_vars",
             "mounted_volumes",
             "kubernetes_secrets",
-            "kubernetes_tolerations",
             "kubernetes_pod_labels",
             "kubernetes_pod_annotations",
+            "kubernetes_tolerations",
             "disable_node_caching"
         ]
         elyra_params = []

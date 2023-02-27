@@ -58,6 +58,7 @@ from elyra.pipeline.component_catalog import ComponentCache
 from elyra.pipeline.component_parameter import DisableNodeCaching
 from elyra.pipeline.component_parameter import ElyraProperty
 from elyra.pipeline.component_parameter import ElyraPropertyList
+from elyra.pipeline.component_parameter import EnvironmentVariable
 from elyra.pipeline.component_parameter import KubernetesAnnotation
 from elyra.pipeline.component_parameter import KubernetesLabel
 from elyra.pipeline.component_parameter import KubernetesSecret
@@ -804,11 +805,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 container_op = factory_function(**sanitized_component_params)
                 container_op.set_display_name(operation.name)
 
-                if "env_vars" in operation.elyra_params:
-                    env_vars = operation.elyra_params["env_vars"].to_dict()
-                    if env_vars:
-                        for key, value in env_vars.items():
-                            container_op.add_env_variable(V1EnvVar(name=key, value=value))
+                # if "env_vars" in operation.elyra_params:
+                #     env_vars = operation.elyra_params["env_vars"].to_dict()
+                #     if env_vars:
+                #         for key, value in env_vars.items():
+                #             container_op.add_env_variable(V1EnvVar(name=key, value=value))
                 
                 if "cpu" in resources:
                     container_op.set_cpu_request(cpu=str(resources["cpu"]))
@@ -839,9 +840,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # Process Elyra-owned properties as required for each type
         for value in operation.elyra_params.values():
             if isinstance(value, (ElyraProperty, ElyraPropertyList)):
-                if isinstance(value, KubernetesLabel):
-                    value.add_to_execution_object(runtime_processor=self, execution_object=container_op, pipeline_input_parameters=args) 
-                value.add_to_execution_object(runtime_processor=self, execution_object=container_op)
+                value.add_to_execution_object(runtime_processor=self, execution_object=container_op, pipeline_input_parameters=args) 
 
         # Add ContainerOp to target_ops dict
         target_ops[operation.id] = container_op
@@ -1332,38 +1331,72 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         if instance.selection:
             execution_object.execution_options.caching_strategy.max_cache_staleness = "P0D"
 
-    def add_kubernetes_secret(self, instance: KubernetesSecret, execution_object: Any, **kwargs) -> None:
-        """Add KubernetesSecret instance to the execution object for the given runtime processor"""
-        execution_object.container.add_env_variable(
-            V1EnvVar(
-                name=instance.env_var,
-                value_from=V1EnvVarSource(secret_key_ref=V1SecretKeySelector(name=instance.name, key=instance.key)),
-            )
-        )
+    def add_env_var(self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+        """Add KubernetesLabel instance to the execution object for the given runtime processor"""
+        
+        v1EnvVar = V1EnvVar(name=instance.env_var, value=instance.value)
+        if instance.type == "enum" and instance.value:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.name == instance.value:
+                    v1EnvVar = V1EnvVar(name=instance.env_var, value=pipeline_input_parameter)
+        execution_object.container.add_env_variable(v1EnvVar)
 
-    def add_mounted_volume(self, instance: VolumeMount, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_secret(self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+        """Add KubernetesSecret instance to the execution object for the given runtime processor"""
+        name = instance.name
+        key = instance.key
+        if instance.key_type == "enum" and instance.key:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.name == instance.key:
+                    key = pipeline_input_parameter
+        if instance.name_type == "enum" and instance.name:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.name == instance.name:
+                    name = pipeline_input_parame
+        v1EnvVar = V1EnvVar(
+            name=instance.env_var,
+            value_from=V1EnvVarSource(secret_key_ref=V1SecretKeySelector(name=name, key=key)),
+        )
+        execution_object.container.add_env_variable(v1EnvVar)
+
+    def add_mounted_volume(self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add VolumeMount instance to the execution object for the given runtime processor"""
+        
         volume = V1Volume(
             name=instance.pvc_name,
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(claim_name=instance.pvc_name),
         )
+        volumeMount = V1VolumeMount(mount_path=instance.path, name=instance.pvc_name)
+
+        if instance.type == "enum" and instance.pvc_name:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.name == instance.pvc_name:
+                    volume = V1Volume(
+                        name=pipeline_input_parameter,
+                        persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(claim_name=pipeline_input_parameter),
+                    )
+                    volumeMount = V1VolumeMount(mount_path=instance.path, name=pipeline_input_parameter)
         if volume not in execution_object.volumes:
             execution_object.add_volume(volume)
-        execution_object.container.add_volume_mount(V1VolumeMount(mount_path=instance.path, name=instance.pvc_name))
+        execution_object.container.add_volume_mount(volumeMount)
 
-    def add_kubernetes_pod_annotation(self, instance: KubernetesAnnotation, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_pod_annotation(self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         if instance.key not in execution_object.pod_annotations:
-            execution_object.add_pod_annotation(instance.key, instance.value or "")
+            if instance.type == "enum" and instance.value:
+                for pipeline_input_parameter in pipeline_input_parameters:
+                    if pipeline_input_parameter.name == instance.value:
+                        execution_object.add_pod_annotation(instance.key, pipeline_input_parameter)
+            else:
+                execution_object.add_pod_annotation(instance.key, instance.value or "")
 
     def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         if instance.key not in execution_object.pod_labels:
-            print(instance.type)
-            if instance.type == "enum":
+            if instance.type == "enum" and instance.value:
                 for pipeline_input_parameter in pipeline_input_parameters:
                     if pipeline_input_parameter.name == instance.value:
-                        execution_object.add_pod_label(instance.key, pipeline_input_parameter or "")
+                        execution_object.add_pod_label(instance.key, pipeline_input_parameter)
             else:
                 execution_object.add_pod_label(instance.key, instance.value or "")
 

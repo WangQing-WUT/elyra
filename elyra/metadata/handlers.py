@@ -68,8 +68,6 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
                         instance_dict["metadata"]["save_path"] += "/"
                     dirname = os.path.dirname(instance_dict["metadata"]["save_path"])
                     instance_dict["metadata"]["save_path"] = os.path.join(self.settings["server_root_dir"], dirname)
-                    print(dirname)
-                    print(instance_dict["metadata"]["save_path"])
                 if "file_name" not in instance_dict["metadata"]:
                     instance_dict["metadata"]["file_name"] = instance_dict["metadata"]["component_name"]
                 instance_dict["metadata"]["root_dir"] = self.settings["server_root_dir"]

@@ -193,12 +193,14 @@ function NodeProperties({
       for (const input_paramter of data.input_parameters) {
         workflowParameters.push(`workflow.parameters.${input_paramter?.name}`);
       }
+      workflowParameters.sort()
     }
 
     if (data?.pipeline_defaults?.input_parameters) {
       for (const input_paramter of data.pipeline_defaults.input_parameters) {
         pipeline_input_parameters.push(`${input_paramter?.name}`);
       }
+      pipeline_input_parameters.sort()
     }
 
     oneOfValues.push(getOneOfValue(" ", " ", " "));
@@ -240,6 +242,7 @@ function NodeProperties({
         );
       }
     }
+    eventParameters.sort()
 
     // update property data to include data for properties with inputpath format
 
@@ -261,6 +264,46 @@ function NodeProperties({
             ?.properties?.value;
         if (kubernetes_pod_labels) {
           kubernetes_pod_labels.enum = pipeline_input_parameters;
+        }
+
+        const kubernetes_pod_annotations =
+          draft.properties.component_parameters?.properties
+            ?.kubernetes_pod_annotations?.items?.properties?.value?.oneOf[1]
+            ?.properties?.value;
+        if (kubernetes_pod_annotations) {
+          kubernetes_pod_annotations.enum = pipeline_input_parameters;
+        }
+
+        const mounted_volumes =
+          draft.properties.component_parameters?.properties
+            ?.mounted_volumes?.items?.properties?.pvc_name?.oneOf[1]
+            ?.properties?.value;
+        if (mounted_volumes) {
+          mounted_volumes.enum = pipeline_input_parameters;
+        }
+
+        const kubernetes_secrets_key =
+          draft.properties.component_parameters?.properties
+            ?.kubernetes_secrets?.items?.properties?.key?.oneOf[1]
+            ?.properties?.value;
+        if (kubernetes_secrets_key) {
+          kubernetes_secrets_key.enum = pipeline_input_parameters;
+        }
+
+        const kubernetes_secrets_name =
+          draft.properties.component_parameters?.properties
+            ?.kubernetes_secrets?.items?.properties?.name?.oneOf[1]
+            ?.properties?.value;
+        if (kubernetes_secrets_name) {
+          kubernetes_secrets_name.enum = pipeline_input_parameters;
+        }
+
+        const env_vars =
+          draft.properties.component_parameters?.properties
+            ?.env_vars?.items?.properties?.value?.oneOf[1]
+            ?.properties?.value;
+        if (env_vars) {
+          env_vars.enum = pipeline_input_parameters;
         }
         // workflow input parameters placeholder of trigger parameters、init and exit
         const workflowOneOfValue =

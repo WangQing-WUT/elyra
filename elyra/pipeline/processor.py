@@ -517,7 +517,7 @@ class RuntimePipelineProcessor(PipelineProcessor):
         :return: dictionary containing environment name/value pairs
         """
 
-        envs: Dict = operation.env_vars.to_dict()
+        envs: Dict = {} # operation.env_vars.to_dict()
         envs["ELYRA_RUNTIME_ENV"] = self.name
 
         # set environment variables for Minio/S3 access, in the following order of precedence:
@@ -603,19 +603,19 @@ class RuntimePipelineProcessor(PipelineProcessor):
         """Add DisableNodeCaching info to the execution object for the given runtime processor"""
         pass
 
-    def add_env_var(self, instance: EnvironmentVariable, execution_object: Any, **kwargs) -> None:
+    def add_env_var(self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add EnvironmentVariable instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_secret(self, instance: KubernetesSecret, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_secret(self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
         pass
 
-    def add_mounted_volume(self, instance: VolumeMount, execution_object: Any, **kwargs) -> None:
+    def add_mounted_volume(self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add VolumeMount instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_pod_annotation(self, instance: KubernetesAnnotation, execution_object: Any, **kwargs) -> None:
+    def add_kubernetes_pod_annotation(self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         pass
 

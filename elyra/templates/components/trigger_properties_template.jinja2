@@ -116,6 +116,7 @@
 									"default": "s3"
 								}
 							},
+							"required": ["bucket_name", "object"],
 							"uihints":{
 								"widget": {"ui:field": "hidden"},
 								"value": {"ui:field": "hidden"}
@@ -317,7 +318,7 @@
 				}
 				{% endif %}
 			},
-			"required": ["template_name", "url", "method", "timeout", "operation"]
+			"required": ["template_name", "url", "method", "timeout", "operation", "source"]
 		}
 	},
 	"required": ["label", "component_parameters"]

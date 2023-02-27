@@ -752,8 +752,13 @@ class ComponentCache(SingletonConfigurable):
         template.globals.update(template_vars)
         canvas_properties = template.render(component=component)
         result = json.loads(canvas_properties)
-        if component.id.startswith("local-file-catalog"):
+        if (ComponentCache.get_generic_component(component.id) is not None) or (component.id.startswith("local-file-catalog")):
             result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"]["value"] = get_oneOf("Value")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_annotations"]["items"]["properties"]["value"] = get_oneOf("Value")
+            result["properties"]["component_parameters"]["properties"]["mounted_volumes"]["items"]["properties"]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"]["key"] = get_oneOf("Secret Key")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"]["name"] = get_oneOf("Secret Name")
+            result["properties"]["component_parameters"]["properties"]["env_vars"]["items"]["properties"]["value"] = get_oneOf("Value")
         return result
 
 

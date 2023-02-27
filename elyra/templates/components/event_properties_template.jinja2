@@ -61,14 +61,11 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"id": {
-								"type": "string",
-								"title": "Id"
-							},
 							"name": {
 								"type": "string",
 								"title": "Property Name",
-								"enum": ["operate", "samples"]
+								"enum": ["operate", "samples"],
+								"default": ["operate"]
 							}
 						},
 						"allOf": [
@@ -223,11 +220,6 @@
 							}
 						],
 						"required": ["name", "operate", "value"]
-					},
-					"uihints":{
-						"items": {
-							"id": { "ui:readonly": "true" }
-						}
 					}
 				},
 				{% endif %}
@@ -282,10 +274,6 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"id": {
-								"type": "string",
-								"title": "Id"
-							},
 							"name": {
 								"type": "string",
 								"title": "Property Name",
@@ -371,11 +359,6 @@
 							}
 						],
 						"required": ["name", "operate", "value"]
-					},
-					"uihints":{
-						"items": {
-							"id": { "ui:readonly": "true" }
-						}
 					}
 				},
 				{% endif %}
@@ -538,10 +521,6 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"id": {
-								"type": "string",
-								"title": "Id"
-							},
 							"name": {
 								"type": "string",
 								"title": "Property Name",
@@ -959,10 +938,6 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"id": {
-								"type": "string",
-								"title": "Id"
-							},
 							"app_name": {
 								"title": "App Name",
 								"oneOf":[
@@ -1074,16 +1049,11 @@
 								]
 							}
 						}
-					},
-					"uihints":{
-						"items": {
-							"id": { "ui:readonly": "true" }
-						}
 					}
 				}
 				{% endif %}
 			},
-			"required": ["expression", "bucket_name", "event_filter", "dataset_name", "model_name", "calendar", "alert_name"]
+			"required": [ "bucket_name", "event_filter", "dataset_name", "model_name", "calendar", "alert_name"]
 		}
 	},
 	"required": ["label", "component_parameters"]

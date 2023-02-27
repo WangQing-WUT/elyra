@@ -270,6 +270,9 @@ class EnvironmentVariable(ElyraPropertyListItem):
     def __init__(self, env_var, value, **kwargs):
         self.env_var = env_var
         self.value = value
+        self.type = value["widget"]
+        if "value" in value:
+            self.value = value["value"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> EnvironmentVariable | None:
@@ -300,9 +303,9 @@ class EnvironmentVariable(ElyraPropertyListItem):
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
         """Add EnvironmentVariable instance to the execution object for the given runtime processor"""
-        runtime_processor.add_env_var(instance=self, execution_object=execution_object, **kwargs)
+        runtime_processor.add_env_var(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
 
 
 class KubernetesSecret(ElyraPropertyListItem):
@@ -331,8 +334,14 @@ class KubernetesSecret(ElyraPropertyListItem):
 
     def __init__(self, env_var, name, key, **kwargs):
         self.env_var = env_var
-        self.name = name
-        self.key = key
+        self.name = ""
+        self.name_type = name["widget"]
+        if "value" in name:
+            self.name = name["value"]
+        self.key = ""
+        self.key_type = key["widget"]
+        if "value" in key:
+            self.key = key["value"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesSecret | None:
@@ -346,22 +355,22 @@ class KubernetesSecret(ElyraPropertyListItem):
             validation_errors.append("Required environment variable was not specified.")
         if not self.name:
             validation_errors.append("Required secret name was not specified.")
-        elif not is_valid_kubernetes_resource_name(self.name):
+        elif self.name_type == "string" and not is_valid_kubernetes_resource_name(self.name):
             validation_errors.append(
                 f"Secret name '{self.name}' is not a valid Kubernetes resource name.",
             )
         if not self.key:
             validation_errors.append("Required secret key was not specified.")
-        elif not is_valid_kubernetes_key(self.key):
+        elif self.key_type == "string" and not is_valid_kubernetes_key(self.key):
             validation_errors.append(
                 f"Key '{self.key}' is not a valid Kubernetes secret key.",
             )
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_secret(instance=self, execution_object=execution_object, **kwargs)
+        runtime_processor.add_kubernetes_secret(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
 
 
 class VolumeMount(ElyraPropertyListItem):
@@ -388,7 +397,10 @@ class VolumeMount(ElyraPropertyListItem):
 
     def __init__(self, path, pvc_name, **kwargs):
         self.path = path
-        self.pvc_name = pvc_name
+        self.pvc_name = ""
+        self.type = pvc_name["widget"]
+        if "value" in pvc_name:
+            self.pvc_name = pvc_name["value"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> VolumeMount | None:
@@ -407,10 +419,10 @@ class VolumeMount(ElyraPropertyListItem):
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
         """Add VolumeMount instance to the execution object for the given runtime processor"""
         self.path = f"/{self.path.strip('/')}"  # normalize path
-        runtime_processor.add_mounted_volume(instance=self, execution_object=execution_object, **kwargs)
+        runtime_processor.add_mounted_volume(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
 
 
 class KubernetesAnnotation(ElyraPropertyListItem):
@@ -432,7 +444,10 @@ class KubernetesAnnotation(ElyraPropertyListItem):
 
     def __init__(self, key, value, **kwargs):
         self.key = key
-        self.value = value
+        self.value = ""
+        self.type = value["widget"]
+        if "value" in value:
+            self.value = value["value"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesAnnotation | None:
@@ -457,9 +472,9 @@ class KubernetesAnnotation(ElyraPropertyListItem):
         """Returns the value to be used when constructing a dict from a list of classes."""
         return self.value
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_pod_annotation(instance=self, execution_object=execution_object, **kwargs)
+        runtime_processor.add_kubernetes_pod_annotation(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
 
 
 class KubernetesLabel(ElyraPropertyListItem):
@@ -481,8 +496,10 @@ class KubernetesLabel(ElyraPropertyListItem):
 
     def __init__(self, key, value, **kwargs):
         self.key = key
-        self.value = value["value"]
+        self.value = ""
         self.type = value["widget"]
+        if "value" in value:
+            self.value = value["value"]
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesLabel | None:
@@ -651,13 +668,15 @@ class ElyraPropertyList(list):
 
         return ElyraPropertyList(subtract_dict.values())
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any):
+    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any):
         """
         Add a property instance to the execution object for the given runtime processor
         for each list item.
         """
         for item in self:
-            if isinstance(item, ElyraPropertyListItem):
+            if isinstance(item, (KubernetesLabel, KubernetesAnnotation, VolumeMount, KubernetesSecret, EnvironmentVariable)):
+                item.add_to_execution_object(runtime_processor=runtime_processor, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters)
+            else:
                 item.add_to_execution_object(runtime_processor=runtime_processor, execution_object=execution_object)
 
 

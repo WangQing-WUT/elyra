@@ -346,61 +346,10 @@ const PipelineWrapper: React.FC<IProps> = ({
         }
       }
     };
-    const autoADD = (data: any, op: string): void => {
-      if (op && op.indexOf('event') != -1) {
-        for (const parametersKey in data.component_parameters) {
-          if (parametersKey.indexOf('filter') != -1) {
-            for (const key in data.component_parameters[parametersKey])
-              data.component_parameters[parametersKey][key].id =
-                Number(key) + 1;
-          }
-        }
-      }
-    };
-    const branch = (subNode: any): void => {
-      if (subNode.op.substring('branch') != -1) {
-        for (const k in subNode.app_data.component_parameters) {
-          if (k == 'branch_conditions') {
-            var conditionsNum =
-              subNode.app_data.component_parameters.branch_conditions.length;
-            var outputsNum = subNode.outputs.length;
-            if (outputsNum > conditionsNum) {
-              for (
-                ;
-                outputsNum != conditionsNum && outputsNum > 1;
-                outputsNum--
-              ) {
-                subNode.outputs.pop();
-              }
-            } else if (outputsNum < conditionsNum) {
-              for (; outputsNum != conditionsNum; outputsNum++) {
-                let tempNode: any = {};
-                for (let k in subNode.outputs[0]) {
-                  if (typeof subNode.outputs[0][k] == 'function') {
-                    tempNode[k] = subNode.outputs[0][k];
-                  } else {
-                    tempNode[k] = JSON.parse(
-                      JSON.stringify(subNode.outputs[0][k])
-                    );
-                  }
-                }
-                var index = outputsNum;
-                tempNode.id = 'outPort'.concat(index.toString());
-                tempNode.app_data.ui_data.label = 'Output Port'.concat(
-                  index.toString()
-                );
-                subNode.outputs.push(tempNode);
-              }
-            }
-          }
-        }
-      }
-    };
+
     // Remove all null values from the pipeline
     for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
       removeNullValues(node.app_data ?? {});
-      autoADD(node.app_data ?? {}, node.op);
-      // branch(node);
     }
     removeNullValues(
       pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??

@@ -56,7 +56,7 @@ export function PropertiesPanel({
   if (schema === undefined) {
     return <Message>No properties defined.</Message>;
   }
-
+  const pipeline_input_parameters: string[] = [""];
   const uiSchema: UiSchema = {};
   for (const field in schema.properties) {
     uiSchema[field] = {};
@@ -73,12 +73,64 @@ export function PropertiesPanel({
       uiSchema[field] = properties.uihints;
     }
   }
+  let schema_copy = JSON.parse(JSON.stringify(schema));
+  console.log("schema_copy")
+  console.log(schema_copy)
+  let pipeline_defaults = schema_copy?.properties?.pipeline_defaults?.properties
+  if (pipeline_defaults) {
+    if (data?.pipeline_defaults?.input_parameters) {
+      for (const input_paramter of data.pipeline_defaults.input_parameters) {
+        pipeline_input_parameters.push(`${input_paramter?.name}`);
+      }
+      pipeline_input_parameters.sort()
+    }
+    let kubernetes_pod_labels = 
+      pipeline_defaults?.kubernetes_pod_labels?.items?.properties
+        ?.value?.oneOf[1]?.properties?.value;
+    if (kubernetes_pod_labels) {
+      kubernetes_pod_labels.enum = pipeline_input_parameters;
+    }
 
+    let kubernetes_pod_annotations =
+      pipeline_defaults?.kubernetes_pod_annotations?.items?.properties
+        ?.value?.oneOf[1]?.properties?.value;
+    if (kubernetes_pod_annotations) {
+      kubernetes_pod_annotations.enum = pipeline_input_parameters;
+    }
+
+    let mounted_volumes =
+      pipeline_defaults?.mounted_volumes?.items?.properties
+        ?.pvc_name?.oneOf[1]?.properties?.value;
+    if (mounted_volumes) {
+      mounted_volumes.enum = pipeline_input_parameters;
+    }
+
+    let kubernetes_secrets_key =
+      pipeline_defaults?.kubernetes_secrets?.items?.properties
+        ?.key?.oneOf[1]?.properties?.value;
+    if (kubernetes_secrets_key) {
+      kubernetes_secrets_key.enum = pipeline_input_parameters;
+    }
+
+    let kubernetes_secrets_name =
+      pipeline_defaults?.kubernetes_secrets?.items?.properties
+        ?.name?.oneOf[1]?.properties?.value;
+    if (kubernetes_secrets_name) {
+      kubernetes_secrets_name.enum = pipeline_input_parameters;
+    }
+
+    let env_vars =
+      pipeline_defaults?.env_vars?.items?.properties
+        ?.value?.oneOf[1]?.properties?.value;
+    if (env_vars) {
+      env_vars.enum = pipeline_input_parameters;
+    }
+  }
   return (
     <Form
       formData={data}
       uiSchema={uiSchema}
-      schema={schema as any}
+      schema={schema_copy as any}
       onChange={e => {
         const newFormData = e.formData;
         const params = schema.properties?.component_parameters?.properties;

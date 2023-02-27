@@ -230,7 +230,6 @@ export const showBrowseFileDialog = async (
   document.body.className += ` ${BROWSE_FILE_OPEN_CLASS}`;
 
   return dialog.launch().then((result: any) => {
-    console.log(result);
     document.body.className = document.body.className
       .replace(BROWSE_FILE_OPEN_CLASS, '')
       .trim();
