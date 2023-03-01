@@ -65,7 +65,7 @@
 								"type": "string",
 								"title": "Property Name",
 								"enum": ["operate", "samples"],
-								"default": ["operate"]
+								"default": "operate"
 							}
 						},
 						"allOf": [
@@ -406,23 +406,6 @@
                     "title": "S3 Object Prefix",
                     "description": "S3 object prefix.",
                     "oneOf":[
-						{
-							"label": " ",
-							"properties": {
-								"value": {
-									"type": "string",
-									"default": ""
-								},
-								"widget": {
-									"type": "string",
-									"default": ""
-								}
-							},
-							"uihints":{
-								"widget": {"ui:field": "hidden"},
-								"value": {"ui:field": "hidden"}
-							}
-						},
                         {
                             "label": "Enter a value manually",
                             "properties": {
@@ -462,23 +445,6 @@
                     "title": "S3 Object Suffix",
                     "description": "S3 object suffix.",
                     "oneOf":[
-						{
-							"label": " ",
-							"properties": {
-								"value": {
-									"type": "string",
-									"default": ""
-								},
-								"widget": {
-									"type": "string",
-									"default": ""
-								}
-							},
-							"uihints":{
-								"widget": {"ui:field": "hidden"},
-								"value": {"ui:field": "hidden"}
-							}
-						},
                         {
                             "label": "Enter a value manually",
                             "properties": {
@@ -866,7 +832,8 @@
 								}
 							}
 						}
-					]
+					],
+					"required": ["value"]
 				}
 				{% endif %}
 				{% if  component.name != "Calendar Event" and component.name != "S3 Event" and component.name != "Model Monitor Event" %}
@@ -1048,7 +1015,8 @@
 									}
 								]
 							}
-						}
+						},
+						"required": ["app_name", "model_name"]
 					}
 				}
 				{% endif %}

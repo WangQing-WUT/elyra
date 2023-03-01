@@ -63,8 +63,8 @@ class RuntimesDisplay extends MetadataDisplay<
   IMetadataDisplayState
 > {
   renderExpandableContent(metadata: IDictionary<any>): JSX.Element {
-    let apiEndpoint = addTrailingSlash(metadata.metadata.api_endpoint);
-    let cosEndpoint = addTrailingSlash(metadata.metadata.cos_endpoint);
+    let apiEndpoint = addTrailingSlash(metadata.metadata.api_endpoint || '');
+    let cosEndpoint = addTrailingSlash(metadata.metadata.cos_endpoint || '');
 
     let githubRepoElement = null;
     let metadata_props = null;

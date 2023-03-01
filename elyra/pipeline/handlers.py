@@ -176,7 +176,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                     )
                     self.set_status(400)
         except Exception as err:
-            raise web.HTTPError(500, repr(err)) from err
+            raise web.HTTPError(500, traceback.format_exc()) from err
 
         self.set_header("Content-Type", "application/json")
         await self.finish(json_msg)

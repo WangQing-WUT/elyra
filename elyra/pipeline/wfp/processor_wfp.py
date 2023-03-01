@@ -76,16 +76,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             pipeline_yaml = open(path, "r", encoding='utf-8')
             resource = pipeline_yaml.read()
             self.create_pipeline_template(path, resource, file_list)
-        
-        export_pipeline_yaml = yaml.load(resource, Loader=yaml.FullLoader)
-        if "pipelines.kubeflow.org/pipeline_spec" in export_pipeline_yaml["metadata"]["annotations"]:
-            pipeline_spec_dict = json.loads(export_pipeline_yaml["metadata"]["annotations"]["pipelines.kubeflow.org/pipeline_spec"])
-            if "inputs" in pipeline_spec_dict:
-                for item in pipeline_spec_dict["inputs"]:
-                    pipeline_input_parameter = {}
-                    pipeline_input_parameter["name"] = item["name"]
-                    pipeline_input_parameter["value"] = item["default"]
-                    pipeline_input_parameters.append(pipeline_input_parameter)
+        if not response.has_fatal:
+            export_pipeline_yaml = yaml.load(resource, Loader=yaml.FullLoader)
+            if "pipelines.kubeflow.org/pipeline_spec" in export_pipeline_yaml["metadata"]["annotations"]:
+                pipeline_spec_dict = json.loads(export_pipeline_yaml["metadata"]["annotations"]["pipelines.kubeflow.org/pipeline_spec"])
+                if "inputs" in pipeline_spec_dict:
+                    for item in pipeline_spec_dict["inputs"]:
+                        pipeline_input_parameter = {}
+                        pipeline_input_parameter["name"] = item["name"]
+                        pipeline_input_parameter["value"] = item["default"]
+                        pipeline_input_parameters.append(pipeline_input_parameter)
         
         return response, pipeline_input_parameters
 
@@ -186,23 +186,38 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if "pipeline" not in trigger_field:
                     trigger_field["pipeline"] = {}
 
+                node_type = "Pipeline Trigger"
+                node_id = node["id"]
+                node_name = node["app_data"]["label"].strip()
+                data = {
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "",
+                    "index": 0
+                }
+                condition, linknodes_name_to_type = self._get_condition(node_json, node)
                 parameters = self._parse_trigger_parameters(
                     node["app_data"]["component_parameters"]["trigger_parameters"],
-                    node_json
+                    node_json,
+                    data,
+                    linknodes_name_to_type,
+                    response
                     )
                 path = node["app_data"]["component_parameters"]["template_name"]
                 pipeline_response, pipeline_input_parameters = await self.export_pipeline(path, runtime_config, root_dir, parent, file_list)
                 if pipeline_response.has_fatal:
-                    issues = pipeline_response.response()["issues"]
+                    issues = (pipeline_response.response)["issues"]
                     for issue in issues:
                         response.add_message(
                             severity=ValidationSeverity.Error,
                             message_type="pipelineExportError",
+                            message="Pipeline Export Error",
                             runtime="WORKFLOW",
                             data={
-                                "nodeType": "Pipeline Trigger",
-                                "nodeID": node["id"],
-                                "nodeName": node["app_data"]["label"], 
+                                "nodeType": node_type,
+                                "nodeID": node_id,
+                                "nodeName": node_name, 
                                 "issue": issue
                             },
                         )
@@ -213,8 +228,9 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                             pipeline_input_parameters.remove(pipeline_input_parameter)
                             break
                 parameters += pipeline_input_parameters
+                condition, _ = self._get_condition(node_json, node)
                 trigger_field["pipeline"][node["app_data"]["label"].strip()] = {
-                    "condition": self._get_condition(node_json, node),
+                    "condition": condition,
                     "operation": "create",
                     "pipeline": {
                         "pipelineTemplate": Path(str(node["app_data"]["component_parameters"]["template_name"])).stem,
@@ -229,8 +245,9 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if "k8sobj" not in trigger_field:
                     trigger_field["k8sobj"] = {}
 
+                condition, _ = self._get_condition(node_json, node)
                 trigger_field["k8sobj"][node["app_data"]["label"].strip()] = {
-                    "condition": self._get_condition(node_json, node),
+                    "condition": condition,
                     "operation": node["app_data"]["component_parameters"]["operation"],
                     "source": self._get_k8s_source(node["app_data"]["component_parameters"]["source"]),
                     "arguments": self._get_k8s_agruments(
@@ -241,34 +258,51 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             elif node_type == "http_trigger":
                 if "http" not in trigger_field:
                     trigger_field["http"] = {}
+                
+                node_type = "HTTP Trigger"
+                node_id = node["id"]
+                node_name = node["app_data"]["label"].strip()
+                data = {
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "",
+                    "index": 0
+                }
+                condition, linknodes_name_to_type = self._get_condition(node_json, node)
+                parameters = self._parse_trigger_parameters(
+                    node["app_data"]["component_parameters"]["trigger_parameters"],
+                    node_json,
+                    data,
+                    linknodes_name_to_type,
+                    response
+                    )
 
                 trigger_field["http"][node["app_data"]["label"].strip()] = {
-                    "condition": self._get_condition(node_json, node),
+                    "condition": condition,
                     "url": node["app_data"]["component_parameters"]["url"],
                     "method": node["app_data"]["component_parameters"]["method"],
                     "timeout": str(node["app_data"]["component_parameters"]["timeout"]) + 's',
-                    "payload": self._parse_trigger_parameters(
-                        node["app_data"]["component_parameters"]["trigger_parameters"],
-                        node_json
-                        ),
+                    "payload": parameters,
                 }
             elif node_type == "init":
                 init_pipeline_field = {}
                 pipeline_input_parameters = {}
+                data = {
+                    "workflowSource": "Init"
+                }
 
                 pipeline_path = node["app_data"]["component_parameters"]["init_pipeline"]
                 path_name = Path(str(pipeline_path)).stem
                 init_pipeline_field["pipelineTemplate"] = path_name
-                response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                data = {
-                    "workflowSource": "Init"
-                }
-                if response.has_fatal:
-                    issues = pipeline_response.response()["issues"]
+                pipeline_response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+                if pipeline_response.has_fatal:
+                    issues = (pipeline_response.response)["issues"]
                     for issue in issues:
                         response.add_message(
                             severity=ValidationSeverity.Error,
                             message_type="pipelineExportError",
+                            message="Pipeline Export Error",
                             runtime="WORKFLOW",
                             data={
                                 "nodeType": "Init",
@@ -280,10 +314,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
                 init_parameters = []
                 for init_item in node["app_data"]["component_parameters"]["init_parameters"]:
-                    temp_value = init_item["value"]["value"]
-                    if init_item["value"]["widget"] == "enum":
-                        temp_value = "{{" + str(init_item["value"]["value"]) + "}}"
-
+                    temp_value = self._widget_value_str(init_item["value"])
                     temp_init = {
                         "name": init_item["name"], 
                         "value": temp_value
@@ -306,20 +337,21 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             elif node_type == "exit":
                 exit_pipeline_field = {}
                 pipeline_input_parameters = {}
+                data = {
+                    "workflowSource": "Exit"
+                }
 
                 pipeline_path = node["app_data"]["component_parameters"]["exit_pipeline"]
                 path_name = Path(str(pipeline_path)).stem
                 exit_pipeline_field["pipelineTemplate"] = path_name
-                response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                data = {
-                    "workflowSource": "Exit"
-                }
-                if response.has_fatal:
-                    issues = pipeline_response.response()["issues"]
+                pipeline_response, pipeline_input_parameters = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+                if pipeline_response.has_fatal:
+                    issues = (pipeline_response.response)["issues"]
                     for issue in issues:
                         response.add_message(
                             severity=ValidationSeverity.Error,
                             message_type="pipelineExportError",
+                            message="Pipeline Export Error",
                             runtime="WORKFLOW",
                             data={
                                 "nodeType": "Exit",
@@ -331,9 +363,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
                 exit_parameters = []
                 for exit_item in node["app_data"]["component_parameters"]["exit_parameters"]:
-                    temp_value = exit_item["value"]["value"]
-                    if exit_item["value"]["widget"] == "enum":
-                        temp_value = "{{" + str(exit_item["value"]["value"]) + "}}"
+                    temp_value = self._widget_value_str(exit_item["value"])
 
                     temp_exit = {
                         "name": exit_item["name"], 
@@ -369,20 +399,21 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         }
         condition = ""
         condition_num = 0
+        linknodes_name_to_type = {}
         for link in node["inputs"][0]["links"]:
+            node_type = self._get_type(node_json, link['node_id_ref'])
+            node_name = self._get_name(node_json, link['node_id_ref'])
+            linknodes_name_to_type[node_name] = node_type
             if condition_num == 0:
-                condition = "events." + field_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
-                            self._get_name(node_json, link['node_id_ref'])
+                condition = "events." + field_map[node_type] + "." + node_name
                 condition_num += 1
             elif condition_num == 1:
-                condition = "(" + condition + ")" + " && (events." + field_map[
-                    self._get_type(node_json, link['node_id_ref'])] + \
-                            "." + self._get_name(node_json, link['node_id_ref']) + ")"
+                condition = "(" + condition + ")" + " && (events." + field_map[node_type] + "." + node_name + ")"
                 condition_num += 1
             else:
-                condition += " && (events." + field_map[self._get_type(node_json, link['node_id_ref'])] + "." + \
-                             self._get_name(node_json, link['node_id_ref']) + ")"
-        return condition
+                condition += " && (events." + field_map[node_type] + "." + node_name + ")"
+        
+        return condition, linknodes_name_to_type
 
     def _get_event_filter(self, event_filter: list[dict], expression: str):
         expression = expression.replace(' ', '')
@@ -418,12 +449,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         return stack_expression
     
     def _widget_value_str(self, dict: dict):
-        if dict["value"] == "":
+        value = dict["value"].strip()
+        if value == "":
             return ""
         elif dict["widget"] == "string":
-            return dict["value"]
+            return value
         elif dict["widget"] == "enum":
-            return "{{" + dict["value"] + "}}"
+            return "{{" + value + "}}"
         else:
             return ""
 
@@ -490,7 +522,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _get_name(node_json: dict, node_id: str):
         for node in node_json:
             if node['id'] == node_id:
-                return node["app_data"]["label"].replace(' ', '')
+                return node["app_data"]["label"].strip()
             else:
                 continue
 
@@ -500,7 +532,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         for item in input_parameters:
             input_parameter = {}
             if "name" in item:
-                input_parameter["name"] = item["name"]
+                input_parameter["name"] = item["name"].strip()
             input_parameter["type"] = item["type"]["widget"]
             if "value" in item["type"]:
                 input_parameter["value"] = item["type"]["value"]
@@ -510,33 +542,31 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         return format_input_parameters
 
     @staticmethod
-    def _parse_trigger_parameters(trigger_parameters: dict, node_json: dict):
-        field_map = {
-            "model_event": "model",
-            "s3_event": "s3",
-            "calendar_event": "calendar",
-            "dataset_event": "dataset",
-            "model_monitor_event": "modelMonitor",
-            "pipeline_trigger": "pipeline",
-            "k8s_object_trigger": "k8sobj",
-            "http_trigger": "http",
-            "init": "init",
-            "exit": "exit"
-        }
-
-        for node in node_json:
-            field_map[node["app_data"]["label"]] = field_map[node["op"].split(":")[0]]
+    def _parse_trigger_parameters(trigger_parameters: dict, node_json: dict, data: dict, linknodes_name_to_type: dict, response):
         trigger_parameters_field = []
-        for item in trigger_parameters:
+        for index, item in enumerate(trigger_parameters):
+            data["index"] = index + 1 
             temp_item = {"name": item["name"]}
-            if item["from"]["widget"] == "workflow_enum":
-                temp_item["value"] = "{{" + item["from"]["value"] + "}}"
-            elif item["from"]["widget"] == "event_enum":
-                name = item["from"]["value"].split(":")[0]
-                temp_item["value"] = "{{events." + field_map[name] + "." + item["from"]["value"] + "}}"
-                temp_item["value"] = temp_item["value"].replace(": ", ".")
+            value = item["from"]["value"].strip()
+            widget = item["from"]["widget"]
+
+            if widget == "workflow_enum":
+                temp_item["value"] = "{{" + value + "}}"
+            elif widget == "event_enum":
+                name = value.split(":")[0]
+                if name in linknodes_name_to_type:
+                    temp_item["value"] = "{{events." + linknodes_name_to_type[name] + "." + value + "}}"
+                    temp_item["value"] = temp_item["value"].replace(": ", ".")
+                else:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodePropertyValue",
+                        message="This node is not connected to the Event named " + name + ". Please check the node connection.",
+                        runtime="WORKFLOW",
+                        data=data,
+                    )
             else:
-                temp_item["value"] = item["from"]["value"]
+                temp_item["value"] = value
             trigger_parameters_field.append(temp_item)
         return trigger_parameters_field
 
@@ -555,12 +585,12 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "exit": "exit"
         }
         for node in node_json:
-            field_map[node["app_data"]["label"]] = field_map[node["op"].split(":")[0]]
+            field_map[node["app_data"]["label"].strip()] = field_map[node["op"].split(":")[0]]
         arguments_list = []
         for dict_item in parameters:
             temp_argument = {}
             if dict_item["from"]["widget"] == "workflow_enum":
-                temp_argument["src"] = "{{" + dict_item["from"]["value"] + "}}"
+                temp_argument["src"] = "{{" + dict_item["from"]["value"].strip() + "}}"
             elif dict_item["from"]["widget"] == "event_enum":
                 name = dict_item["from"]["value"].split(":")[0]
                 temp_argument["src"] = "{{events." + field_map[name] + "." + dict_item["from"]["value"] + "}}"
@@ -577,15 +607,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             return {
                 "s3": {
                     "bucket": {
-                        "name": parameters["bucket_name"]
+                        "name": parameters["bucket_name"].strip()
                     },
-                    "object": parameters["object"]
+                    "object": parameters["object"].strip()
                 }
             }
         elif parameters["widget"] == "http":
             return {
                 "http": {
-                    "url": parameters["url"]
+                    "url": parameters["url"].strip()
                 }
             }
         else:
@@ -665,16 +695,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         response = ValidationResponse(runtime="WORKFLOW")
         name = {}
         workflow_input_parameters = []
-        for parameter in input_parameters:
+        for index, parameter in enumerate(input_parameters):
             if ("name" not in parameter) or (parameter["name"].strip() == "") :
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="The 'Parameter Name' field of workflow input parameters cannot be empty.",
                     runtime="WORKFLOW",
+                    data={"index": index + 1}
                 )
             else:
-                workflow_input_parameters.append("workflow.parameters." + parameter["name"])
+                workflow_input_parameters.append("workflow.parameters." + parameter["name"].strip())
         for node in nodes:
             node_type = node["op"].split(":")[0]
             if node_type == "model_event":
@@ -702,18 +733,19 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_s3_event(self, node, workflow_input_parameters, name, response):
         node_type = "S3 Event"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
         bucket_name = node["app_data"]["component_parameters"]["bucket_name"]
         s3_object_prefix = node["app_data"]["component_parameters"]["prefix"]
         s3_object_suffix = node["app_data"]["component_parameters"]["suffix"]
         self._validate_node_property_value(bucket_name, node_type, node_id, node_name, "Bucket Name", workflow_input_parameters, response)
         if s3_object_prefix["widget"] == "enum":
-            if s3_object_prefix["value"] not in workflow_input_parameters:
+            value = s3_object_prefix["value"].strip()
+            if (value != "") and (value not in workflow_input_parameters):
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + s3_object_prefix["value"] + "'.",
+                    message="Workflow input parameters do not contain '" + value + "'.",
                     runtime="WORKFLOW",
                     data={
                         "nodeType": node_type,
@@ -723,11 +755,12 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     },
                 )
         if s3_object_suffix["widget"] == "enum":
-            if s3_object_suffix["value"] not in workflow_input_parameters:
+            value = s3_object_suffix["value"].strip()
+            if (value != "") and (value not in workflow_input_parameters):
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + s3_object_suffix["value"] + "'.",
+                    message="Workflow input parameters do not contain '" + value + "'.",
                     runtime="WORKFLOW",
                     data={
                         "nodeType": node_type,
@@ -752,13 +785,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             )
         else:
             event_filters = node["app_data"]["component_parameters"]["event_filter"]
-            for event_filter in event_filters:
-                self._validate_event_filter(event_filter, node_type, node_id, node_name, "S3 Event Filter", workflow_input_parameters, response)
+            for index, event_filter in enumerate(event_filters):
+                self._validate_event_filter(index, event_filter, node_type, node_id, node_name, "S3 Event Filter", workflow_input_parameters, response)
     
     def _validate_calendar_event(self, node, workflow_input_parameters, name, response):
         node_type = "Calendar Event"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
         calendar = node["app_data"]["component_parameters"]["calendar"]
         self._validate_node_property_value(calendar["value"], node_type, node_id, node_name, calendar["name"], workflow_input_parameters, response)
@@ -766,47 +799,46 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_model_event(self, node, workflow_input_parameters, name, response):
         node_type = "Model Event"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
+
+        data={
+            "nodeType": node_type,
+            "nodeID": node_id,
+            "nodeName": node_name, 
+            "propertyName": ""
+        }
         
         if ("model_name" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["model_name"]) == 0):
+            data["propertyName"] = "Model Name"
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name, 
-                    "propertyName": "Model Name"
-                },
+                data=data,
             )
         else:
             model_names = node["app_data"]["component_parameters"]["model_name"]
-            for model_name in model_names:
-                self._validate_node_property_value(model_name, node_type, node_id, node_name, "Model Name", workflow_input_parameters, response)
+            for index, model_name in enumerate(model_names):
+                self._validate_node_property_value(model_name, node_type, node_id, node_name, "Model Name", workflow_input_parameters, response, index)
 
         if ("event_filter" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["event_filter"]) == 0):
+            data["propertyName"] = "Model Event Filter"
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name, 
-                    "propertyName": "Model Event Filter"
-                },
+                data=data,
             )
         else:
             component_parameters = node["app_data"]["component_parameters"]
             event_filters = component_parameters["event_filter"]
             filter_id = 1
             expression = "1"
-            for event_filter in event_filters:
-                self._validate_event_filter(event_filter, node_type, node_id, node_name, "Model Event Filter", workflow_input_parameters, response)
+            for index, event_filter in enumerate(event_filters):
+                self._validate_event_filter(index, event_filter, node_type, node_id, node_name, "Model Event Filter", workflow_input_parameters, response)
                 if filter_id > 1:
                     expression += "&&" + str(filter_id)
                 filter_id += 1
@@ -816,46 +848,44 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_dataset_event(self, node, workflow_input_parameters, name, response):
         node_type = "Dataset Event"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
+        data = {
+            "nodeType": node_type,
+            "nodeID": node_id,
+            "nodeName": node_name, 
+            "propertyName": ""
+        }
         self._validate_node_name(node, name, response)
         if ("dataset_name" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["dataset_name"]) == 0):
+            data["propertyName"] = "Dataset Name"
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name, 
-                    "propertyName": "Dataset Name"
-                },
+                data=data,
             )
         else:
             dataset_names = node["app_data"]["component_parameters"]["dataset_name"]
-            for dataset_name in dataset_names:
-                self._validate_node_property_value(dataset_name, node_type, node_id, node_name, "Dataset Name", workflow_input_parameters, response)
+            for index, dataset_name in enumerate(dataset_names):
+                self._validate_node_property_value(dataset_name, node_type, node_id, node_name, "Dataset Name", workflow_input_parameters, response, index)
 
         if ("event_filter" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["event_filter"]) == 0):
+            data["propertyName"] = "Dataset Event Filter"
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name, 
-                    "propertyName": "Dataset Event Filter"
-                },
+                data=data,
             )
         else:
             component_parameters = node["app_data"]["component_parameters"]
             event_filters = component_parameters["event_filter"]
             filter_id = 1
             expression = "1"
-            for event_filter in event_filters:
-                self._validate_event_filter(event_filter, node_type, node_id, node_name, "Dataset Event Filter", workflow_input_parameters, response)
+            for index, event_filter in enumerate(event_filters):
+                self._validate_event_filter(index, event_filter, node_type, node_id, node_name, "Dataset Event Filter", workflow_input_parameters, response)
                 if filter_id > 1:
                     expression += "&&" + str(filter_id)
                 filter_id += 1
@@ -865,7 +895,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_model_monitor_event(self, node, workflow_input_parameters, name, response):
         node_type = "Model Monitor Event"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         if ("event_filter" not in node["app_data"]["component_parameters"]) or (len(node["app_data"]["component_parameters"]["event_filter"]) == 0):
             response.add_message(
                 severity=ValidationSeverity.Error,
@@ -881,76 +911,75 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             )
         else:
             event_filters = node["app_data"]["component_parameters"]["event_filter"]
-            for event_filter in event_filters:
-                self._validate_node_property_value(event_filter["app_name"], node_type, node_id, node_name, "App Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response)
-                self._validate_node_property_value(event_filter["model_name"], node_type, node_id, node_name, "Model Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response)
+            for index, event_filter in enumerate(event_filters):
+                self._validate_node_property_value(event_filter["app_name"], node_type, node_id, node_name, "App Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response, index)
+                self._validate_node_property_value(event_filter["model_name"], node_type, node_id, node_name, "Model Name of Model Configuration with Id=" + str(event_filter["id"]), workflow_input_parameters, response, index)
 
     def _validate_pipeline_trigger(self, node, workflow_input_parameters, name, response):
         node_type = "Pipeline Trigger"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
         self._validate_node_links(node, node_type, node_id, node_name, response)
         if "trigger_parameters" not in node["app_data"]["component_parameters"]:
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
-        self._validate_trigger_from()
+        else:
+            trigger_parameters = node["app_data"]["component_parameters"]["trigger_parameters"]
+            self._validate_trigger_parametes(trigger_parameters, node_type, node_id, node_name, "Pipeline Trigger Parameters", workflow_input_parameters, response)
     
     def _validate_k8s_object_trigger(self, node, workflow_input_parameters, name, response):
         node_type = "K8s Object Trigger"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
         self._validate_node_links(node, node_type, node_id, node_name, response)
         source = node["app_data"]["component_parameters"]["source"]
+        data={
+            "nodeType": node_type,
+            "nodeID": node_id,
+            "nodeName": node_name, 
+            "propertyName": ""
+        }
         if source["widget"] == "s3":
             if ("bucket_name" not in source) or (source["bucket_name"].strip() == ""):
+                data["propertyName"] = "Bucket Name of Source s3"
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Node is missing a value for a required property.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": node_type,
-                        "nodeID": node_id,
-                        "nodeName": node_name, 
-                        "propertyName": "Bucket Name of Source s3"
-                    },
+                    data=data,
                 )
             if ("object" not in source) or (source["object"].strip() == ""):
+                data["propertyName"] = "Object of Source s3"
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Node is missing a value for a required property.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": node_type,
-                        "nodeID": node_id,
-                        "nodeName": node_name, 
-                        "propertyName": "Object of Source s3"
-                    },
+                    data=data,
                 )
         elif source["widget"] == "http":
             if ("url" not in source) or (source["url"].strip() == ""):
+                data["propertyName"] = "Url of Source http"
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Node is missing a value for a required property.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": node_type,
-                        "nodeID": node_id,
-                        "nodeName": node_name, 
-                        "propertyName": "Url of Source http"
-                    },
+                    data=data,
                 )
         
         if "trigger_parameters" not in node["app_data"]["component_parameters"]:
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
+        else:
+            trigger_parameters = node["app_data"]["component_parameters"]["trigger_parameters"]
+            self._validate_trigger_parametes(trigger_parameters, node_type, node_id, node_name, "K8s Object Trigger Parameters", workflow_input_parameters, response)
     
     def _validate_http_trigger(self, node, workflow_input_parameters, name, response):
         node_type = "HTTP Trigger"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         self._validate_node_name(node, name, response)
         self._validate_node_links(node, node_type, node_id, node_name, response)
 
@@ -969,127 +998,118 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             )
         if "trigger_parameters" not in node["app_data"]["component_parameters"]:
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
+        else:
+            trigger_parameters = node["app_data"]["component_parameters"]["trigger_parameters"]
+            self._validate_trigger_parametes(trigger_parameters, node_type, node_id, node_name, "HTTP Trigger Parameters", workflow_input_parameters, response)
     
     def _validate_init(self, node, workflow_input_parameters, name, response):
         node_type = "Init"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         if "init_parameters" not in node["app_data"]["component_parameters"]:
             node["app_data"]["component_parameters"]["init_parameters"] = []
         init_parameters = node["app_data"]["component_parameters"]["init_parameters"]
-        self._validate_init_exit(init_parameters, node_type, node_id, node_name, "Init Parameters", workflow_input_parameters, response)
+        self._validate_trigger_parametes(init_parameters, node_type, node_id, node_name, "Init Parameters", workflow_input_parameters, response)
     
     def _validate_exit(self, node, workflow_input_parameters, name, response):
         node_type = "Exit"
         node_id = node["id"]
-        node_name = node["app_data"]["label"]
+        node_name = node["app_data"]["label"].strip()
         if "exit_parameters" not in node["app_data"]["component_parameters"]:
             node["app_data"]["component_parameters"]["exit_parameters"] = []
         exit_parameters = node["app_data"]["component_parameters"]["exit_parameters"]
-        self._validate_init_exit(exit_parameters, node_type, node_id, node_name, "Exit Parameters", workflow_input_parameters, response)
+        self._validate_trigger_parametes(exit_parameters, node_type, node_id, node_name, "Exit Parameters", workflow_input_parameters, response)
     
     def _validate_node_name(self, node, name, response):
-        if node["app_data"]["label"] in name:
+        label = node["app_data"]["label"].strip()
+        if label in name:
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeName",
                 message="Workflow component name fields cannot be the same",
                 runtime="WORKFLOW",
                 data={
-                    "duplicateName": node["app_data"]["label"],
-                    "node1": name[node["app_data"]["label"]],
+                    "duplicateName": label,
+                    "node1": name[label],
                     "node2": node["id"]
                 }
             )
         else:
-            name[node["app_data"]["label"]] = node["id"]
+            name[label] = node["id"]
     
-    def _validate_node_property_value(self, property, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):        
+    def _validate_node_property_value(self, property, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response, index = -1):        
+        data = {
+            "nodeType": nodeType,
+            "nodeID": nodeID,
+            "nodeName": nodeName, 
+            "propertyName": propertyName
+        }
+        if index != -1:
+            data["index"] = index + 1
         if ("value" not in property) or (property["value"].strip() == ""):
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": nodeType,
-                    "nodeID": nodeID,
-                    "nodeName": nodeName, 
-                    "propertyName": propertyName
-                },
+                data=data,
             )
         elif property["widget"] == "enum":
-            if property["value"] not in workflow_input_parameters:
+            value = property["value"].strip()
+            if value not in workflow_input_parameters:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + property["value"] + "'.",
+                    message="Workflow input parameters do not contain '" + value + "'.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": nodeType,
-                        "nodeID": nodeID,
-                        "nodeName": nodeName, 
-                        "propertyName": propertyName
-                    },
+                    data=data,
                 )
     
-    def _validate_event_filter(self, property, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):
+    def _validate_event_filter(self, index, property, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):
+        data = {
+            "nodeType": nodeType,
+            "nodeID": nodeID,
+            "nodeName": nodeName, 
+            "propertyName": "",
+            "index": index + 1
+        }
         if "name" not in property:
+            data["propertyName"] = "Property Name of " + propertyName
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": nodeType,
-                    "nodeID": nodeID,
-                    "nodeName": nodeName, 
-                    "propertyName": "Property Name of " + propertyName,
-                    "filterID": property["id"]
-                },
+                data=data,
             )
         if "operate" not in property:
+            data["propertyName"] = "Operate of " + propertyName
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": nodeType,
-                    "nodeID": nodeID,
-                    "nodeName": nodeName, 
-                    "propertyName": "Operate of " + propertyName,
-                    "filterID": property["id"]
-                },
+                data=data,
             )
-        if property["value"]["value"] == "":
+        if property["value"]["value"].strip() == "":
+            data["propertyName"] = "Value of " + propertyName
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data={
-                    "nodeType": nodeType,
-                    "nodeID": nodeID,
-                    "nodeName": nodeName, 
-                    "propertyName": "Value of " + propertyName,
-                    "filterID": property["id"]
-                },
+                data=data,
             )
         elif property["value"]["widget"] == "enum":
-            if property["value"]["value"] not in workflow_input_parameters:
+            data["propertyName"] = "Value of " + propertyName
+            value = property["value"]["value"].strip()
+            if value not in workflow_input_parameters:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + property["value"]["value"] + "'.",
+                    message="Workflow input parameters do not contain '" + value + "'.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": nodeType,
-                        "nodeID": nodeID,
-                        "nodeName": nodeName, 
-                        "propertyName": "Value of " + propertyName,
-                        "filterID": property["id"]
-                    },
+                    data=data,
                 )
 
     def _validate_node_links(self, node, nodeType, nodeID, nodeName, response):
@@ -1106,50 +1126,52 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 },
             )
 
-    def _validate_trigger_from(self):
-        pass
+    def _validate_trigger_parametes(self, parameters, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):
+        data = {
+            "nodeType": nodeType,
+            "nodeID": nodeID,
+            "nodeName": nodeName,
+            "propertyName": "",
+            "index": 0
+        }
+        name = "name"
+        value = "value"
+        if nodeType in ["Pipeline Trigger", "HTTP Trigger"]:
+            name = "name"
+            value = "from"
+        elif nodeType == "K8s Object Trigger":
+            name = "dest"
+            value = "from"
 
-    def _validate_init_exit(self, parameters, nodeType, nodeID, nodeName, propertyName, workflow_input_parameters, response):
-        for parameter in parameters:
-            if "name" not in parameter:
+        for index, parameter in enumerate(parameters):
+            data["index"] = index + 1
+            if (name not in parameter) or (parameter[name].strip() == ""):
+                data["propertyName"] = name.title() + " of " + propertyName
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Node is missing a value for a required property.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": nodeType,
-                        "nodeID": nodeID,
-                        "nodeName": nodeName,
-                        "propertyName": "Name of " + propertyName,
-                    },
+                    data=data,
                 )
-            if parameter["value"]["value"] == "":
+            if parameter[value]["value"].strip() == "":
+                data["propertyName"] = value.title() + " of " + propertyName
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
                     message="Node is missing a value for a required property.",
                     runtime="WORKFLOW",
-                    data={
-                        "nodeType": nodeType,
-                        "nodeID": nodeID,
-                        "nodeName": nodeName, 
-                        "propertyName": "Value of " + propertyName,
-                    },
+                    data=data,
                 )
-            if parameter["value"]["widget"] == "enum":
-                if parameter["value"]["value"] not in workflow_input_parameters:
+            if parameter[value]["widget"] in ["workflow_enum", "enum"]:
+                if parameter[value]["value"] not in workflow_input_parameters and parameter[value]["value"] != "workflow.instance_name":
+                    data["propertyName"] = value.title() + " of " + propertyName
                     response.add_message(
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodePropertyValue",
-                        message="Workflow input parameters do not contain '" + parameters["value"]["value"] + "'.",
+                        message="Workflow input parameters do not contain '" + parameter[value]["value"] + "'.",
                         runtime="WORKFLOW",
-                        data={
-                            "nodeType": nodeType,
-                            "nodeID": nodeID,
-                            "nodeName": nodeName, 
-                            "propertyName": "Value of " + propertyName,
-                        },
+                        data=data,
                     )
             
 

@@ -26,11 +26,18 @@ const renderDefaults = (
   } else if (props.schema.items?.type === "object") {
     for (const item of items) {
       const itemRendered = [];
+      console.log(item);
       for (const key in props.schema.items.properties ?? {}) {
+        let value = item[key] || "";
+        if (item[key]?.widget == "string") {
+          value = item[key].value;
+        } else if (item[key]?.widget == "enum") {
+          value = "Pipeline input parameter: " + item[key].value;
+        }
         itemRendered.push(
           <div key={`${key}-defaultValue`} style={{ margin: "5px" }}>
             <label className="control-label">{`${props.schema.items.properties[key].title}: `}</label>
-            <input readOnly value={item[key]} className="form-control" />
+            <input readOnly value={value} className="form-control" />
           </div>
         );
       }
@@ -72,11 +79,14 @@ export const ArrayTemplate: React.FC<ArrayFieldTemplateProps> = props => {
     props.uiSchema.pipeline_defaults ?? [],
     props
   );
+  let index = 1;
   return (
     <div className={props.className}>
       {props.items.map(item => {
         return (
           <div key={item.key} className={item.className}>
+            <label className="control-label">Index: {index++}</label>
+            <br></br>
             {item.children}
             <button
               className="jp-mod-styled jp-mod-warn"

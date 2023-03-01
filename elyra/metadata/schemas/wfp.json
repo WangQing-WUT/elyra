@@ -77,10 +77,10 @@
           "title": "Workflow engine",
           "description": "The Workflow engine in use",
           "type": "string",
-          "enum": ["Argo", "Tekton"],
+          "enum": ["Argo"],
           "default": "Argo",
           "uihints": {
-            "category": "Workflow"
+            "hidden": true
           }
         },
         "auth_type": {
@@ -192,7 +192,8 @@
             "pattern": "^[^ \t]+([ \t]+[^ \t]+)*$"
           },
           "uihints": {
-            "ui:field": "tags"
+            "ui:field": "tags",
+            "hidden": true
           }
         }
       },

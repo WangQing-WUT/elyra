@@ -82,7 +82,11 @@ function addItem(
   upstreamNode: any
 ) {
   for (let item of items) {
-    eventParameters.push(`${upstreamNode.app_data?.ui_data?.label}: ${item}`);
+    if (upstreamNode.app_data?.ui_data?.label) {
+      eventParameters.push(
+        `${upstreamNode.app_data?.ui_data?.label.trim()}: ${item}`
+      );
+    }
   }
 }
 
@@ -191,16 +195,20 @@ function NodeProperties({
     };
     if (data?.input_parameters) {
       for (const input_paramter of data.input_parameters) {
-        workflowParameters.push(`workflow.parameters.${input_paramter?.name}`);
+        if (input_paramter?.name) {
+          workflowParameters.push(
+            `workflow.parameters.${input_paramter?.name.trim()}`
+          );
+        }
       }
-      workflowParameters.sort()
+      workflowParameters.sort();
     }
 
     if (data?.pipeline_defaults?.input_parameters) {
       for (const input_paramter of data.pipeline_defaults.input_parameters) {
         pipeline_input_parameters.push(`${input_paramter?.name}`);
       }
-      pipeline_input_parameters.sort()
+      pipeline_input_parameters.sort();
     }
 
     oneOfValues.push(getOneOfValue(" ", " ", " "));
@@ -242,7 +250,7 @@ function NodeProperties({
         );
       }
     }
-    eventParameters.sort()
+    eventParameters.sort();
 
     // update property data to include data for properties with inputpath format
 
@@ -275,33 +283,29 @@ function NodeProperties({
         }
 
         const mounted_volumes =
-          draft.properties.component_parameters?.properties
-            ?.mounted_volumes?.items?.properties?.pvc_name?.oneOf[1]
-            ?.properties?.value;
+          draft.properties.component_parameters?.properties?.mounted_volumes
+            ?.items?.properties?.pvc_name?.oneOf[1]?.properties?.value;
         if (mounted_volumes) {
           mounted_volumes.enum = pipeline_input_parameters;
         }
 
         const kubernetes_secrets_key =
-          draft.properties.component_parameters?.properties
-            ?.kubernetes_secrets?.items?.properties?.key?.oneOf[1]
-            ?.properties?.value;
+          draft.properties.component_parameters?.properties?.kubernetes_secrets
+            ?.items?.properties?.key?.oneOf[1]?.properties?.value;
         if (kubernetes_secrets_key) {
           kubernetes_secrets_key.enum = pipeline_input_parameters;
         }
 
         const kubernetes_secrets_name =
-          draft.properties.component_parameters?.properties
-            ?.kubernetes_secrets?.items?.properties?.name?.oneOf[1]
-            ?.properties?.value;
+          draft.properties.component_parameters?.properties?.kubernetes_secrets
+            ?.items?.properties?.name?.oneOf[1]?.properties?.value;
         if (kubernetes_secrets_name) {
           kubernetes_secrets_name.enum = pipeline_input_parameters;
         }
 
         const env_vars =
-          draft.properties.component_parameters?.properties
-            ?.env_vars?.items?.properties?.value?.oneOf[1]
-            ?.properties?.value;
+          draft.properties.component_parameters?.properties?.env_vars?.items
+            ?.properties?.value?.oneOf[1]?.properties?.value;
         if (env_vars) {
           env_vars.enum = pipeline_input_parameters;
         }
@@ -328,13 +332,6 @@ function NodeProperties({
         if (eventOneOfValue) {
           eventOneOfValue.enum = eventParameters;
         }
-
-        // const oneOf =
-        //   draft.properties.component_parameters?.properties?.event_filter?.items
-        //     ?.properties?.value?.oneOf;
-        // if (oneOf) {
-        //   oneOf[2].properties.value.enum = workflowParameters;
-        // }
 
         // workflow input parameters placeholder of events filter
         const allOf =

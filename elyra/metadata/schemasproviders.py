@@ -96,13 +96,15 @@ class RuntimesSchemas(ElyraSchemasProvider):
                     f"'elyra.pipeline.processor' to match the schema with the same name. Skipping..."
                 )
 
-        if kfp_schema_present or wfp_schema_present:  # Update the kfp engine enum to reflect current packages...
+        if kfp_schema_present:
+        # if kfp_schema_present or wfp_schema_present:  # Update the kfp engine enum to reflect current packages...
             # If TektonClient package is missing, navigate to the engine property
             # and remove 'tekton' entry if present and return updated result.
             if not TektonClient:
                 # locate the schema and update the enum
                 for schema in runtime_schemas:
-                    if schema["name"] == "kfp" or schema["name"] == "wfp":
+                    # if schema["name"] == "kfp" or schema["name"] == "wfp":
+                    if schema["name"] == "kfp":
                         engine_enum: list = schema["properties"]["metadata"]["properties"]["engine"]["enum"]
                         if "Tekton" in engine_enum:
                             engine_enum.remove("Tekton")
