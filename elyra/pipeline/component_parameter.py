@@ -754,7 +754,7 @@ class ComponentParameter(object):
         self._description = description
 
         if not allowed_input_types:
-            allowed_input_types = ["inputvalue", "inputpath", "file", "enum"]
+            allowed_input_types = ["inputvalue", "inputpath", "file", "enum", "loop_args"]
         self._allowed_input_types = allowed_input_types
 
         self._items = items or []
@@ -869,6 +869,12 @@ class ComponentParameter(object):
                     obj["properties"]["widget"]["default"] = "enum"
                     obj["properties"]["value"]["type"] = "string"
                     obj["properties"]["value"]["enum"] = []
+                
+                elif widget_type == "loop_args":
+                    obj["title"] = InputTypeDescriptionMap["loop_args"].value
+                    obj["properties"]["widget"]["default"] = "loop_args"
+                    obj["properties"]["value"]["type"] = "string"
+                    obj["properties"]["value"]["enum"] = []
 
                 else:  # inputpath or file types
                     obj["title"] = InputTypeDescriptionMap[widget_type].value
@@ -900,6 +906,7 @@ class InputTypeDescriptionMap(Enum):
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
     enum = "Please select one from pipeline input parameters"
+    loop_args = "Please select one from loop args"
     outputpath = None  # outputs are read-only and don't require a description
 
 
@@ -947,9 +954,10 @@ class PipelineBranch(Enum):
 
 
 class PipelineLoop(Enum):
-    """Pipeline Loop component"""
+    """ParallelFor component"""
 
-    loop = "Pipeline Loop"
+    loop_start = "ParallelFor Start"
+    loop_end = "ParallelFor End"
 
     def is_exist(name: str) -> bool :
         for v in PipelineLoop:
@@ -958,7 +966,7 @@ class PipelineLoop(Enum):
         return False
 
 class WorkflowInitExit(Enum):
-    """Pipeline Loop component"""
+    """Workflow Init and Exit component"""
 
     init = "Init"
     exit = "Exit"

@@ -46,6 +46,18 @@ interface Props {
   onPropertiesUpdateRequested?: (options: any) => any;
 }
 
+let timer: any = null;
+function debounce(fn: (...arg: any[]) => any, duration: number = 300) {
+  return function(this: any, ...args: any[]) {
+    if (timer != null) {
+      clearTimeout(timer);
+    }
+    timer = window.setTimeout(() => {
+      fn.apply(this, args);
+    }, duration);
+  };
+}
+
 export function PropertiesPanel({
   data,
   schema,
@@ -105,25 +117,30 @@ export function PropertiesPanel({
       return schema;
     }
   };
+  let formData: any;
   return (
     <Form
       formData={data}
       uiSchema={uiSchema}
       schema={selectPipelineParameters()}
       onChange={e => {
-        const newFormData = e.formData;
-        const params = schema.properties?.component_parameters?.properties;
-        for (const field in params) {
-          if (params[field].oneOf) {
-            for (const option of params[field].oneOf) {
-              if (option.widget?.const !== undefined) {
-                newFormData.component_parameters[field].widget =
-                  option.widget.const;
+        let func = debounce(() => {
+          const newFormData = e.formData;
+          const params = schema.properties?.component_parameters?.properties;
+          for (const field in params) {
+            if (params[field].oneOf) {
+              for (const option of params[field].oneOf) {
+                if (option.widget?.const !== undefined) {
+                  newFormData.component_parameters[field].widget =
+                    option.widget.const;
+                }
               }
             }
           }
-        }
-        onChange?.(e.formData);
+          formData = e.formData;
+          onChange?.(formData);
+        }, 500);
+        func();
       }}
       formContext={{
         onFileRequested: async (args: any) => {

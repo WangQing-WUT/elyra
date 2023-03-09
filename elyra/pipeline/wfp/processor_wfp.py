@@ -245,15 +245,30 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if "k8sobj" not in trigger_field:
                     trigger_field["k8sobj"] = {}
 
-                condition, _ = self._get_condition(node_json, node)
+                node_type = "K8s Object Trigger"
+                node_id = node["id"]
+                node_name = node["app_data"]["label"].strip()
+                data = {
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "",
+                    "index": 0
+                }
+
+                condition, linknodes_name_to_type = self._get_condition(node_json, node)
+                parameters = self._parse_trigger_parameters(
+                    node["app_data"]["component_parameters"]["trigger_parameters"],
+                    node_json,
+                    data,
+                    linknodes_name_to_type,
+                    response
+                    )
                 trigger_field["k8sobj"][node["app_data"]["label"].strip()] = {
                     "condition": condition,
                     "operation": node["app_data"]["component_parameters"]["operation"],
                     "source": self._get_k8s_source(node["app_data"]["component_parameters"]["source"]),
-                    "arguments": self._get_k8s_agruments(
-                        node["app_data"]["component_parameters"]["trigger_parameters"],
-                        node_json
-                        )
+                    "arguments": parameters
                 }
             elif node_type == "http_trigger":
                 if "http" not in trigger_field:
@@ -403,7 +418,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         for link in node["inputs"][0]["links"]:
             node_type = self._get_type(node_json, link['node_id_ref'])
             node_name = self._get_name(node_json, link['node_id_ref'])
-            linknodes_name_to_type[node_name] = node_type
+            linknodes_name_to_type[node_name] = field_map[node_type]
             if condition_num == 0:
                 condition = "events." + field_map[node_type] + "." + node_name
                 condition_num += 1
@@ -544,20 +559,30 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     @staticmethod
     def _parse_trigger_parameters(trigger_parameters: dict, node_json: dict, data: dict, linknodes_name_to_type: dict, response):
         trigger_parameters_field = []
+
         for index, item in enumerate(trigger_parameters):
             data["index"] = index + 1 
-            temp_item = {"name": item["name"]}
+            temp_item = {}
+            key = "value"
+            if data["nodeType"] == "K8s Object Trigger":
+                key = "src"
+                temp_item["src"] = ""
+                temp_item["dest"] = "{{" + str(item["dest"]) + "}}"
+            else:
+                temp_item["name"] = item["name"]
+                temp_item["value"] = ""
             value = item["from"]["value"].strip()
             widget = item["from"]["widget"]
 
             if widget == "workflow_enum":
-                temp_item["value"] = "{{" + value + "}}"
+                temp_item[key] = "{{" + value + "}}"
             elif widget == "event_enum":
                 name = value.split(":")[0]
                 if name in linknodes_name_to_type:
-                    temp_item["value"] = "{{events." + linknodes_name_to_type[name] + "." + value + "}}"
-                    temp_item["value"] = temp_item["value"].replace(": ", ".")
+                    temp_item[key] = "{{events." + linknodes_name_to_type[name] + "." + value + "}}"
+                    temp_item[key] = temp_item[key].replace(": ", ".")
                 else:
+                    data["propertyName"] = "From of " + data["nodeType"] + " Parameters"
                     response.add_message(
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodePropertyValue",
@@ -566,7 +591,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                         data=data,
                     )
             else:
-                temp_item["value"] = value
+                temp_item[key] = value
             trigger_parameters_field.append(temp_item)
         return trigger_parameters_field
 
@@ -1154,7 +1179,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime="WORKFLOW",
                     data=data,
                 )
-            if parameter[value]["value"].strip() == "":
+            if ("value" not in parameter[value]) or (parameter[value]["value"].strip() == ""):
                 data["propertyName"] = value.title() + " of " + propertyName
                 response.add_message(
                     severity=ValidationSeverity.Error,
@@ -1163,7 +1188,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime="WORKFLOW",
                     data=data,
                 )
-            if parameter[value]["widget"] in ["workflow_enum", "enum"]:
+            elif parameter[value]["widget"] in ["workflow_enum", "enum"]:
                 if parameter[value]["value"] not in workflow_input_parameters and parameter[value]["value"] != "workflow.instance_name":
                     data["propertyName"] = value.title() + " of " + propertyName
                     response.add_message(

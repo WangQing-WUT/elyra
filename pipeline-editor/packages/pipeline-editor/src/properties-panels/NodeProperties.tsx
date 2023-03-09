@@ -185,6 +185,7 @@ function NodeProperties({
     const oneOfValuesNoOpt: any[] = [];
     let workflowParameters: string[] = ["", "workflow.instance_name"];
     let eventParameters: string[] = [""];
+    let loopArgs: string[] = [""];
     const pipeline_input_parameters: string[] = [""];
     const evnetObject: { [index: string]: string[] } = {
       calendar_event: ["time"],
@@ -217,6 +218,28 @@ function NodeProperties({
     for (const upstreamNode of upstreamNodes ?? []) {
       const nodeDef = nodes.find(n => n.op === upstreamNode.op);
       const prevLen = oneOfValuesNoOpt.length;
+
+      if (upstreamNode.op.indexOf("loop_start") != -1) {
+        const loop_args =
+          upstreamNode.app_data.component_parameters?.parallefor?.loop_args;
+        if (loop_args?.widget == "List[Dict[str, any]]") {
+          if (loop_args?.value?.[0]) {
+            for (let item of loop_args.value[0]) {
+              if ("key" in item) {
+                loopArgs.push(
+                  `${upstreamNode.app_data?.ui_data?.label.trim()}: item.${
+                    item.key
+                  }`
+                );
+              }
+            }
+          }
+        } else {
+          loopArgs.push(
+            `${upstreamNode.app_data?.ui_data?.label.trim()}: item`
+          );
+        }
+      }
 
       const nodeProperties =
         nodeDef?.app_data.properties.properties.component_parameters.properties;
@@ -479,6 +502,13 @@ function NodeProperties({
                   delete component_properties[prop].oneOf[i].properties.value
                     .default;
                 }
+              } else if (
+                component_properties[prop].oneOf[i].properties.widget
+                  .default === "loop_args"
+              ) {
+                component_properties[prop].oneOf[
+                  i
+                ].properties.value.enum = loopArgs;
               }
             }
           }

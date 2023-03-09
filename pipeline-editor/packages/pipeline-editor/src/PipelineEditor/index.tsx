@@ -70,6 +70,69 @@ interface Props {
 const READ_ONLY_NODE_SVG_PATH =
   "M 0 0 h 160 a 6 6 0 0 1 6 6 v 28 a 6 6 0 0 1 -6 6 h -160 a 6 6 0 0 1 -6 -6 v -28 a 6 6 0 0 1 6 -6 z";
 
+function dfs(
+  current_node: any,
+  nodes: any,
+  stack: any,
+  remain_nodes: any,
+  number: any
+) {
+  if (remain_nodes.length == number) {
+    return;
+  }
+  if (current_node.op.indexOf("loop_start") != -1) {
+    if (stack == 0) {
+      remain_nodes.push(current_node);
+    } else {
+      stack--;
+    }
+  } else if (current_node.op.indexOf("loop_end") != -1) {
+    stack++;
+  }
+
+  let links = current_node?.inputs?.[0]?.links;
+  if (links) {
+    for (let link of links) {
+      if (remain_nodes.length == number) {
+        break;
+      }
+      dfs(nodes[link?.node_id_ref], nodes, stack, remain_nodes, number);
+    }
+  }
+}
+
+function removeLoopNodes(
+  selectNode: any,
+  pipeline: any,
+  originalUpstreamNodes: any,
+  loop_start_nodes: any,
+  loop_end_nodes: any
+) {
+  const len_start = loop_start_nodes.length;
+  const len_end = loop_end_nodes.length;
+  if (len_end == 0 || len_start == 0) {
+    return originalUpstreamNodes;
+  } else if (len_start == len_end) {
+    return originalUpstreamNodes.filter((node: any) =>
+      loop_start_nodes.every((n: any) => n.id != node.id)
+    );
+  } else {
+    let stack: any = 0;
+    let remain_nodes: any = [];
+    let number = len_start - len_end;
+    let nodes: any = {};
+    for (let node of pipeline.pipelines[0].nodes) {
+      nodes[node.id] = node;
+    }
+    dfs(selectNode, nodes, stack, remain_nodes, number);
+    return originalUpstreamNodes.filter(
+      (node: any) =>
+        remain_nodes.some((n: any) => n.id == node.id) ||
+        loop_start_nodes.every((n: any) => n.id != node.id)
+    );
+  }
+}
+
 function isCreateNodeEvent(
   e: CanvasEditEvent
 ): e is {
@@ -766,9 +829,25 @@ const PipelineEditor = forwardRef(
     }
 
     const selectedNodes = controller.current.idsToNodes(selectedNodeIDs ?? []);
-    const upstreamNodes = selectedNodeIDs?.[0]
+    let upstreamNodes = selectedNodeIDs?.[0]
       ? controller.current.getUpstreamNodes(selectedNodeIDs[0])
       : [];
+
+    let loop_end_nodes = upstreamNodes.filter(
+      (node: any) => node.op.indexOf("loop_end") != -1
+    );
+    let loop_start_nodes = upstreamNodes.filter(
+      (node: any) => node.op.indexOf("loop_start") != -1
+    );
+    if (selectedNodes?.[0]) {
+      upstreamNodes = removeLoopNodes(
+        selectedNodes[0],
+        pipeline,
+        upstreamNodes,
+        loop_start_nodes,
+        loop_end_nodes
+      );
+    }
 
     const panelTabs = [
       {

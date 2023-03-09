@@ -26,7 +26,6 @@ const renderDefaults = (
   } else if (props.schema.items?.type === "object") {
     for (const item of items) {
       const itemRendered = [];
-      console.log(item);
       for (const key in props.schema.items.properties ?? {}) {
         let value = item[key] || "";
         if (item[key]?.widget == "string") {
@@ -81,7 +80,7 @@ export const ArrayTemplate: React.FC<ArrayFieldTemplateProps> = props => {
   );
   let index = 1;
   return (
-    <div className={props.className}>
+    <div className="field field-array field-array-of-object">
       {props.items.map(item => {
         return (
           <div key={item.key} className={item.className}>

@@ -332,6 +332,9 @@ const PipelineWrapper: React.FC<IProps> = ({
           const newArray = [];
           for (const i in data[key]) {
             if (typeof data[key][i] === 'object') {
+              if (data[key][i] === null) {
+                continue;
+              }
               removeNullValues(data[key][i], true);
               if (Object.keys(data[key][i]).length > 0) {
                 newArray.push(data[key][i]);

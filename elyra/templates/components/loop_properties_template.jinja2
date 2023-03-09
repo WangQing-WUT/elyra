@@ -9,18 +9,118 @@
     "component_parameters": {
       "type": "object",
       "properties": {
-        "loop_conditions": {
-          "type": "array",
-          "title": "Loop Condition",
-          "description": "Loop Condition.",
-          "items": {
-            "type": "string",
-            "default": ""
-          }
+        {% if  component.name == "ParallelFor Start" %}
+        "parallefor": {
+          "type": "object",
+          "title": "ParallelFor Parameters",
+          "description": "ParallelFor Parameters.",
+          "properties": {
+            "loop_args": {
+              "title": "Loop Args",
+              "description": "Loop args.",
+              "oneOf": [
+                {
+                  "label": "Number",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "default": ""
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "Number"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "List[str]",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "default": ""
+                      },
+                      "default": []
+                    },
+                    "widget": {
+                        "type": "string",
+                        "default": "List[str]"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "List[int] or List[float]",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "default": ""
+                      },
+                      "default": []
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "List[int] or List[float]"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                },
+                {
+                  "label": "List[Dict[str, any]]",
+                  "properties": {
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string",
+                              "default": ""
+                            },
+                            "value": {
+                              "type": "string",
+                              "default": ""
+                            }
+                          }
+                        },
+                        "default": []
+                      },
+                      "default": []
+                    },
+                    "widget": {
+                      "type": "string",
+                      "default": "List[Dict[str, any]]"
+                    }
+                  },
+                  "uihints":{
+                    "widget": {"ui:field": "hidden"}
+                  }
+                }
+              ]
+            },
+            "parallelism": {
+              "type": "number",
+              "title": "ParallelFor Parallelism",
+              "description": "ParallelFor Parallelism."
+            }
+          },
+          "required": ["loop_args"]
         }
-      },
-      "required": []
+        {% endif %}
+      }
     }
- },
+  },
   "required": ["component_parameters"]
 }

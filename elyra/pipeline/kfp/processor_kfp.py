@@ -1052,7 +1052,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     ):
 
         name = operation.name
-        if name == "Pipeline Loop":
+        if name == "ParallelFor":
             name = None
         target_ops[operation.id] = "Loop"
         component_params = operation.component_params
