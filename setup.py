@@ -73,12 +73,11 @@ setup_args = dict(
         "jsonschema>=3.2.0,<4.0",  # Cap from kfp
         "jupyter_core>=4.6.0",
         "jupyter_client>=6.1.7",
-        #"jupyter-events~=0.4.0",
+        # "jupyter-events~=0.4.0",
         "jupyter-packaging>=0.10",
         "jupyter_server>=1.7.0",
-        #"jupyter_server~=1.23.4",
-        "jupyterlab-server>=2.0,<2.11"
-        "jupyterlab>=3.4.6",  # comment out to use local jupyterlab
+        # "jupyter_server~=1.23.4",
+        "jupyterlab-server>=2.0,<2.11" "jupyterlab>=3.4.6",  # comment out to use local jupyterlab
         "jupyterlab-lsp>=3.8.0",  # comment out to use local jupyterlab
         "jupyterlab-git~=0.32",  # Avoid breaking 1.x changes
         "jupyter-resource-usage>=0.5.1",

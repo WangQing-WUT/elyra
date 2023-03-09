@@ -36,7 +36,6 @@ from elyra.pipeline.pipeline_constants import KUBERNETES_SECRETS
 from elyra.pipeline.pipeline_constants import PIPELINE_DEFAULTS
 from elyra.pipeline.pipeline_constants import PIPELINE_META_PROPERTIES
 from elyra.pipeline.runtime_type import RuntimeProcessorType
-from elyra.util.validation_type import *
 
 
 class AppDataBase(object):  # ABC
@@ -590,24 +589,20 @@ class PipelineDefinition(object):
                 elif "pipeline_defaults" in primary_pipeline["app_data"]["properties"]:
                     if "input_parameters" in primary_pipeline["app_data"]["properties"]["pipeline_defaults"]:
                         input_parameter_names = []
-                        for input_parameter in primary_pipeline["app_data"]["properties"]["pipeline_defaults"]["input_parameters"]:
+                        for input_parameter in primary_pipeline["app_data"]["properties"]["pipeline_defaults"][
+                            "input_parameters"
+                        ]:
                             if "name" not in input_parameter:
-                                validation_issues.append("The 'Parameter Name' field of pipeline input parameters cannot be empty.")
+                                validation_issues.append(
+                                    "The 'Parameter Name' field of pipeline input parameters cannot be empty."
+                                )
                             else:
                                 if input_parameter["name"] in input_parameter_names:
-                                    validation_issues.append("The 'Parameter Name' field of pipeline input parameters cannot be duplicate.")
+                                    validation_issues.append(
+                                        "The 'Parameter Name' field of pipeline input parameters cannot be duplicate."
+                                    )
                                 else:
-                                    # if input_parameter["type"] == "Integer":
-                                    #     if not input_parameter["value"].isdigit():
-                                    #         validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Integer).")
-                                    # elif input_parameter["type"] == "Float":
-                                    #     if not is_float(input_parameter["value"]):
-                                    #         validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Float).")
-                                    # elif input_parameter["type"] == "Boolean":
-                                    #     if not is_bool(input_parameter["value"]):
-                                    #         validation_issues.append("The value of the 'Parameter Name'(" + input_parameter["name"] + ") of pipeline input parameters does not match the 'Value Type'(Boolean).")
                                     input_parameter_names.append(input_parameter["name"])
-                            
 
             if "nodes" not in primary_pipeline or len(primary_pipeline["nodes"]) == 0:
                 validation_issues.append("At least one node must exist in the primary pipeline.")
@@ -752,7 +747,7 @@ class PipelineDefinition(object):
             "kubernetes_secrets",
             "kubernetes_pod_labels",
             "kubernetes_pod_annotations",
-            "kubernetes_tolerations"
+            "kubernetes_tolerations",
         ]
         elyra_params = []
         for item in sorted_list:

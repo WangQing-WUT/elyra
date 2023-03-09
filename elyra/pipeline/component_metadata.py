@@ -74,5 +74,6 @@ class DirectoryCatalogMetadata(ComponentCatalogMetadata):
 class FilenameCatalogMetadata(ComponentCatalogMetadata):
     pass
 
+
 class NewComponentMetadata(ComponentCatalogMetadata):
     pass

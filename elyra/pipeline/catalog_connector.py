@@ -138,7 +138,7 @@ class CatalogEntry(object):
 
         # Use only the first 12 characters of the resulting hash
         hash_digest = f"{hashlib.sha256(hash_str.encode()).hexdigest()[:12]}"
-        if (self.categories[0] in specific_categories):
+        if self.categories[0] in specific_categories:
             file_name = Path(str(self.entry_reference["path"])).stem
             return f"{file_name}:{hash_digest}"
         else:

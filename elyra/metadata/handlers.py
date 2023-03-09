@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+
 from jsonschema import ValidationError
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from jupyter_server.utils import url_unescape
 from tornado import web
+import yaml
 
 from elyra.metadata.error import MetadataExistsError
 from elyra.metadata.error import MetadataNotFoundError
@@ -26,9 +29,6 @@ from elyra.metadata.manager import MetadataManager
 from elyra.metadata.metadata import Metadata
 from elyra.metadata.schema import SchemaManager
 from elyra.util.http import HttpErrorMixin
-
-import os
-import yaml
 
 
 class MetadataHandler(HttpErrorMixin, APIHandler):
@@ -75,7 +75,7 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
             elif instance_dict["schema_name"] == "local-file-catalog":
                 instance_dict["metadata"]["base_path"] = self.settings["server_root_dir"]
                 instance = Metadata.from_dict(schemaspace, instance_dict)
-            
+
             self.log.debug(
                 f"MetadataHandler: Creating metadata instance '{instance.name}' in schemaspace '{schemaspace}'..."
             )
@@ -196,6 +196,7 @@ class MetadataResourceHandler(HttpErrorMixin, APIHandler):
         self.set_status(204)
         self.finish()
 
+
 class ComponentEditorHandler(HttpErrorMixin, APIHandler):
     """Handler for component editor."""
 
@@ -217,18 +218,15 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
         self.finish(payload)
-    
+
     @web.authenticated
     async def get(self, path):
         path = url_unescape(path)
-        component_metadata = {
-            "schema_name": "component-editor",
-            "metadata": {}
-        }
+        component_metadata = {"schema_name": "component-editor", "metadata": {}}
         component_absolute_path = os.path.join(os.getcwd(), path)
 
         try:
-            with open(component_absolute_path, "r", encoding='utf-8') as r:
+            with open(component_absolute_path, "r", encoding="utf-8") as r:
                 component_yaml = yaml.load(r.read(), Loader=yaml.FullLoader)
                 metadata = component_metadata["metadata"]
                 input_parameters_placeholder = {}
@@ -265,7 +263,9 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
                         if "name" in input_parameter:
                             temp_input_parameter["name"] = input_parameter["name"]
                             if input_parameter["name"] in input_parameters_placeholder:
-                                temp_input_parameter["placeholder_type"] = input_parameters_placeholder[input_parameter["name"]]
+                                temp_input_parameter["placeholder_type"] = input_parameters_placeholder[
+                                    input_parameter["name"]
+                                ]
                             else:
                                 temp_input_parameter["placeholder_type"] = "inputValue"
                         if "type" in input_parameter:
@@ -296,6 +296,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
 
         self.set_header("Content-Type", "application/json")
         self.finish(component_metadata)
+
 
 class SchemaHandler(HttpErrorMixin, APIHandler):
     """Handler for schemaspace schemas."""

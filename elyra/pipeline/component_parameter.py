@@ -303,9 +303,20 @@ class EnvironmentVariable(ElyraPropertyListItem):
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
+    ):
         """Add EnvironmentVariable instance to the execution object for the given runtime processor"""
-        runtime_processor.add_env_var(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
+        runtime_processor.add_env_var(
+            instance=self,
+            execution_object=execution_object,
+            pipeline_input_parameters=pipeline_input_parameters,
+            **kwargs,
+        )
 
 
 class KubernetesSecret(ElyraPropertyListItem):
@@ -368,9 +379,20 @@ class KubernetesSecret(ElyraPropertyListItem):
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
+    ):
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_secret(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
+        runtime_processor.add_kubernetes_secret(
+            instance=self,
+            execution_object=execution_object,
+            pipeline_input_parameters=pipeline_input_parameters,
+            **kwargs,
+        )
 
 
 class VolumeMount(ElyraPropertyListItem):
@@ -419,10 +441,21 @@ class VolumeMount(ElyraPropertyListItem):
 
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
+    ):
         """Add VolumeMount instance to the execution object for the given runtime processor"""
         self.path = f"/{self.path.strip('/')}"  # normalize path
-        runtime_processor.add_mounted_volume(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
+        runtime_processor.add_mounted_volume(
+            instance=self,
+            execution_object=execution_object,
+            pipeline_input_parameters=pipeline_input_parameters,
+            **kwargs,
+        )
 
 
 class KubernetesAnnotation(ElyraPropertyListItem):
@@ -472,9 +505,20 @@ class KubernetesAnnotation(ElyraPropertyListItem):
         """Returns the value to be used when constructing a dict from a list of classes."""
         return self.value
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
+    ):
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_pod_annotation(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
+        runtime_processor.add_kubernetes_pod_annotation(
+            instance=self,
+            execution_object=execution_object,
+            pipeline_input_parameters=pipeline_input_parameters,
+            **kwargs,
+        )
 
 
 class KubernetesLabel(ElyraPropertyListItem):
@@ -523,9 +567,20 @@ class KubernetesLabel(ElyraPropertyListItem):
         """Returns the value to be used when constructing a dict from a list of classes."""
         return self.value
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
+    ):
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
-        runtime_processor.add_kubernetes_pod_label(instance=self, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters, **kwargs)
+        runtime_processor.add_kubernetes_pod_label(
+            instance=self,
+            execution_object=execution_object,
+            pipeline_input_parameters=pipeline_input_parameters,
+            **kwargs,
+        )
 
 
 class KubernetesToleration(ElyraPropertyListItem):
@@ -668,14 +723,22 @@ class ElyraPropertyList(list):
 
         return ElyraPropertyList(subtract_dict.values())
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any):
+    def add_to_execution_object(
+        self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any
+    ):
         """
         Add a property instance to the execution object for the given runtime processor
         for each list item.
         """
         for item in self:
-            if isinstance(item, (KubernetesLabel, KubernetesAnnotation, VolumeMount, KubernetesSecret, EnvironmentVariable)):
-                item.add_to_execution_object(runtime_processor=runtime_processor, execution_object=execution_object, pipeline_input_parameters=pipeline_input_parameters)
+            if isinstance(
+                item, (KubernetesLabel, KubernetesAnnotation, VolumeMount, KubernetesSecret, EnvironmentVariable)
+            ):
+                item.add_to_execution_object(
+                    runtime_processor=runtime_processor,
+                    execution_object=execution_object,
+                    pipeline_input_parameters=pipeline_input_parameters,
+                )
             else:
                 item.add_to_execution_object(runtime_processor=runtime_processor, execution_object=execution_object)
 
@@ -869,7 +932,7 @@ class ComponentParameter(object):
                     obj["properties"]["widget"]["default"] = "enum"
                     obj["properties"]["value"]["type"] = "string"
                     obj["properties"]["value"]["enum"] = []
-                
+
                 elif widget_type == "loop_args":
                     obj["title"] = InputTypeDescriptionMap["loop_args"].value
                     obj["properties"]["widget"]["default"] = "loop_args"
@@ -910,7 +973,6 @@ class InputTypeDescriptionMap(Enum):
     outputpath = None  # outputs are read-only and don't require a description
 
 
-
 class WorkflowTrigger(Enum):
     """A mapping of workflow trigger types"""
 
@@ -918,7 +980,7 @@ class WorkflowTrigger(Enum):
     k8s_object = "K8s Object Trigger"
     pipeline = "Pipeline Trigger"
 
-    def is_exist(trigger_type: str) -> bool :
+    def is_exist(trigger_type: str) -> bool:
         for v in WorkflowTrigger:
             if trigger_type == v.value:
                 return True
@@ -934,7 +996,7 @@ class WorkflowEvent(Enum):
     model = "Model Event"
     monitor = "Model Monitor Event"
 
-    def is_exist(event_type: str) -> bool :
+    def is_exist(event_type: str) -> bool:
         for v in WorkflowEvent:
             if event_type == v.value:
                 return True
@@ -946,7 +1008,7 @@ class PipelineBranch(Enum):
 
     branch = "Pipeline Branch"
 
-    def is_exist(name: str) -> bool :
+    def is_exist(name: str) -> bool:
         for v in PipelineBranch:
             if name == v.value:
                 return True
@@ -959,11 +1021,12 @@ class PipelineLoop(Enum):
     loop_start = "ParallelFor Start"
     loop_end = "ParallelFor End"
 
-    def is_exist(name: str) -> bool :
+    def is_exist(name: str) -> bool:
         for v in PipelineLoop:
             if name == v.value:
                 return True
         return False
+
 
 class WorkflowInitExit(Enum):
     """Workflow Init and Exit component"""
@@ -971,8 +1034,8 @@ class WorkflowInitExit(Enum):
     init = "Init"
     exit = "Exit"
 
-    def is_exist(name: str) -> bool :
+    def is_exist(name: str) -> bool:
         for v in WorkflowInitExit:
             if name == v.value:
                 return True
-        return False    
+        return False

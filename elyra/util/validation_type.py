@@ -8,8 +8,9 @@ def is_float(text):
     except ValueError:
         return False
 
+
 def is_bool(text):
-    if text.lower() == 'true' or text.lower() == 'false':
+    if text.lower() == "true" or text.lower() == "false":
         return True
     else:
         return False

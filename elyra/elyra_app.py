@@ -21,9 +21,9 @@ from jupyter_server.extension.application import ExtensionAppJinjaMixin
 from elyra._version import __version__
 from elyra.api.handlers import YamlSpecHandler
 from elyra.contents.handlers import ContentHandler
+from elyra.metadata.handlers import ComponentEditorHandler
 from elyra.metadata.handlers import MetadataHandler
 from elyra.metadata.handlers import MetadataResourceHandler
-from elyra.metadata.handlers import ComponentEditorHandler
 from elyra.metadata.handlers import SchemaHandler
 from elyra.metadata.handlers import SchemaResourceHandler
 from elyra.metadata.handlers import SchemaspaceHandler
@@ -42,8 +42,8 @@ from elyra.pipeline.handlers import PipelineExportHandler
 from elyra.pipeline.handlers import PipelinePropertiesHandler
 from elyra.pipeline.handlers import PipelineRuntimeTypesHandler
 from elyra.pipeline.handlers import PipelineSchedulerHandler
-from elyra.pipeline.handlers import PipelineValidationHandler
 from elyra.pipeline.handlers import PipelineTriggerParametersHandler
+from elyra.pipeline.handlers import PipelineValidationHandler
 from elyra.pipeline.processor import PipelineProcessor
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.processor import PipelineProcessorRegistry
@@ -52,9 +52,9 @@ from elyra.pipeline.validation import PipelineValidationManager
 
 DEFAULT_STATIC_FILES_PATH = os.path.join(os.path.dirname(__file__), "static")
 DEFAULT_TEMPLATE_FILES_PATH = os.path.join(os.path.dirname(__file__), "templates")
-DEFAULT_KUBEFLOW_COMPONENT_PATH = os.path.join(os.path.dirname(__file__),".component/kubeflow")
-DEFAULT_WORKFLOW_COMPONENT_PATH = os.path.join(os.path.dirname(__file__),".component/workflow")
-DEFAULT_PIPELINE_PATH = os.path.join(os.path.dirname(__file__),".pipeline")
+DEFAULT_KUBEFLOW_COMPONENT_PATH = os.path.join(os.path.dirname(__file__), ".component/kubeflow")
+DEFAULT_WORKFLOW_COMPONENT_PATH = os.path.join(os.path.dirname(__file__), ".component/workflow")
+DEFAULT_PIPELINE_PATH = os.path.join(os.path.dirname(__file__), ".pipeline")
 
 
 class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
@@ -120,7 +120,7 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 (f"/{self.name}/pipeline/runtimes/types", PipelineRuntimeTypesHandler),
                 (f"/{self.name}/pipeline/schedule", PipelineSchedulerHandler),
                 (f"/{self.name}/pipeline/validate", PipelineValidationHandler),
-                (f"/{self.name}/pipeline/pipeline_trigger/{path}", PipelineTriggerParametersHandler)
+                (f"/{self.name}/pipeline/pipeline_trigger/{path}", PipelineTriggerParametersHandler),
             ]
         )
 
@@ -145,24 +145,22 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 abs_path = DEFAULT_WORKFLOW_COMPONENT_PATH + "/" + category
                 if os.path.isdir(abs_path):
                     components_list = os.listdir(abs_path)
-                    for i in range (len(components_list)):
-                        components_list[i] = abs_path+ "/" + components_list[i]
+                    for i in range(len(components_list)):
+                        components_list[i] = abs_path + "/" + components_list[i]
                     component_json = {
                         "display_name": category,
                         "metadata": {
                             "display_name": category,
                             "runtime_type": "WORKFLOW_PIPELINES",
-                            "categories": [
-                                category
-                            ],
-                            "paths": components_list
+                            "categories": [category],
+                            "paths": components_list,
                         },
-                        "schema_name": "local-file-catalog"
+                        "schema_name": "local-file-catalog",
                     }
                     instance = Metadata(**component_json)
                     try:
                         metadata_manager.create(instance.name, instance)
-                    except:
+                    except Exception:
                         metadata_manager.update(instance.name, instance)
 
         for category in os.listdir(DEFAULT_KUBEFLOW_COMPONENT_PATH):
@@ -170,26 +168,24 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
                 abs_path = DEFAULT_KUBEFLOW_COMPONENT_PATH + "/" + category
                 if os.path.isdir(abs_path):
                     components_list = os.listdir(abs_path)
-                    for i in range (len(components_list)):
-                        components_list[i] = abs_path+ "/" + components_list[i]
+                    for i in range(len(components_list)):
+                        components_list[i] = abs_path + "/" + components_list[i]
                     component_json = {
                         "display_name": category,
                         "metadata": {
                             "display_name": category,
                             "runtime_type": "KUBEFLOW_PIPELINES",
-                            "categories": [
-                                category
-                            ],
-                            "paths": components_list
+                            "categories": [category],
+                            "paths": components_list,
                         },
-                        "schema_name": "local-file-catalog"
+                        "schema_name": "local-file-catalog",
                     }
                     instance = Metadata(**component_json)
                     try:
                         metadata_manager.create(instance.name, instance)
-                    except:
+                    except Exception:
                         metadata_manager.update(instance.name, instance)
-        # ------ Read Components ------ 
+        # ------ Read Components ------
 
     def initialize_templates(self):
         pass

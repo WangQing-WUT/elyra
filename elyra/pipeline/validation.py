@@ -64,7 +64,7 @@ class ValidationResponse(object):
                 "title": "Workflow Diagnostics",
                 "description": "Issues discovered when parsing the workflow",
                 "issues": [],
-            }    
+            }
 
     @property
     def response(self) -> Dict:
@@ -83,7 +83,7 @@ class ValidationResponse(object):
         message_type: Optional[str] = "",
         data: Optional[Dict] = "",
         severity: ValidationSeverity = ValidationSeverity.Warning,
-        runtime: Optional[str] = "KUBEFLOW_PIPELINES"
+        runtime: Optional[str] = "KUBEFLOW_PIPELINES",
     ):
         """
         Helper function to add a diagnostic message to the response to be sent back
@@ -128,7 +128,7 @@ class ValidationResponse(object):
 
     def update_message(self, data: Dict):
         for issue in self._response["issues"]:
-            for key,value in data.items():
+            for key, value in data.items():
                 issue["data"][key] = value
 
 
@@ -180,7 +180,7 @@ class PipelineValidationManager(SingletonConfigurable):
         else:
             pipeline_runtime = "kfp"
             pipeline_type = "KUBEFLOW_PIPELINES"
-            
+
         if PipelineProcessorManager.instance().is_supported_runtime(pipeline_runtime):
             # Set the runtime since its derived from runtime_config and valid
             primary_pipeline.set("runtime", pipeline_runtime)
@@ -493,18 +493,12 @@ class PipelineValidationManager(SingletonConfigurable):
         component_property_dict = {}
         if node.op.startswith("branch"):
             parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
-            component_property_dict = {
-                "properties": {
-                    "component_parameters": {
-                        "required": parsed_parameters
-                    }
-                }
-            }
-        
+            component_property_dict = {"properties": {"component_parameters": {"required": parsed_parameters}}}
+
         elif node.op.startswith("loop"):
             return
         else:
-        # Full dict of properties for the operation e.g. current params, optionals etc
+            # Full dict of properties for the operation e.g. current params, optionals etc
             component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
             current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
 
@@ -513,8 +507,10 @@ class PipelineValidationManager(SingletonConfigurable):
                 self._validate_elyra_owned_property(node.id, node.label, node, param, response, param_required)
 
             # List of just the current parameters for the component
-            resources = ['cpu', 'gpu', 'memory', 'npu310', 'npu910', 'node_selector']
-            parsed_parameters = [p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources]
+            resources = ["cpu", "gpu", "memory", "npu310", "npu910", "node_selector"]
+            parsed_parameters = [
+                p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources
+            ]
         for default_parameter in parsed_parameters:
             node_param = node.get_component_parameter(default_parameter)
             if node.op.startswith("branch"):
@@ -528,7 +524,7 @@ class PipelineValidationManager(SingletonConfigurable):
                         data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                     )
             elif type(node_param) is not str:
-                if  node_param.get("widget") == "inputpath":
+                if node_param.get("widget") == "inputpath":
                     # The value of any component property with widget type `inputpath` will be a
                     # dictionary of two keys:
                     #   "value": the node ID of the parent node containing the output
@@ -614,7 +610,9 @@ class PipelineValidationManager(SingletonConfigurable):
                                 response.add_message(
                                     severity=ValidationSeverity.Error,
                                     message_type="invalidNodeProperty",
-                                    message="Pipeline input parameters does not contain '" + node_param.get("value") + "'.",
+                                    message="Pipeline input parameters does not contain '"
+                                    + node_param.get("value")
+                                    + "'.",
                                     data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                                 )
                         else:
@@ -624,7 +622,6 @@ class PipelineValidationManager(SingletonConfigurable):
                                 message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
                                 data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                             )
-
 
     def _validate_container_image_name(
         self, node_id: str, node_label: str, image_name: str, response: ValidationResponse
@@ -938,7 +935,7 @@ class PipelineValidationManager(SingletonConfigurable):
         # list of components associated with the pipeline runtime being used
         component_list = await PipelineProcessorManager.instance().get_components(pipeline_runtime)
         components = ComponentCache.to_canvas_palette(component_list)
-    
+
         for category in components["categories"]:
             for node_type in category["node_types"]:
                 if node_op == node_type["op"]:

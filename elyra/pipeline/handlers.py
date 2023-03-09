@@ -16,35 +16,34 @@
 from datetime import datetime
 from http.client import responses
 import json
-import os
-import yaml
-import traceback
-from pathlib import Path
 from logging import Logger
 import mimetypes
+import os
+from pathlib import Path
+import traceback
 from typing import List
 from typing import Optional
 
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from tornado import web
+import yaml
 
 from elyra.metadata.error import MetadataNotFoundError
 from elyra.metadata.manager import MetadataManager
 from elyra.metadata.schemaspaces import ComponentCatalogs
 from elyra.pipeline.component import Component
 from elyra.pipeline.component_catalog import ComponentCache
+from elyra.pipeline.component_catalog import get_oneOf
 from elyra.pipeline.component_catalog import RefreshInProgressError
-from elyra.pipeline.component_parameter import WorkflowEvent
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline_definition import PipelineDefinition
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.processor import PipelineProcessorRegistry
-from elyra.pipeline.wfp.processor_wfp import WfpPipelineProcessor
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.pipeline.runtime_type import RuntimeTypeResources
 from elyra.pipeline.validation import PipelineValidationManager
-from elyra.pipeline.component_catalog import get_oneOf
+from elyra.pipeline.wfp.processor_wfp import WfpPipelineProcessor
 from elyra.util.http import HttpErrorMixin
 
 
@@ -112,7 +111,13 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                     description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
                 runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
                 WPPR = WfpPipelineProcessor()
-                zip_file, response = await WPPR.export_custom(self.settings["server_root_dir"], parent, pipeline_definition, pipeline_export_path, pipeline_overwrite)
+                zip_file, response = await WPPR.export_custom(
+                    self.settings["server_root_dir"],
+                    parent,
+                    pipeline_definition,
+                    pipeline_export_path,
+                    pipeline_overwrite,
+                )
                 if not response.has_fatal:
                     if pipeline_upload:
                         response = await WPPR.upload(zip_file, runtime_config, name, description)
@@ -266,9 +271,9 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
         # Get pipeline properties json
         if runtime_type == "WORKFLOW_PIPELINES":
             pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(
-            package_name="templates/pipeline",
-            template_name="workflow_pipeline_properties_template.jinja2",
-            runtime_type=runtime_processor_type.name,
+                package_name="templates/pipeline",
+                template_name="workflow_pipeline_properties_template.jinja2",
+                runtime_type=runtime_processor_type.name,
             )
         else:
             pipeline_properties_json = PipelineDefinition.get_canvas_properties_from_template(
@@ -276,12 +281,24 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
                 template_name="pipeline_properties_template.jinja2",
                 runtime_type=runtime_processor_type.name,
             )
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_labels"]["items"]["properties"]["value"] = get_oneOf("Value")
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_annotations"]["items"]["properties"]["value"] = get_oneOf("Value")
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["mounted_volumes"]["items"]["properties"]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"]["properties"]["key"] = get_oneOf("Secret Key")
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"]["properties"]["name"] = get_oneOf("Secret Name")
-            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["env_vars"]["items"]["properties"]["value"] = get_oneOf("Value")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_labels"]["items"][
+                "properties"
+            ]["value"] = get_oneOf("Value")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_annotations"][
+                "items"
+            ]["properties"]["value"] = get_oneOf("Value")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["mounted_volumes"]["items"][
+                "properties"
+            ]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"][
+                "properties"
+            ]["key"] = get_oneOf("Secret Key")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"][
+                "properties"
+            ]["name"] = get_oneOf("Secret Name")
+            pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["env_vars"]["items"][
+                "properties"
+            ]["value"] = get_oneOf("Value")
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
@@ -296,7 +313,7 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
         result = []
         pipeline_absolute_path = os.path.join(os.getcwd(), pipeline_path)
         try:
-            with open(pipeline_absolute_path, "r", encoding='utf-8') as r:
+            with open(pipeline_absolute_path, "r", encoding="utf-8") as r:
                 if pipeline_absolute_path.endswith(".pipeline"):
                     pipeline = json.load(r)
                     properties = pipeline["pipelines"][0]["app_data"]["properties"]

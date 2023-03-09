@@ -182,7 +182,7 @@ uninstall-server-package:
 install-server-package: uninstall-server-package
 	$(PYTHON_PIP) install --upgrade --use-deprecated=legacy-resolver --upgrade-strategy $(UPGRADE_STRATEGY) "$(shell find dist -name "elyra-*-py3-none-any.whl")[all]"
 
-install-server: build-dependencies build-server install-server-package ## Build and install backend
+install-server: build-dependencies lint-server build-server install-server-package ## Build and install backend
 
 install: build-local-pipeline-editor dev-link package-ui install-server check-install ## Build and install
 

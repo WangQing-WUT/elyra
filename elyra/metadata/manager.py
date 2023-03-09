@@ -13,28 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import re
-import json
-import yaml
 import os
+import re
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Union
 
 from jsonschema import ValidationError
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import PreservedScalarString as pss
 from traitlets import Type  # noqa H306
 from traitlets.config import LoggingConfigurable  # noqa H306
+import yaml
 
+from elyra.metadata.error import MetadataNotFoundError
 from elyra.metadata.metadata import Metadata
 from elyra.metadata.schema import SchemaManager
 from elyra.metadata.storage import FileMetadataStore
 from elyra.metadata.storage import MetadataStore
-from elyra.metadata.error import MetadataNotFoundError
-
-from yaml.resolver import BaseResolver
-from ruamel.yaml import YAML
-from ruamel.yaml.scalarstring import PreservedScalarString as pss
 
 
 class MetadataManager(LoggingConfigurable):
@@ -183,11 +180,12 @@ class MetadataManager(LoggingConfigurable):
         if not name[-1].isalnum():
             name = name + "_0"
         return name
-    
+
     def _parse_component_parameters(self, new_metadata: Dict):
         input_parameters = []
         output_parameters = []
         parameters_placeholder = {}
+
         def getValue(name: str, parameter: Dict):
             if name in parameter:
                 return parameter[name]
@@ -200,7 +198,7 @@ class MetadataManager(LoggingConfigurable):
                     "name": input_parameter["name"],
                     "type": input_parameter["value_type"],
                     "default": getValue("default", input_parameter),
-                    "description": getValue("description", input_parameter)
+                    "description": getValue("description", input_parameter),
                 }
                 input_parameters.append(temp_input_parameter)
                 parameters_placeholder[input_parameter["name"]] = input_parameter["placeholder_type"]
@@ -210,7 +208,7 @@ class MetadataManager(LoggingConfigurable):
                 temp_output_parameter = {
                     "name": output_parameter["name"],
                     "type": output_parameter["value_type"],
-                    "description": getValue("description", output_parameter)
+                    "description": getValue("description", output_parameter),
                 }
                 output_parameters.append(temp_output_parameter)
                 parameters_placeholder[output_parameter["name"]] = output_parameter["placeholder_type"]
@@ -223,19 +221,13 @@ class MetadataManager(LoggingConfigurable):
             "description": "",
             "inputs": [],
             "outputs": [],
-            "implementation": {
-                "container": {
-                    "image": implementation["image_name"],
-                    "command": [],
-                    "args": []
-                }
-            }
+            "implementation": {"container": {"image": implementation["image_name"], "command": [], "args": []}},
         }
         if "component_description" in new_metadata:
             component_yaml["description"] = new_metadata["component_description"]
         else:
             del component_yaml["description"]
-        
+
         input_parameters, output_parameters, parameters_placeholder = self._parse_component_parameters(new_metadata)
 
         component_yaml["inputs"] = input_parameters
@@ -246,7 +238,7 @@ class MetadataManager(LoggingConfigurable):
             if type(item) is dict:
                 temp_item = {}
                 for para in item:
-                    if item[para] == None:
+                    if item[para] is None:
                         if para in parameters_placeholder:
                             temp_item[parameters_placeholder[para]] = para
                         else:
@@ -268,7 +260,7 @@ class MetadataManager(LoggingConfigurable):
                 if type(item) is dict:
                     temp_item = {}
                     for para in item:
-                        if item[para] == None:
+                        if item[para] is None:
                             if para in parameters_placeholder:
                                 temp_item[parameters_placeholder[para]] = para
                             else:
@@ -280,7 +272,7 @@ class MetadataManager(LoggingConfigurable):
                     temp_args.append(item)
             component_yaml["implementation"]["container"]["args"] = temp_args
         return component_yaml
-    
+
     def save_component(self, component_metadata, path):
         component_yaml = self._metedata_to_component(component_metadata)
         yaml_loader = YAML()
@@ -326,7 +318,7 @@ class MetadataManager(LoggingConfigurable):
         self.validate(name, metadata)
         metadata_dict = metadata.to_dict()
 
-        if (metadata_dict["schema_name"] == "new-component"):
+        if metadata_dict["schema_name"] == "new-component":
             new_metadata = metadata_dict["metadata"]
             save_path = new_metadata["save_path"]
             file_name = new_metadata["file_name"]
@@ -339,23 +331,21 @@ class MetadataManager(LoggingConfigurable):
                 update_metadata = self.get(new_metadata["categories"][0])
                 update_metadata_dict = update_metadata.to_dict()
                 name = update_metadata_dict["name"]
-                update_metadata_dict["metadata"]["paths"].append(os.path.relpath(file_path, update_metadata_dict["metadata"]["base_path"]))
+                update_metadata_dict["metadata"]["paths"].append(
+                    os.path.relpath(file_path, update_metadata_dict["metadata"]["base_path"])
+                )
                 for_update = True
                 metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
             except MetadataNotFoundError:
                 new_metadata_dict = {
                     "display_name": metadata_dict["display_name"],
                     "metadata": {
-                        "categories": [
-                            new_metadata["categories"][0]
-                        ],
-                        "paths": [
-                            os.path.relpath(file_path, new_metadata["root_dir"])
-                        ],
+                        "categories": [new_metadata["categories"][0]],
+                        "paths": [os.path.relpath(file_path, new_metadata["root_dir"])],
                         "base_path": new_metadata["root_dir"],
-                        "runtime_type": "KUBEFLOW_PIPELINES"
+                        "runtime_type": "KUBEFLOW_PIPELINES",
                     },
-                    "schema_name": "local-file-catalog"
+                    "schema_name": "local-file-catalog",
                 }
                 if "description" in new_metadata:
                     new_metadata_dict["metadata"]["description"] = new_metadata["description"]

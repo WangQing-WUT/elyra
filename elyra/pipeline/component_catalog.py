@@ -44,11 +44,11 @@ from elyra.pipeline.component import Component
 from elyra.pipeline.component import ComponentParser
 from elyra.pipeline.component_metadata import ComponentCatalogMetadata
 from elyra.pipeline.component_parameter import ComponentParameter
-from elyra.pipeline.component_parameter import WorkflowEvent
-from elyra.pipeline.component_parameter import WorkflowTrigger
 from elyra.pipeline.component_parameter import PipelineBranch
 from elyra.pipeline.component_parameter import PipelineLoop
+from elyra.pipeline.component_parameter import WorkflowEvent
 from elyra.pipeline.component_parameter import WorkflowInitExit
+from elyra.pipeline.component_parameter import WorkflowTrigger
 from elyra.pipeline.runtime_type import RuntimeProcessorType
 
 BLOCKING_TIMEOUT = 0.5
@@ -62,41 +62,25 @@ WORKER_THREAD_WARNING_THRESHOLD = int(os.getenv("ELYRA_WORKER_THREAD_WARNING_THR
 # Define custom type to describe the component cache
 ComponentCacheType = Dict[str, Dict[str, Dict[str, Dict[str, Union[Component, str, List[str]]]]]]
 
+
 def get_oneOf(title: str):
     oneOf = [
         {
             "label": "Enter a value manually",
             "properties": {
-                "value": {
-                    "type": "string",
-                    "default": ""
-                },
-                "widget": {
-                    "type": "string",
-                    "default": "string"
-                }
+                "value": {"type": "string", "default": ""},
+                "widget": {"type": "string", "default": "string"},
             },
-            "uihints":{
-                "widget": {"ui:field": "hidden"}
-            }
+            "uihints": {"widget": {"ui:field": "hidden"}},
         },
         {
             "label": "Select one of the pipeline input parameters",
             "properties": {
-                "value": {
-                    "type": "string",
-                    "enum": [""],
-                    "default": ""
-                },
-                "widget": {
-                    "type": "string",
-                    "default": "enum"
-                }
+                "value": {"type": "string", "enum": [""], "default": ""},
+                "widget": {"type": "string", "default": "enum"},
             },
-            "uihints":{
-                "widget": {"ui:field": "hidden"}
-            }
-        }
+            "uihints": {"widget": {"ui:field": "hidden"}},
+        },
     ]
 
     value = {
@@ -105,6 +89,7 @@ def get_oneOf(title: str):
         "oneOf": oneOf,
     }
     return value
+
 
 class RefreshInProgressError(Exception):
     def __init__(self):
@@ -744,21 +729,35 @@ class ComponentCache(SingletonConfigurable):
                 template = ComponentCache.load_jinja_template("init_exit_properties_template.jinja2")
             else:
                 template = ComponentCache.load_jinja_template("canvas_properties_template.jinja2")
-                
-        if (component.name == "Init"):
+
+        if component.name == "Init":
             template_vars["component_name"] = "init"
-        elif (component.name == "Exit"):
+        elif component.name == "Exit":
             template_vars["component_name"] = "exit"
         template.globals.update(template_vars)
         canvas_properties = template.render(component=component)
         result = json.loads(canvas_properties)
-        if (ComponentCache.get_generic_component(component.id) is not None) or (component.id.startswith("local-file-catalog")):
-            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"]["value"] = get_oneOf("Value")
-            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_annotations"]["items"]["properties"]["value"] = get_oneOf("Value")
-            result["properties"]["component_parameters"]["properties"]["mounted_volumes"]["items"]["properties"]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
-            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"]["key"] = get_oneOf("Secret Key")
-            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"]["name"] = get_oneOf("Secret Name")
-            result["properties"]["component_parameters"]["properties"]["env_vars"]["items"]["properties"]["value"] = get_oneOf("Value")
+        if (ComponentCache.get_generic_component(component.id) is not None) or (
+            component.id.startswith("local-file-catalog")
+        ):
+            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"][
+                "value"
+            ] = get_oneOf("Value")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_pod_annotations"]["items"][
+                "properties"
+            ]["value"] = get_oneOf("Value")
+            result["properties"]["component_parameters"]["properties"]["mounted_volumes"]["items"]["properties"][
+                "pvc_name"
+            ] = get_oneOf("Persistent Volume Claim Name")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"][
+                "key"
+            ] = get_oneOf("Secret Key")
+            result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"][
+                "name"
+            ] = get_oneOf("Secret Name")
+            result["properties"]["component_parameters"]["properties"]["env_vars"]["items"]["properties"][
+                "value"
+            ] = get_oneOf("Value")
         return result
 
 

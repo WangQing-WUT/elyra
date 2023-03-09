@@ -151,7 +151,7 @@ class KfpComponentParser(ComponentParser):
             # If the component definition does not define a container command, log a warning.
             # See https://www.kubeflow.org/docs/components/pipelines/installation/choose-executor/#emissary-executor
             if results.get("implementation", {}).get("container", {}).get("command") is None:
-                if results['name'] in ["Pipeline Branch", "ParallelFor Start", "ParallelFor End"]:
+                if results["name"] in ["Pipeline Branch", "ParallelFor Start", "ParallelFor End"]:
                     pass
                 else:
                     self.log.warning(
@@ -202,7 +202,7 @@ class KfpComponentParser(ComponentParser):
         """
         Takes the type information of a component parameter as parsed from the component
         specification and returns a new type that is one of several standard options.
-        """                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+        """
         data_type_info = super().determine_type_information(parsed_type)
 
         data_type_info.allowed_input_types = []

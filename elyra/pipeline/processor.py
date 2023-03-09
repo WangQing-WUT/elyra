@@ -153,7 +153,7 @@ class PipelineProcessorManager(SingletonConfigurable):
 
     async def get_component(self, runtime, component_id):
         processor = self.get_processor_for_runtime(runtime_name=runtime)
-        
+
         res = await asyncio.get_event_loop().run_in_executor(
             None, functools.partial(processor.get_component, component_id=component_id)
         )
@@ -166,7 +166,7 @@ class PipelineProcessorManager(SingletonConfigurable):
         return res
 
     async def export(self, pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool):
-        processor = self.get_processor_for_runtime("kfp") #pipeline.runtime
+        processor = self.get_processor_for_runtime("kfp")  # pipeline.runtime
 
         res = await asyncio.get_event_loop().run_in_executor(
             None, processor.export, pipeline, pipeline_export_format, pipeline_export_path, overwrite
@@ -517,7 +517,7 @@ class RuntimePipelineProcessor(PipelineProcessor):
         :return: dictionary containing environment name/value pairs
         """
 
-        envs: Dict = {} # operation.env_vars.to_dict()
+        envs: Dict = {}  # operation.env_vars.to_dict()
         envs["ELYRA_RUNTIME_ENV"] = self.name
 
         # set environment variables for Minio/S3 access, in the following order of precedence:
@@ -603,23 +603,33 @@ class RuntimePipelineProcessor(PipelineProcessor):
         """Add DisableNodeCaching info to the execution object for the given runtime processor"""
         pass
 
-    def add_env_var(self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+    def add_env_var(
+        self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+    ) -> None:
         """Add EnvironmentVariable instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_secret(self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+    def add_kubernetes_secret(
+        self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+    ) -> None:
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
         pass
 
-    def add_mounted_volume(self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+    def add_mounted_volume(
+        self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+    ) -> None:
         """Add VolumeMount instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_pod_annotation(self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+    def add_kubernetes_pod_annotation(
+        self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+    ) -> None:
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         pass
 
-    def add_kubernetes_pod_label(self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs) -> None:
+    def add_kubernetes_pod_label(
+        self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+    ) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         pass
 

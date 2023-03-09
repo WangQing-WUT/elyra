@@ -225,7 +225,7 @@ class Component(object):
             "kubernetes_pod_labels",
             "kubernetes_pod_annotations",
             "kubernetes_tolerations",
-            "disable_node_caching"
+            "disable_node_caching",
         ]
         elyra_params = []
         for item in sorted_list:
