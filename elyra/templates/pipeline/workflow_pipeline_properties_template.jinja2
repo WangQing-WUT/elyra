@@ -107,20 +107,22 @@
                 }
               },
               {
-                "label": "Boolean",
+                "label": "Bool",
                 "properties": {
                   "value": {
-                    "type": "boolean",
+                    "type": "string",
                     "title": "Default Value",
+                    "enum": [true, false],
                     "default": false
                   },
                   "widget": {
                     "type": "string",
-                    "default": "Boolean"
+                    "default": "Bool"
                   }
                 },
                 "uihints":{
-                  "widget": {"ui:field": "hidden"}
+                  "widget": {"ui:field": "hidden"},
+                  "value": {"ui:hideError": true}
                 }
               }
             ]

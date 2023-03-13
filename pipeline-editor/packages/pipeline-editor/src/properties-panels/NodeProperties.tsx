@@ -220,8 +220,8 @@ function NodeProperties({
       const prevLen = oneOfValuesNoOpt.length;
 
       if (upstreamNode.op.indexOf("loop_start") != -1) {
-        const loop_args =
-          upstreamNode.app_data.component_parameters?.parallefor?.loop_args;
+        const loop_args = upstreamNode.app_data.component_parameters?.loop_args;
+        loopArgs.push(`${upstreamNode.app_data?.ui_data?.label.trim()}: item`);
         if (loop_args?.widget == "List[Dict[str, any]]") {
           if (loop_args?.value?.[0]) {
             for (let item of loop_args.value[0]) {
@@ -234,10 +234,6 @@ function NodeProperties({
               }
             }
           }
-        } else {
-          loopArgs.push(
-            `${upstreamNode.app_data?.ui_data?.label.trim()}: item`
-          );
         }
       }
 

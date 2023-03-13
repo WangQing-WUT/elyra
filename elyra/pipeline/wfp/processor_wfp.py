@@ -683,6 +683,18 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         response = ValidationResponse(runtime="WORKFLOW")
         name = {}
         workflow_input_parameters = []
+        validate = {
+            "model_event": self._validate_model_event,
+            "s3_event": self._validate_s3_event,
+            "calendar_event": self._validate_calendar_event,
+            "dataset_event": self._validate_dataset_event,
+            "model_monitor_event": self._validate_model_monitor_event,
+            "pipeline_trigger": self._validate_pipeline_trigger,
+            "k8s_object_trigger": self._validate_k8s_object_trigger,
+            "http_trigger": self._validate_http_trigger,
+            "init": self._validate_init,
+            "exit": self._validate_exit,
+        }
         for index, parameter in enumerate(input_parameters):
             if ("name" not in parameter) or (parameter["name"].strip() == ""):
                 response.add_message(
@@ -696,26 +708,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 workflow_input_parameters.append("workflow.parameters." + parameter["name"].strip())
         for node in nodes:
             node_type = node["op"].split(":")[0]
-            if node_type == "model_event":
-                self._validate_model_event(node, workflow_input_parameters, name, response)
-            elif node_type == "s3_event":
-                self._validate_s3_event(node, workflow_input_parameters, name, response)
-            elif node_type == "calendar_event":
-                self._validate_calendar_event(node, workflow_input_parameters, name, response)
-            elif node_type == "dataset_event":
-                self._validate_dataset_event(node, workflow_input_parameters, name, response)
-            elif node_type == "model_monitor_event":
-                self._validate_model_monitor_event(node, workflow_input_parameters, name, response)
-            elif node_type == "pipeline_trigger":
-                self._validate_pipeline_trigger(node, workflow_input_parameters, name, response)
-            elif node_type == "k8s_object_trigger":
-                self._validate_k8s_object_trigger(node, workflow_input_parameters, name, response)
-            elif node_type == "http_trigger":
-                self._validate_http_trigger(node, workflow_input_parameters, name, response)
-            elif node_type == "init":
-                self._validate_init(node, workflow_input_parameters, name, response)
-            elif node_type == "exit":
-                self._validate_exit(node, workflow_input_parameters, name, response)
+            validate_func = validate[node_type]
+            validate_func(node, workflow_input_parameters, name, response)
         return response
 
     def _validate_s3_event(self, node, workflow_input_parameters, name, response):
@@ -1155,7 +1149,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        if property["value"]["value"].strip() == "":
+        if str(property["value"]["value"]).strip() == "":
             data["propertyName"] = "Value of " + propertyName
             response.add_message(
                 severity=ValidationSeverity.Error,
