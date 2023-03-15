@@ -255,22 +255,23 @@ class MetadataManager(LoggingConfigurable):
         args = []
         if "args" in implementation:
             args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
-            temp_args = []
-            for item in args:
-                if type(item) is dict:
-                    temp_item = {}
-                    for para in item:
-                        if item[para] is None:
-                            if para in parameters_placeholder:
-                                temp_item[parameters_placeholder[para]] = para
+            if args:
+                temp_args = []
+                for item in args:
+                    if type(item) is dict:
+                        temp_item = {}
+                        for para in item:
+                            if item[para] is None:
+                                if para in parameters_placeholder:
+                                    temp_item[parameters_placeholder[para]] = para
+                                else:
+                                    raise Exception("Command parameter {" + para + "} is not defined.")
                             else:
-                                raise Exception("Command parameter {" + para + "} is not defined.")
-                        else:
-                            temp_item = item
-                    temp_args.append(temp_item)
-                elif type(item) is str:
-                    temp_args.append(item)
-            component_yaml["implementation"]["container"]["args"] = temp_args
+                                temp_item = item
+                        temp_args.append(temp_item)
+                    elif type(item) is str:
+                        temp_args.append(item)
+                component_yaml["implementation"]["container"]["args"] = temp_args
         return component_yaml
 
     def save_component(self, component_metadata, path):

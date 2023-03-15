@@ -35,11 +35,14 @@
           "maxItems": 1,
           "minItems": 1,
           "items": {
-            "type": "string",
-            "maxLength": 18
+            "type": "string"
           },
+          "default": [""],
           "uihints": {
-            "category": "Component Categories"
+            "category": "Component Categories",
+            "ui:options": {
+              "removable": false
+            }
           }
         },
         "description": {
@@ -83,7 +86,7 @@
           }
         }
       },
-      "required": ["runtime_type", "paths"]
+      "required": ["categories", "runtime_type", "paths"]
     }
   },
   "required": ["schema_name", "display_name", "metadata"]

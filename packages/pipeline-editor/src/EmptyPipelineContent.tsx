@@ -139,7 +139,7 @@ export const EmptyWorkflowCanvas: React.FC<any> = () => {
         height="120px"
       />
       <h3 className={HEADER_CLASS}>
-        Start your new worflow by dragging component from the left palette.
+        Start your new workflow by dragging component from the left palette.
       </h3>
     </div>
   );

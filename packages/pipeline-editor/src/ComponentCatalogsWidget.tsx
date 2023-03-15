@@ -256,7 +256,16 @@ export class ComponentCatalogsWidget extends MetadataWidget {
   }
 
   renderDisplay(metadata: IMetadata[]): React.ReactElement {
-    if (Array.isArray(metadata) && !metadata.length) {
+    let filter_metadata = [];
+    let hide_metadata = ['Actions', 'Events', 'Global', 'Logic'];
+    for (let item in metadata) {
+      if (hide_metadata.includes(metadata[item].display_name)) {
+        continue;
+      } else {
+        filter_metadata.push(metadata[item]);
+      }
+    }
+    if (Array.isArray(metadata) && !filter_metadata.length) {
       // Empty metadata
       return (
         <div>
@@ -266,15 +275,6 @@ export class ComponentCatalogsWidget extends MetadataWidget {
           </h6>
         </div>
       );
-    }
-    let filter_metadata = [];
-    let hide_metadata = ['Actions', 'Events', 'Global', 'Logic'];
-    for (let item in metadata) {
-      if (hide_metadata.includes(metadata[item].display_name)) {
-        continue;
-      } else {
-        filter_metadata.push(metadata[item]);
-      }
     }
     return (
       <ComponentCatalogsDisplay

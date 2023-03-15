@@ -46,18 +46,6 @@ interface Props {
   onPropertiesUpdateRequested?: (options: any) => any;
 }
 
-let timer: any = null;
-function debounce(fn: (...arg: any[]) => any, duration: number = 300) {
-  return function(this: any, ...args: any[]) {
-    if (timer != null) {
-      clearTimeout(timer);
-    }
-    timer = window.setTimeout(() => {
-      fn.apply(this, args);
-    }, duration);
-  };
-}
-
 export function PropertiesPanel({
   data,
   schema,
@@ -117,6 +105,7 @@ export function PropertiesPanel({
       return schema;
     }
   };
+  let flag = 0;
   let formData: any;
   return (
     <Form
@@ -124,30 +113,36 @@ export function PropertiesPanel({
       uiSchema={uiSchema}
       schema={selectPipelineParameters()}
       onChange={e => {
-        let func = debounce(() => {
-          const newFormData = e.formData;
-          const params = schema.properties?.component_parameters?.properties;
-          for (const field in params) {
-            if (params[field].oneOf) {
-              for (const option of params[field].oneOf) {
-                if (option.widget?.const !== undefined) {
-                  newFormData.component_parameters[field].widget =
-                    option.widget.const;
-                }
+        const newFormData = e.formData;
+        const params = schema.properties?.component_parameters?.properties;
+        for (const field in params) {
+          if (params[field].oneOf) {
+            for (const option of params[field].oneOf) {
+              if (option.widget?.const !== undefined) {
+                newFormData.component_parameters[field].widget =
+                  option.widget.const;
               }
             }
           }
-          formData = e.formData;
-          onChange?.(formData);
-        }, 500);
-        func();
+        }
+
+        formData = e.formData;
+        if (flag === 1) {
+          onChange?.(e.formData);
+          flag = 0;
+        }
+      }}
+      onBlur={() => {
+        onChange?.(formData);
       }}
       formContext={{
         onFileRequested: async (args: any) => {
-          return await onFileRequested?.({
+          let filename = await onFileRequested?.({
             ...args,
             filename: undefined
           });
+          flag = 1;
+          return filename;
         },
         onPropertiesUpdateRequested: async (args: any) => {
           const newData = await onPropertiesUpdateRequested?.(args);

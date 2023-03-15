@@ -192,7 +192,8 @@
             "pattern": "^[^ \t]+([ \t]+[^ \t]+)*$"
           },
           "uihints": {
-            "ui:field": "tags"
+            "ui:field": "tags",
+            "hidden": true
           }
         }
       },

@@ -1139,6 +1139,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         special_node_links = {}
         special_node_subnodes = {}
         is_sorted = []
+         
+        print("link_ref")
+        print(link_ref)
 
         self._filter_component_node(
             pipeline.operations, link_ref, outermost_node_ids, special_node_links, special_node_subnodes, is_sorted
@@ -1159,20 +1162,20 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             sorted_node_operations = self._sorted_opreation_list(special_node_subnodes[node_id], pipeline)
             sorted_special_node_subnodes[node_id] = sorted_node_operations
 
-        # sorted_outermost_node_ids = []
-        # sorted_special_node_links = {}
-        # for sorted_outermost_node_operation in sorted_outermost_node_operations:
-        #     sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
-        # for node_id in sorted_special_node_subnodes:
-        #     temp_node_id = []
-        #     for operation in sorted_special_node_subnodes[node_id]:
-        #         temp_node_id.append(operation.name)
-        #     sorted_special_node_links[node_id] = temp_node_id
+        sorted_outermost_node_ids = []
+        sorted_special_node_links = {}
+        for sorted_outermost_node_operation in sorted_outermost_node_operations:
+            sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
+        for node_id in sorted_special_node_subnodes:
+            temp_node_id = []
+            for operation in sorted_special_node_subnodes[node_id]:
+                temp_node_id.append(operation.name)
+            sorted_special_node_links[node_id] = temp_node_id
 
-        # print("==============")
-        # print(sorted_special_node_links)
-        # print(sorted_outermost_node_ids)
-        # return target_ops
+        print("==============")
+        print(sorted_special_node_links)
+        print(sorted_outermost_node_ids)
+        return target_ops
 
         # All previous operation outputs should be propagated throughout the pipeline.
         # In order to process this recursively, the current operation's inputs should be combined
