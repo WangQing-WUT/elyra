@@ -61,8 +61,22 @@ export function getLinkProblems(pipeline: any) {
 }
 
 // TODO: Update this to validate the new schema format
-function getPropertyValidationErrors(prop: any, value: any): any[] {
+function getPropertyValidationErrors(prop: any, value: any): [any[], string] {
   let errorMessages: any[] = [];
+  let propName = "";
+  switch (prop.title) {
+    case "Calendar Event Filters":
+      if (value.value.widget === "string") {
+        const trimmedString = (value.value.value ?? "").trim();
+        if (trimmedString === "") {
+          break;
+        }
+        propName = value.name;
+        const stringValidators = getStringValidators(prop.uihints[propName]);
+        errorMessages = getErrorMessages(trimmedString, stringValidators);
+      }
+  }
+
   switch (prop.custom_control_id) {
     case "EnumControl":
       const enumValidators = getEnumValidators(prop.data);
@@ -95,7 +109,7 @@ function getPropertyValidationErrors(prop: any, value: any): any[] {
       errorMessages = getErrorMessages(trimmedString, stringValidators);
       break;
   }
-  return errorMessages;
+  return [errorMessages, propName];
 }
 
 export function getPipelineProblems(pipeline: any, pipelineProperties: any) {
@@ -132,7 +146,7 @@ export function getPipelineProblems(pipeline: any, pipelineProperties: any) {
       });
     }
 
-    let errorMessages = getPropertyValidationErrors(prop, value);
+    let [errorMessages, propName] = getPropertyValidationErrors(prop, value);
 
     if (errorMessages[0] !== undefined) {
       problems.push({
@@ -155,6 +169,8 @@ export function getPipelineProblems(pipeline: any, pipelineProperties: any) {
 export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
   const nodes = getNodes(pipeline);
   let problems: PartialProblem[] = [];
+  let init = 0;
+  let exit = 0;
   for (const [n, node] of nodes.entries()) {
     if (node.type !== "execution_node") {
       continue;
@@ -178,13 +194,48 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
     const nodeLabel = node.app_data?.label;
     const nodeOp = node.op;
     let path = ["nodes", n, "app_data"];
+
+    if (nodeOp.indexOf("init") != -1) {
+      if (init === 0) {
+        init++;
+      } else {
+        problems.push({
+          message: `Canvas can only contain one Init component.`,
+          path,
+          info: {
+            type: "invalidComponent",
+            pipelineID: pipeline.id,
+            nodeID: node.id,
+            message: "Canvas can only contain one Init component"
+          }
+        });
+      }
+    }
+
+    if (nodeOp.indexOf("exit") != -1) {
+      if (exit === 0) {
+        exit++;
+      } else {
+        problems.push({
+          message: `Canvas can only contain one Exit component.`,
+          path,
+          info: {
+            type: "invalidComponent",
+            pipelineID: pipeline.id,
+            nodeID: node.id,
+            message: "Canvas can only contain one Exit component"
+          }
+        });
+      }
+    }
+
     if (
-      nodeOp.search("execute") == -1 &&
-      nodeOp.search("catalog") == -1 &&
-      nodeOp.search("loop") == -1 &&
-      nodeOp.search("branch") == -1 &&
-      nodeOp.search("init") == -1 &&
-      nodeOp.search("exit") == -1
+      nodeOp.indexOf("execute") == -1 &&
+      nodeOp.indexOf("catalog") == -1 &&
+      nodeOp.indexOf("loop") == -1 &&
+      nodeOp.indexOf("branch") == -1 &&
+      nodeOp.indexOf("init") == -1 &&
+      nodeOp.indexOf("exit") == -1
     ) {
       if (!nodeLabel) {
         problems.push({
@@ -214,7 +265,7 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
           });
         }
       }
-    } else if (nodeOp.search("branch") != -1 && nodeLabel) {
+    } else if (nodeOp.indexOf("branch") != -1 && nodeLabel) {
       const rExp: RegExp = /^[a-z][a-z0-9-]*[a-z0-9]$/;
       if (!rExp.test(nodeLabel)) {
         problems.push({
@@ -253,8 +304,15 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
       );
       const component_parameters =
         nodeDef.app_data.properties?.properties?.component_parameters ?? {};
+
       if (component_parameters.required?.includes(fieldName)) {
-        if (!value || (value?.widget && (!value.value || value.value === ""))) {
+        if (
+          !value ||
+          (Array.prototype.isPrototypeOf(value) && value.length === 0) ||
+          (value?.widget && (!value.value || value.value === "")) ||
+          (value?.value?.widget &&
+            (!value.value.value || value.value.value === ""))
+        ) {
           problems.push({
             message: `The property '${prop.title}' on node '${node.app_data.ui_data.label}' is required.`,
             path,
@@ -268,7 +326,7 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
         }
       }
 
-      let errorMessages = getPropertyValidationErrors(prop, value);
+      let [errorMessages, propName] = getPropertyValidationErrors(prop, value);
 
       if (errorMessages[0] !== undefined) {
         problems.push({
@@ -279,7 +337,7 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
             pipelineID: pipeline.id,
             nodeID: node.id,
             // do not strip elyra here, we need to differentiate between component_parameters still.
-            property: prop.parameter_ref,
+            property: prop.parameter_ref ? prop.parameter_ref : propName,
             message: errorMessages[0]
           }
         });
@@ -318,7 +376,6 @@ export function validate(
           p,
           ...path
         ]);
-
         return {
           ...rest,
           severity: 1 as 1 | 2 | 3 | 4 | undefined,

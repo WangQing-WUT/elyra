@@ -651,7 +651,6 @@ const PipelineEditor = forwardRef(
             ...e,
             onPropertiesUpdateRequested
           });
-
           // cancel the edit until we finalize properties.
           return null;
         }

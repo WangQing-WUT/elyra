@@ -351,13 +351,13 @@ const PipelineWrapper: React.FC<IProps> = ({
     };
 
     // Remove all null values from the pipeline
-    for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
-      removeNullValues(node.app_data ?? {});
-    }
-    removeNullValues(
-      pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
-        {}
-    );
+    // for (const node of pipelineJson?.pipelines?.[0]?.nodes ?? []) {
+    //   removeNullValues(node.app_data ?? {});
+    // }
+    // removeNullValues(
+    //   pipelineJson?.pipelines?.[0]?.app_data?.properties?.pipeline_defaults ??
+    //     {}
+    // );
     if (contextRef.current.isReady) {
       contextRef.current.model.fromString(
         JSON.stringify(pipelineJson, null, 2)

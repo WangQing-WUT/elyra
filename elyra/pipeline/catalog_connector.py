@@ -133,7 +133,7 @@ class CatalogEntry(object):
             if not self.entry_reference.get(key):
                 # Catalog entry does not have key - build hash without it
                 continue
-            hash_str = hash_str + str(self.entry_reference[key]) + ":"
+            hash_str = hash_str + Path(str(self.entry_reference[key])).stem + ":"
         hash_str = hash_str[:-1]
 
         # Use only the first 12 characters of the resulting hash

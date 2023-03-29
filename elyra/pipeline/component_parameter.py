@@ -129,6 +129,8 @@ class ElyraProperty:
             properties[attr] = {"type": attr_type, "title": attr_title, "default": attr_default}
             if cls._ui_details_map[attr].get("placeholder"):
                 uihints[attr] = {"ui:placeholder": cls._ui_details_map[attr].get("placeholder")}
+            if cls._ui_details_map[attr].get("pattern"):
+                properties[attr]["pattern"] = cls._ui_details_map[attr].get("pattern")
 
             if ui_info.get("required"):
                 required_list.append(attr)
@@ -263,6 +265,7 @@ class EnvironmentVariable(ElyraPropertyListItem):
             "placeholder": "ENV_VAR",
             "json_type": "string",
             "required": True,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
         },
         "value": {"display_name": "Value", "placeholder": "value", "json_type": "string", "required": False},
     }
@@ -338,6 +341,7 @@ class KubernetesSecret(ElyraPropertyListItem):
             "placeholder": "ENV_VAR",
             "json_type": "string",
             "required": True,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
         },
         "name": {"display_name": "Secret Name", "placeholder": "secret-name", "json_type": "string", "required": True},
         "key": {"display_name": "Secret Key", "placeholder": "secret-key", "json_type": "string", "required": True},
@@ -817,7 +821,7 @@ class ComponentParameter(object):
         self._description = description
 
         if not allowed_input_types:
-            allowed_input_types = ["inputvalue", "inputpath", "file", "enum", "loop_args"]
+            allowed_input_types = ["inputvalue", "inputpath", "file", "enum"]
         self._allowed_input_types = allowed_input_types
 
         self._items = items or []
@@ -933,12 +937,6 @@ class ComponentParameter(object):
                     obj["properties"]["value"]["type"] = "string"
                     obj["properties"]["value"]["enum"] = []
 
-                elif widget_type == "loop_args":
-                    obj["title"] = InputTypeDescriptionMap["loop_args"].value
-                    obj["properties"]["widget"]["default"] = "loop_args"
-                    obj["properties"]["value"]["type"] = "string"
-                    obj["properties"]["value"]["enum"] = []
-
                 else:  # inputpath or file types
                     obj["title"] = InputTypeDescriptionMap[widget_type].value
                     obj["properties"]["widget"]["default"] = widget_type
@@ -969,7 +967,6 @@ class InputTypeDescriptionMap(Enum):
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
     enum = "Please select one from pipeline input parameters"
-    loop_args = "Please select one from loop args"
     outputpath = None  # outputs are read-only and don't require a description
 
 

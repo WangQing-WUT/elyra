@@ -5,7 +5,7 @@
 			"title": "Name",
 			"description": "A custom name for the node.",
 			"type": "string",
-			"pattern": "^[0-9]*$"
+			"pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
 		},
 		"component_parameters": {
 			"type": "object",
@@ -640,29 +640,13 @@
 										"description": "Calendar interval, such as 30s, 60m, 24h, etc.",
 										"oneOf":[
 											{
-												"label": " ",
-												"properties": {
-													"value": {
-														"type": "string",
-														"default": ""
-													},
-													"widget": {
-														"type": "string",
-														"default": ""
-													}
-												},
-												"uihints":{
-													"widget": {"ui:field": "hidden"},
-													"value": {"ui:field": "hidden"}
-												}
-											},
-											{
 												"label": "Enter a value manually",
 												"properties": {
 													"value": {
 														"type": "string",
-														"default": ""
-														},
+														"default": "",
+														"pattern": "^[1-9]\\d*[hms]$"
+													},
 													"widget": {
 														"type": "string",
 														"default": "string"
@@ -706,32 +690,16 @@
 								"properties": {
 									"value": {
 										"title": "Schedule",
-										"description": "You can visit the website cronmaker.com to generate cron expressions online.",
+										"description": "You can visit the website crontab.guru to generate cron expressions online.",
 										"oneOf":[
-											{
-												"label": " ",
-												"properties": {
-													"value": {
-														"type": "string",
-														"default": ""
-													},
-													"widget": {
-														"type": "string",
-														"default": ""
-													}
-												},
-												"uihints":{
-													"widget": {"ui:field": "hidden"},
-													"value": {"ui:field": "hidden"}
-												}
-											},
 											{
 												"label": "Enter a value manually",
 												"properties": {
 													"value": {
 														"type": "string",
-														"default": ""
-														},
+														"default": "",
+														"pattern": "^[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+$"
+													},
 													"widget": {
 														"type": "string",
 														"default": "string"
@@ -778,29 +746,13 @@
 										"description": "Calendar once, such as 30s, 60m, 24h, etc.",
 										"oneOf":[
 											{
-												"label": " ",
-												"properties": {
-													"value": {
-														"type": "string",
-														"default": ""
-													},
-													"widget": {
-														"type": "string",
-														"default": ""
-													}
-												},
-												"uihints":{
-													"widget": {"ui:field": "hidden"},
-													"value": {"ui:field": "hidden"}
-												}
-											},
-											{
 												"label": "Enter a value manually",
 												"properties": {
 													"value": {
 														"type": "string",
-														"default": ""
-														},
+														"default": "",
+														"pattern": "^[1-9]\\d*[hms]$"
+													},
 													"widget": {
 														"type": "string",
 														"default": "string"
@@ -833,6 +785,17 @@
 							}
 						}
 					],
+					"uihints": {
+						"interval": {
+							"pattern": "^[1-9]\\d*[hms]$"
+						},
+						"once": {
+							"pattern": "^[1-9]\\d*[hms]$"
+						},
+						"schedule": {
+							"pattern": "^[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+\\s+[0-9/*,-]+$"
+						}
+					},
 					"required": ["value"]
 				}
 				{% endif %}

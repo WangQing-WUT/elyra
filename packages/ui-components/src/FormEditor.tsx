@@ -83,18 +83,26 @@ const ArrayTemplate: React.FC<ArrayFieldTemplateProps> = props => {
   return (
     <div className={props.className}>
       {props.items.map(item => {
-        return (
-          <div key={item.key} className={item.className}>
-            {item.children}
-            <button
-              className="jp-mod-styled jp-mod-warn"
-              onClick={item.onDropIndexClick(item.index)}
-              disabled={!item.hasRemove}
-            >
-              {props.formContext.trans.__('Remove')}
-            </button>
-          </div>
-        );
+        if (item.hasRemove) {
+          return (
+            <div key={item.key} className={item.className}>
+              {item.children}
+              <button
+                className="jp-mod-styled jp-mod-warn"
+                onClick={item.onDropIndexClick(item.index)}
+                disabled={!item.hasRemove}
+              >
+                {props.formContext.trans.__('Remove')}
+              </button>
+            </div>
+          );
+        } else {
+          return (
+            <div key={item.key} className={item.className}>
+              {item.children}
+            </div>
+          );
+        }
       })}
       {props.canAdd && (
         <button

@@ -489,6 +489,7 @@ class PipelineValidationManager(SingletonConfigurable):
         :param pipeline_runtime: the pipeline runtime selected
         :return:
         """
+        node_label = node.label
         parsed_parameters = []
         component_property_dict = {}
         if node.op.startswith("branch"):
@@ -498,6 +499,18 @@ class PipelineValidationManager(SingletonConfigurable):
         elif node.op.startswith("loop"):
             return
         else:
+            if pipeline_runtime != "local":
+                for resource_name in ["cpu", "npu310", "npu910", "gpu", "memory"]:
+                    resource_value = node.get_component_parameter(resource_name)
+                    if resource_value:
+                        self._validate_resource_value(
+                            node.id,
+                            node_label,
+                            resource_name=resource_name,
+                            resource_value=resource_value,
+                            response=response,
+                        )
+            self._validate_label(node_id=node.id, node_label=node_label, response=response)
             # Full dict of properties for the operation e.g. current params, optionals etc
             component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
             current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
@@ -669,11 +682,24 @@ class PipelineValidationManager(SingletonConfigurable):
         :param response: ValidationResponse containing the issue list to be updated
         """
         try:
-            if int(resource_value) <= 0:
+            if resource_name == "memory":
+                if int(resource_value) <= 0:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="Property must be greater than zero.",
+                        data={
+                            "nodeID": node_id,
+                            "nodeName": node_label,
+                            "propertyName": resource_name,
+                            "value": resource_value,
+                        },
+                    )
+            elif not isinstance(resource_value, int) or int(resource_value) <= 0 or int(resource_value) >= 100:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
-                    message="Property must be greater than zero.",
+                    message="Property must be integer and greater than zero but less than 100.",
                     data={
                         "nodeID": node_id,
                         "nodeName": node_label,

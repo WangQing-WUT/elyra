@@ -65,7 +65,6 @@ export const CustomFieldTemplate: React.FC<FieldTemplateProps> = props => {
       )}
       {children}
       {props.errors}
-      {requiredError && <li className="text-danger">is a required property</li>}
     </div>
   );
 };

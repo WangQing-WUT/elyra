@@ -269,7 +269,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "condition": condition,
                     "url": node["app_data"]["component_parameters"]["url"],
                     "method": node["app_data"]["component_parameters"]["method"],
-                    "timeout": str(node["app_data"]["component_parameters"]["timeout"]) + "s",
+                    "timeout": node["app_data"]["component_parameters"]["timeout"],
                     "payload": parameters,
                 }
             elif node_type == "init":

@@ -36,7 +36,7 @@
               "properties": {
                 "value": {
                   "type": "string",
-                  "default": ""
+                  "default": "[]"
                 },
                 "widget": {
                     "type": "string",
@@ -53,7 +53,7 @@
               "properties": {
                 "value": {
                   "type": "string",
-                  "default": ""
+                  "default": "[]"
                 },
                 "widget": {
                   "type": "string",
@@ -87,7 +87,7 @@
                         }
                       }
                     },
-                    "default": []
+                    "default": [{"key": "", "value": ""}]
                   },
                   "default": []
                 },
@@ -97,7 +97,15 @@
                 }
               },
               "uihints":{
-                "widget": {"ui:field": "hidden"}
+                "widget": {"ui:field": "hidden"},
+                "value": {
+                  "items": {
+                    "items": {
+                      "key": {"ui:placeholder": "key"},
+                      "value": {"ui:placeholder": "value"}
+                    }
+                  }
+                }
               }
             },
             {

@@ -9,11 +9,10 @@
     "component_parameters": {
       "type": "object",
       "properties": {
-        {% if component.input_properties|length > 0 %}
-        "inputs_header": {
+        "resources_header": {
           "type": "null",
-          "title": "Inputs",
-          "description": "Input properties for this component.",
+          "title": "Resources",
+          "description": "Resources for this component.",
           "uihints": {
             "ui:field": "header"
           }
@@ -57,15 +56,26 @@
 						"properties": {
               "key": {
                 "type": "string",
-                "title": "label key"
+                "title": "label key",
+                "default": ""
               },
               "value": {
                 "type": "string",
-                "title": "label value"
+                "title": "label value",
+                "default": ""
               }
             }
           },
           "maxItems": "1"
+        },
+        {% if component.input_properties|length > 0 %}
+        "inputs_header": {
+          "type": "null",
+          "title": "Inputs",
+          "description": "Input properties for this component.",
+          "uihints": {
+            "ui:field": "header"
+          }
         },
         {% for property in component.input_properties %}
         "{{ property.ref }}": {{ render_parameter_details(property) }},

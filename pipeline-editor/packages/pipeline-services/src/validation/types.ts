@@ -50,6 +50,13 @@ export interface MissingComponentInfo {
   op: string;
 }
 
+export interface InvalidComponent {
+  type: "invalidComponent";
+  pipelineID: string;
+  nodeID: string;
+  message: string;
+}
+
 export interface Problem {
   severity: 1 | 2 | 3 | 4 | undefined;
   range: {
@@ -61,7 +68,8 @@ export interface Problem {
     | CircularReferenceInfo
     | MissingPropertyInfo
     | InvalidPropertyInfo
-    | MissingComponentInfo;
+    | MissingComponentInfo
+    | InvalidComponent;
 }
 
 export interface PartialProblem {
@@ -71,7 +79,8 @@ export interface PartialProblem {
     | CircularReferenceInfo
     | MissingPropertyInfo
     | InvalidPropertyInfo
-    | MissingComponentInfo;
+    | MissingComponentInfo
+    | InvalidComponent;
 }
 
 export interface NestedEnumData {

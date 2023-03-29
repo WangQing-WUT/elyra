@@ -76,9 +76,8 @@ from elyra.pipeline.runtime_type import RuntimeProcessorType
 from elyra.util.cos import join_paths
 from elyra.util.path import get_absolute_path
 
-
-def str_to_bool(str):
-    return True if str.lower() == "true" else False
+loop_stack = []
+global_loop_args = {}
 
 
 class KfpPipelineProcessor(RuntimePipelineProcessor):
@@ -253,16 +252,27 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 # the pipelines' dependencies, if applicable
                 pipeline_instance_id = f"{pipeline_name}-{timestamp}"
 
-                pipeline_function = lambda: self._cc_pipeline(  # nopep8 E731
-                    pipeline,
-                    pipeline_name=pipeline_name,
-                    pipeline_version=pipeline_version_name,
-                    experiment_name=experiment_name,
-                    pipeline_instance_id=pipeline_instance_id,
-                )
+                def gen_function(args):
+                    def new_function(*args, **kwargs):
+                        self._cc_pipeline(pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id, args=args)
+
+                    params = [
+                        inspect.Parameter(
+                            param, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=type(value), default=value
+                        )
+                        for param, value in args.items()
+                    ]
+                    new_function.__signature__ = inspect.Signature(params)
+                    new_function.__annotations__ = args
+                    name = Path(str(pipeline_name)).stem
+                    new_function.__name__ = name
+                    return new_function
 
                 # collect pipeline configuration information
                 pipeline_conf = self._generate_pipeline_conf(pipeline)
+
+                input_parameters = self._get_pipeline_input_parameters(pipeline)
+                pipeline_function = gen_function(input_parameters)
 
                 # compile the pipeline
                 if engine == "Tekton":
@@ -448,23 +458,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 new_function.__name__ = name
                 return new_function
 
-            input_parameters = {}
-            if "input_parameters" in pipeline.pipeline_parameters:
-                for item in pipeline.pipeline_parameters["input_parameters"]:
-                    if "value" in item["type"]:
-                        temp_value = item["type"]["value"]
-                        if item["type"]["widget"] == "Float":
-                            temp_value = float(temp_value)
-                        elif item["type"]["widget"] == "Integer":
-                            temp_value = int(temp_value)
-                        input_parameters[item["name"]] = temp_value
-                    else:
-                        if item["type"]["widget"] == "String":
-                            input_parameters[item["name"]] = ""
-                        elif item["type"]["widget"] == "Float":
-                            input_parameters[item["name"]] = 0.0
-                        else:
-                            input_parameters[item["name"]] = 0
+            input_parameters = self._get_pipeline_input_parameters(pipeline)
 
             pipeline_function = gen_function(input_parameters)
             # pipeline_function = lambda: self._cc_pipeline(
@@ -530,28 +524,75 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         self,
         pipeline_operations: dict,
         link_dict: dict,
+        outermost_node_ids: list,
         special_node_links: dict,
+        special_node_sublinks: dict,
         special_node_subnodes: dict,
         subnodes: list,
         is_sorted: list,
     ):
+        global loop_stack
         for node_id in link_dict:
             if pipeline_operations[node_id].classifier.startswith("branch"):
                 special_node_subnodes[node_id] = []
-                special_node_links[node_id] = {}
+                special_node_sublinks[node_id] = {}
                 self._filter_special_node(
                     pipeline_operations,
                     link_dict[node_id],
-                    special_node_links[node_id],
+                    outermost_node_ids,
+                    special_node_links,
+                    special_node_sublinks[node_id],
                     special_node_subnodes,
                     special_node_subnodes[node_id],
                     is_sorted,
                 )
+            elif pipeline_operations[node_id].classifier.startswith("loop_start"):
+                special_node_subnodes[node_id] = []
+                special_node_sublinks[node_id] = {}
+                loop_stack.append([node_id, special_node_sublinks[node_id], special_node_subnodes[node_id]])
+                self._filter_special_node(
+                    pipeline_operations,
+                    link_dict[node_id],
+                    outermost_node_ids,
+                    special_node_links,
+                    special_node_sublinks[node_id],
+                    special_node_subnodes,
+                    special_node_subnodes[node_id],
+                    is_sorted,
+                )
+            elif pipeline_operations[node_id].classifier.startswith("loop_end"):
+                if node_id not in is_sorted:
+                    for id in link_dict[node_id]:
+                        pipeline_operations[id].parent_operation_ids.append(loop_stack[-1][0])
+                    if len(loop_stack) == 1:
+                        loop_stack = []
+                        self._filter_component_node(
+                            pipeline_operations,
+                            link_dict[node_id],
+                            outermost_node_ids,
+                            special_node_links,
+                            special_node_subnodes,
+                            is_sorted,
+                        )
+                    else:
+                        loop_stack.pop()
+                        self._filter_special_node(
+                            pipeline_operations,
+                            link_dict[node_id],
+                            outermost_node_ids,
+                            special_node_links,
+                            loop_stack[-1][1],
+                            special_node_subnodes,
+                            loop_stack[-1][2],
+                            is_sorted,
+                        )
             else:
                 self._filter_special_node(
                     pipeline_operations,
                     link_dict[node_id],
+                    outermost_node_ids,
                     special_node_links,
+                    special_node_sublinks,
                     special_node_subnodes,
                     subnodes,
                     is_sorted,
@@ -570,6 +611,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         special_node_subnodes: dict,
         is_sorted: list,
     ):
+        global loop_stack
         for node_id in link_dict:
             if node_id not in is_sorted:
                 if pipeline_operations[node_id].classifier.startswith("branch"):
@@ -579,6 +621,23 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     self._filter_special_node(
                         pipeline_operations,
                         link_dict[node_id],
+                        outermost_node_ids,
+                        special_node_links,
+                        special_node_links[node_id],
+                        special_node_subnodes,
+                        special_node_subnodes[node_id],
+                        is_sorted,
+                    )
+                elif pipeline_operations[node_id].classifier.startswith("loop_start"):
+                    special_node_subnodes[node_id] = []
+                    special_node_links[node_id] = {}
+                    outermost_node_ids.append(node_id)
+                    loop_stack.append([node_id, special_node_links[node_id], special_node_subnodes[node_id]])
+                    self._filter_special_node(
+                        pipeline_operations,
+                        link_dict[node_id],
+                        outermost_node_ids,
+                        special_node_links,
                         special_node_links[node_id],
                         special_node_subnodes,
                         special_node_subnodes[node_id],
@@ -594,10 +653,31 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                         special_node_subnodes,
                         is_sorted,
                     )
-
                 is_sorted.append(node_id)
             else:
                 continue
+
+    def _get_pipeline_input_parameters(self, pipeline):
+        input_parameters = {}
+        if "input_parameters" in pipeline.pipeline_parameters:
+            for item in pipeline.pipeline_parameters["input_parameters"]:
+                if "value" in item["type"]:
+                    temp_value = item["type"]["value"]
+                    if item["type"]["widget"] == "Float":
+                        temp_value = float(temp_value)
+                    elif item["type"]["widget"] == "Integer":
+                        temp_value = int(temp_value)
+                    elif item["type"]["widget"] == "List":
+                        temp_value = self._process_list_value(temp_value)
+                    input_parameters[item["name"]] = temp_value
+                else:
+                    if item["type"]["widget"] == "String":
+                        input_parameters[item["name"]] = ""
+                    elif item["type"]["widget"] == "Float":
+                        input_parameters[item["name"]] = 0.0
+                    else:
+                        input_parameters[item["name"]] = 0
+        return input_parameters
 
     def _filter_duplicate_nodes(self, special_node_links: dict, special_node_subnodes: dict, is_sorted: list):
         for node in special_node_links:
@@ -625,6 +705,38 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             sorted_node_operations.remove(temp_operation)
         sorted_node_operations += temp_operations
         return sorted_node_operations
+
+    def _graph_parse(
+        self,
+        pipeline,
+    ):
+        link_ref = self._gen_link_ref_dict(pipeline.operations)
+        outermost_node_ids = []
+        special_node_links = {}
+        special_node_subnodes = {}
+        is_sorted = []
+
+        self._filter_component_node(
+            pipeline.operations, link_ref, outermost_node_ids, special_node_links, special_node_subnodes, is_sorted
+        )
+
+        is_sorted = []
+        self._filter_duplicate_nodes(special_node_links, special_node_subnodes, is_sorted)
+
+        temp_remove_nodes = []
+        for outermost_node_id in outermost_node_ids:
+            if outermost_node_id in is_sorted:
+                temp_remove_nodes.append(outermost_node_id)
+        for remove_node in temp_remove_nodes:
+            outermost_node_ids.remove(remove_node)
+
+        sorted_outermost_node_operations = self._sorted_opreation_list(outermost_node_ids, pipeline)
+        sorted_special_node_subnodes = {}
+        for node_id in special_node_subnodes:
+            sorted_node_operations = self._sorted_opreation_list(special_node_subnodes[node_id], pipeline)
+            sorted_special_node_subnodes[node_id] = sorted_node_operations
+
+        return sorted_outermost_node_operations, sorted_special_node_subnodes
 
     def _process_component(
         self,
@@ -720,6 +832,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
         # If operation is a "non-standard" component, load it's spec and create operation with factory function
         else:
+            global global_loop_args
             # Retrieve component from cache
             component = ComponentCache.instance().get_component(self._type, operation.classifier)
             # Convert the user-entered value of certain properties according to their type
@@ -741,9 +854,19 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     # KFP path-based parameters accept an input from a parent
                     output_node_id = property_value["value"]  # parent node id
                     output_node_parameter_key = property_value["option"].replace("output_", "")  # parent param
-                    operation.component_params[component_property.ref] = target_ops[output_node_id].outputs[
-                        output_node_parameter_key
-                    ]
+                    if target_ops[output_node_id] == "Loop Start":
+                        arg = property_value["option"].replace("ParallelFor:", "")
+                        if arg == "item":
+                            operation.component_params[component_property.ref] = global_loop_args[output_node_id]
+                        else:
+                            arg = arg.replace("item.", "")
+                            operation.component_params[component_property.ref] = getattr(
+                                global_loop_args[output_node_id], arg
+                            )
+                    else:
+                        operation.component_params[component_property.ref] = target_ops[output_node_id].outputs[
+                            output_node_parameter_key
+                        ]
                 elif data_entry_type == "enum":
                     for arg in args:
                         if arg.name == property_value:
@@ -847,9 +970,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops[operation.id] = container_op
 
         for parent_operation_id in operation.parent_operation_ids:
-            parent_op = target_ops[parent_operation_id]
-            if not isinstance(parent_op, str):
-                container_op.after(parent_op)
+            if parent_operation_id in target_ops:
+                parent_op = target_ops[parent_operation_id]
+                if not isinstance(parent_op, str):
+                    container_op.after(parent_op)
 
     def _loop(
         self,
@@ -897,7 +1021,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime_configuration,
                     target_ops,
                 )
-            elif operation.classifier.startswith("loop"):
+            elif operation.classifier.startswith("loop_start"):
                 self._process_loop(
                     args,
                     operation,
@@ -920,6 +1044,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime_configuration,
                     target_ops,
                 )
+            elif operation.classifier.startswith("loop_end"):
+                pass
             else:
                 self._process_component(
                     args,
@@ -943,12 +1069,41 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 )
 
     def _parse_branch_parameter(self, parameter, args, target_ops):
+        global global_loop_args
         if parameter["widget"] == "string":
             return parameter["value"]
         elif parameter["widget"] == "enum":
             for arg in args:
                 if arg.name == parameter["value"]:
                     return arg
+        elif parameter["widget"] == "inputpath":
+            output_node_id = parameter["value"]["value"]
+            output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
+            if target_ops[output_node_id] == "Loop Start":
+                arg = parameter["value"]["option"].replace("ParallelFor:", "")
+                if arg == "item":
+                    return global_loop_args[output_node_id]
+                else:
+                    arg = arg.replace("item.", "")
+                    return getattr(global_loop_args[output_node_id], arg)
+            else:
+                return target_ops[output_node_id].outputs[output_node_parameter_key]
+
+    def _parse_loop_parameter(self, parameter, args, target_ops):
+        if parameter["widget"] == "Number":
+            return [i for i in range(parameter["value"])]
+        elif parameter["widget"] == "List[str]":
+            return self._process_list_value(parameter["value"])
+        elif parameter["widget"] == "List[int] or List[float]":
+            return self._process_list_value(parameter["value"])
+        elif parameter["widget"] == "List[Dict[str, any]]":
+            loop_args = []
+            loop_arg = {}
+            for items in parameter["value"]:
+                for item in items:
+                    loop_arg[item["key"]] = item["value"]
+                loop_args.append(loop_arg)
+            return loop_args
         elif parameter["widget"] == "inputpath":
             output_node_id = parameter["value"]["value"]
             output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
@@ -1047,21 +1202,16 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         runtime_configuration,
         target_ops,
     ):
-
-        name = operation.name
-        if name == "ParallelFor":
-            name = None
-        target_ops[operation.id] = "Loop"
+        global global_loop_args
+        target_ops[operation.id] = "Loop Start"
         component_params = operation.component_params
-        branch_parameter1 = self._parse_branch_parameter(
-            component_params["branch_conditions"]["branch_parameter1"], args, target_ops
-        )
-        branch_parameter2 = self._parse_branch_parameter(
-            component_params["branch_conditions"]["branch_parameter2"], args, target_ops
-        )
-        operate = component_params["branch_conditions"]["operate"]
+        loop_args = self._parse_loop_parameter(component_params["loop_args"], args, target_ops)
+        parallelism = None
+        if "parallelism" in component_params:
+            parallelism = component_params["parallelism"]
 
-        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
+        with dsl.ParallelFor(loop_args, parallelism) as item:
+            global_loop_args[operation.id] = item
             self._loop(
                 args,
                 sorted_special_node_subnodes[operation.id],
@@ -1134,48 +1284,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         #         self._verify_cos_connectivity(runtime_configuration)
         #         break
 
-        link_ref = self._gen_link_ref_dict(pipeline.operations)
-        outermost_node_ids = []
-        special_node_links = {}
-        special_node_subnodes = {}
-        is_sorted = []
-         
-        print("link_ref")
-        print(link_ref)
-
-        self._filter_component_node(
-            pipeline.operations, link_ref, outermost_node_ids, special_node_links, special_node_subnodes, is_sorted
-        )
-
-        is_sorted = []
-        self._filter_duplicate_nodes(special_node_links, special_node_subnodes, is_sorted)
-        temp_remove_nodes = []
-        for outermost_node_id in outermost_node_ids:
-            if outermost_node_id in is_sorted:
-                temp_remove_nodes.append(outermost_node_id)
-        for remove_node in temp_remove_nodes:
-            outermost_node_ids.remove(remove_node)
-
-        sorted_outermost_node_operations = self._sorted_opreation_list(outermost_node_ids, pipeline)
-        sorted_special_node_subnodes = {}
-        for node_id in special_node_subnodes:
-            sorted_node_operations = self._sorted_opreation_list(special_node_subnodes[node_id], pipeline)
-            sorted_special_node_subnodes[node_id] = sorted_node_operations
-
-        sorted_outermost_node_ids = []
-        sorted_special_node_links = {}
-        for sorted_outermost_node_operation in sorted_outermost_node_operations:
-            sorted_outermost_node_ids.append(sorted_outermost_node_operation.name)
-        for node_id in sorted_special_node_subnodes:
-            temp_node_id = []
-            for operation in sorted_special_node_subnodes[node_id]:
-                temp_node_id.append(operation.name)
-            sorted_special_node_links[node_id] = temp_node_id
-
-        print("==============")
-        print(sorted_special_node_links)
-        print(sorted_outermost_node_ids)
-        return target_ops
+        sorted_outermost_node_operations, sorted_special_node_subnodes = self._graph_parse(pipeline)
 
         # All previous operation outputs should be propagated throughout the pipeline.
         # In order to process this recursively, the current operation's inputs should be combined

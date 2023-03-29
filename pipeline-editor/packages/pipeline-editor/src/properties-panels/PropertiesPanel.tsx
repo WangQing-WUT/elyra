@@ -46,6 +46,18 @@ interface Props {
   onPropertiesUpdateRequested?: (options: any) => any;
 }
 
+let timer: any = null;
+function debounce(fn: (...arg: any[]) => any, duration: number = 300) {
+  return function(this: any, ...args: any[]) {
+    if (timer != null) {
+      clearTimeout(timer);
+    }
+    timer = window.setTimeout(() => {
+      fn.apply(this, args);
+    }, duration);
+  };
+}
+
 export function PropertiesPanel({
   data,
   schema,
@@ -105,7 +117,6 @@ export function PropertiesPanel({
       return schema;
     }
   };
-  let flag = 0;
   let formData: any;
   return (
     <Form
@@ -125,24 +136,18 @@ export function PropertiesPanel({
             }
           }
         }
-
         formData = e.formData;
-        if (flag === 1) {
-          onChange?.(e.formData);
-          flag = 0;
-        }
-      }}
-      onBlur={() => {
-        onChange?.(formData);
+        let func = debounce(() => {
+          onChange?.(formData);
+        }, 500);
+        func();
       }}
       formContext={{
         onFileRequested: async (args: any) => {
-          let filename = await onFileRequested?.({
+          return await onFileRequested?.({
             ...args,
             filename: undefined
           });
-          flag = 1;
-          return filename;
         },
         onPropertiesUpdateRequested: async (args: any) => {
           const newData = await onPropertiesUpdateRequested?.(args);
@@ -155,9 +160,9 @@ export function PropertiesPanel({
       fields={{
         OneOfField: CustomOneOf
       }}
-      liveValidate
+      liveValidate={true}
+      noHtml5Validate={true}
       ArrayFieldTemplate={ArrayTemplate}
-      noHtml5Validate
       FieldTemplate={CustomFieldTemplate}
       className={"elyra-formEditor"}
       transformErrors={(errors: AjvError[]) => {
@@ -166,10 +171,11 @@ export function PropertiesPanel({
         for (const error of errors) {
           if (
             error.message !== "should match exactly one schema in oneOf" &&
-            (error as any).schemaPath?.includes("oneOf") &&
+            // (error as any).schemaPath?.includes("oneOf") &&
             error.message !== "should be object" &&
             error.message !== "should be string" &&
-            error.message !== "should be equal to one of the allowed values"
+            error.message !== "should be equal to one of the allowed values" &&
+            error.message !== 'should match "then" schema'
           ) {
             transformed.push(error);
           }

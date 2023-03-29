@@ -316,7 +316,6 @@ class PipelineController extends CanvasController {
         if (node.app_data!.ui_data!.label !== newLabel) {
           this.setNodeLabel(node.id, newLabel as string, pipeline.id);
         }
-
         if (
           // `app_data` and `ui_data` should be guaranteed.
           node.app_data!.ui_data!.description !== nodeDef.description ||
@@ -395,6 +394,12 @@ class PipelineController extends CanvasController {
           ];
           break;
         case "missingComponent":
+          nodesWithErrors[problem.info.pipelineID] = [
+            ...(nodesWithErrors[problem.info.pipelineID] ?? []),
+            problem.info.nodeID
+          ];
+          break;
+        case "invalidComponent":
           nodesWithErrors[problem.info.pipelineID] = [
             ...(nodesWithErrors[problem.info.pipelineID] ?? []),
             problem.info.nodeID
@@ -592,6 +597,11 @@ class PipelineController extends CanvasController {
           case "missingComponent":
             if (p.info.nodeID === nodeID) {
               nodeProblems.push(`component "${p.info.op}" cannot be found`);
+            }
+            break;
+          case "invalidComponent":
+            if (p.info.nodeID === nodeID) {
+              nodeProblems.push(`${p.info.message}`);
             }
             break;
         }

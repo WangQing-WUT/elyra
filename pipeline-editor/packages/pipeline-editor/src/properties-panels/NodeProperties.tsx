@@ -185,7 +185,7 @@ function NodeProperties({
     const oneOfValuesNoOpt: any[] = [];
     let workflowParameters: string[] = ["", "workflow.instance_name"];
     let eventParameters: string[] = [""];
-    let loopArgs: string[] = [""];
+    let loopArgs: any[] = [];
     const pipeline_input_parameters: string[] = [""];
     const evnetObject: { [index: string]: string[] } = {
       calendar_event: ["time"],
@@ -221,16 +221,24 @@ function NodeProperties({
 
       if (upstreamNode.op.indexOf("loop_start") != -1) {
         const loop_args = upstreamNode.app_data.component_parameters?.loop_args;
-        loopArgs.push(`${upstreamNode.app_data?.ui_data?.label.trim()}: item`);
+        const oneOfValue = getOneOfValue(
+          upstreamNode.id,
+          `ParallelFor:item`,
+          `${upstreamNode.app_data?.ui_data?.label.trim()}: item`
+        );
+        oneOfValues.push(oneOfValue);
         if (loop_args?.widget == "List[Dict[str, any]]") {
           if (loop_args?.value?.[0]) {
             for (let item of loop_args.value[0]) {
               if ("key" in item) {
-                loopArgs.push(
+                const oneOfValue = getOneOfValue(
+                  upstreamNode.id,
+                  `ParallelFor:item.${item.key}`,
                   `${upstreamNode.app_data?.ui_data?.label.trim()}: item.${
                     item.key
                   }`
                 );
+                oneOfValues.push(oneOfValue);
               }
             }
           }
@@ -270,6 +278,7 @@ function NodeProperties({
       }
     }
     eventParameters.sort();
+    oneOfValues.sort((a, b) => (a.label > b.label ? 1 : -1));
 
     // update property data to include data for properties with inputpath format
 
@@ -372,7 +381,7 @@ function NodeProperties({
           for (let item of calendar_allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
             if (valueOneOf) {
-              valueOneOf[2].properties.value.enum = workflowParameters;
+              valueOneOf[1].properties.value.enum = workflowParameters;
             }
           }
         }
@@ -498,13 +507,6 @@ function NodeProperties({
                   delete component_properties[prop].oneOf[i].properties.value
                     .default;
                 }
-              } else if (
-                component_properties[prop].oneOf[i].properties.widget
-                  .default === "loop_args"
-              ) {
-                component_properties[prop].oneOf[
-                  i
-                ].properties.value.enum = loopArgs;
               }
             }
           }
@@ -531,8 +533,8 @@ function NodeProperties({
           onPropertiesUpdateRequested={onPropertiesUpdateRequested}
         />
         <Href>
-          <a href="http://www.cronmaker.com/" target="_blank">
-            cronmaker.com
+          <a href="https://crontab.guru/" target="_blank">
+            crontab.guru
           </a>
         </Href>
       </div>
