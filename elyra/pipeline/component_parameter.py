@@ -38,10 +38,12 @@ from elyra.pipeline.pipeline_constants import KUBERNETES_TOLERATIONS
 from elyra.pipeline.pipeline_constants import MOUNTED_VOLUMES
 from elyra.util.kubernetes import is_valid_annotation_key
 from elyra.util.kubernetes import is_valid_annotation_value
+from elyra.util.kubernetes import is_valid_environment_variable
 from elyra.util.kubernetes import is_valid_kubernetes_key
 from elyra.util.kubernetes import is_valid_kubernetes_resource_name
 from elyra.util.kubernetes import is_valid_label_key
 from elyra.util.kubernetes import is_valid_label_value
+from elyra.util.kubernetes import is_valid_volume_mount_path
 
 
 class ElyraProperty:
@@ -301,9 +303,8 @@ class EnvironmentVariable(ElyraPropertyListItem):
         validation_errors = []
         if not self.env_var:
             validation_errors.append("Required environment variable was not specified.")
-        elif " " in self.env_var:
-            validation_errors.append(f"Environment variable '{self.env_var}' includes invalid space character(s).")
-
+        elif not is_valid_environment_variable(self.env_var):
+            validation_errors.append(f"Environment variable '{self.env_var}' includes invalid character(s).")
         return validation_errors
 
     def add_to_execution_object(
@@ -368,6 +369,8 @@ class KubernetesSecret(ElyraPropertyListItem):
         validation_errors = []
         if not self.env_var:
             validation_errors.append("Required environment variable was not specified.")
+        elif not is_valid_environment_variable(self.env_var):
+            validation_errors.append(f"Environment variable '{self.env_var}' includes invalid character(s).")
         if not self.name:
             validation_errors.append("Required secret name was not specified.")
         elif self.name_type == "string" and not is_valid_kubernetes_resource_name(self.name):
@@ -438,6 +441,8 @@ class VolumeMount(ElyraPropertyListItem):
         validation_errors = []
         if not self.path:
             validation_errors.append("Required mount path was not specified.")
+        elif not is_valid_volume_mount_path(self.path):
+            validation_errors.append(f"Mount Path '{self.path}' includes invalid character(s).")
         if not self.pvc_name:
             validation_errors.append("Required persistent volume claim name was not specified.")
         elif not is_valid_kubernetes_resource_name(self.pvc_name):

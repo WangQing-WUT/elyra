@@ -40,6 +40,50 @@ def is_valid_kubernetes_resource_name(name: str) -> bool:
     return True
 
 
+def is_valid_environment_variable(name: str) -> bool:
+    """
+    Returns True if the given name is a valid Kubernetes environment variable name,
+    False otherwise. See https://kubernetes.io/docs/concepts/configuration/overview/#environment-variables
+    for more information.
+    """
+    if name is None:
+        return False
+
+    # Check length
+    if len(name) > 253:
+        return False
+
+    # Check format
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+        return False
+
+    # Check reserved names
+    if name.upper() in ["KUBERNETES_PORT", "KUBERNETES_SERVICE_HOST", "KUBERNETES_SERVICE_PORT"]:
+        return False
+
+    return True
+
+
+def is_valid_volume_mount_path(name: str) -> bool:
+    """
+    Returns True if the given path is a valid Kubernetes Volume Mount Path,
+    False otherwise. See https://kubernetes.io/docs/concepts/storage/volumes/#paths
+    for more information.
+    """
+    if name is None:
+        return False
+
+    # Check length
+    if len(name) > 253:
+        return False
+
+    # Check format
+    if not re.match(r"^/[\w\-./]+$", name):
+        return False
+
+    return True
+
+
 def is_valid_dns_subdomain_name(name: str) -> bool:
     """
     Returns a truthy value indicating whether name meets the kubernetes

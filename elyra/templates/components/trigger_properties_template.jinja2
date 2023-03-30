@@ -88,7 +88,8 @@
 									}
 								]
 							}
-						}
+						},
+						"required": ["name", "from"]
 					}
 				}
 				{% endif %}
@@ -127,8 +128,9 @@
 							"label": "http",
 							"properties": {
 								"url": {
-									"title": "Url",
-									"type": "string"
+									"title": "URL",
+									"type": "string",
+									"format": "uri"
 								},
 								"value": {
 									"type": "string",
@@ -221,15 +223,16 @@
 								"type": "string",
 								"title": "Destination"
 							}
-						}
+						},
+						"required": ["dest", "from"]
 					}
 				}
 				{% endif %}
 				{% if  component.name == "HTTP Trigger" %}
 				"url": {
 					"type": "string",
-					"title": "Http URL",
-					"description": "Http url.",
+					"title": "HTTP URL",
+					"description": "HTTP URL.",
 					"format": "uri",
 					"uihints": {
 						"ui:placeholder": "http://http-server.argo-events.svc:8090/hello"
@@ -237,8 +240,8 @@
 				},
 				"method": {
 					"type": "string",
-					"title": "Method",
-					"description": "Http method.",
+					"title": "HTTP Method",
+					"description": "HTTP method.",
                     "default": "GET",
 					"enum": [ "GET", "DELETE", "PATCH", "POST", "PUT" ]
 				},
@@ -250,8 +253,8 @@
 				},
 				"trigger_parameters": {
 					"type": "array",
-					"title": "Http Trigger Parameters",
-					"description": "Http trigger parameters.",
+					"title": "HTTP Trigger Parameters",
+					"description": "HTTP trigger parameters.",
 					"items": {
 						"type": "object",
 						"properties": {
@@ -314,7 +317,8 @@
 									}
 								]
 							}
-						}
+						},
+						"required": ["name", "from"]
 					}
 				}
 				{% endif %}

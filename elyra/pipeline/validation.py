@@ -495,8 +495,8 @@ class PipelineValidationManager(SingletonConfigurable):
         if node.op.startswith("branch"):
             parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
             component_property_dict = {"properties": {"component_parameters": {"required": parsed_parameters}}}
-
-        elif node.op.startswith("loop"):
+        elif node.op.startswith("loop_start"):
+            parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
             return
         else:
             if pipeline_runtime != "local":
