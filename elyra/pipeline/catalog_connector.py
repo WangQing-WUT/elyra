@@ -37,6 +37,7 @@ from requests.auth import HTTPBasicAuth
 from traitlets.config import LoggingConfigurable
 from traitlets.traitlets import default
 from traitlets.traitlets import Integer
+import yaml
 
 from elyra._version import __version__
 from elyra.metadata.metadata import Metadata
@@ -129,13 +130,16 @@ class CatalogEntry(object):
         """
         specific_categories = ["Logic", "Events", "Actions", "Global"]
         hash_str = ""
+        component_name = ""
         for key in hash_keys:
             if not self.entry_reference.get(key):
                 # Catalog entry does not have key - build hash without it
                 continue
-            hash_str = hash_str + Path(str(self.entry_reference[key])).stem + ":"
+            data = yaml.safe_load(self.entry_data.definition)
+            if data.get("name"):
+                component_name = data.get("name")
+            hash_str = hash_str + Path(str(self.entry_reference[key])).stem + "[" + component_name + "]" + ":"
         hash_str = hash_str[:-1]
-
         # Use only the first 12 characters of the resulting hash
         hash_digest = f"{hashlib.sha256(hash_str.encode()).hexdigest()[:12]}"
         if self.categories[0] in specific_categories:

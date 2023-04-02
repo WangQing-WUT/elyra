@@ -15,6 +15,44 @@
           "description": "Loop args.",
           "oneOf": [
             {
+              "label": "Please select a value from the pipeline input parameters",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "enum": [""],
+                  "default": ""
+                },
+                "widget": {
+                  "type": "string",
+                  "default": "enum"
+                }
+              },
+              "uihints":{
+                "widget": {"ui:field": "hidden"}
+              }
+            },
+            {
+              "label": "Select an output from a parent",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "enum": [""],
+                  "default": ""
+                },
+                "widget": {
+                  "type": "string",
+                  "default": "inputpath"
+                }
+              },
+              "uihints":{
+                "widget": {"ui:field": "hidden"},
+                "value": {
+                  "inputpath": true,
+                  "ui:hideError": true
+                }
+              }
+            },
+            {
               "label": "Number",
               "properties": {
                 "value": {
@@ -105,27 +143,6 @@
                       "value": {"ui:placeholder": "value"}
                     }
                   }
-                }
-              }
-            },
-            {
-              "label": "Select an output from a parent",
-              "properties": {
-                "value": {
-                  "type": "string",
-                  "enum": [""],
-                  "default": ""
-                },
-                "widget": {
-                  "type": "string",
-                  "default": "inputpath"
-                }
-              },
-              "uihints":{
-                "widget": {"ui:field": "hidden"},
-                "value": {
-                  "inputpath": true,
-                  "ui:hideError": true
                 }
               }
             }

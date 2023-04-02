@@ -203,6 +203,8 @@ class PipelineValidationManager(SingletonConfigurable):
 
         self._validate_pipeline_graph(pipeline=pipeline, response=response)
 
+        self._validate_input_parameters(pipeline=pipeline, response=response)
+
         if response.has_fatal:
             return response
 
@@ -496,8 +498,8 @@ class PipelineValidationManager(SingletonConfigurable):
             parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
             component_property_dict = {"properties": {"component_parameters": {"required": parsed_parameters}}}
         elif node.op.startswith("loop_start"):
-            parsed_parameters = ["branch_parameter1", "branch_parameter2", "operate"]
-            return
+            parsed_parameters = ["loop_args", "parallelism"]
+            component_property_dict = {"properties": {"component_parameters": {"required": ["loop_args"]}}}
         else:
             if pipeline_runtime != "local":
                 for resource_name in ["cpu", "npu310", "npu910", "gpu", "memory"]:
@@ -528,7 +530,15 @@ class PipelineValidationManager(SingletonConfigurable):
             node_param = node.get_component_parameter(default_parameter)
             if node.op.startswith("branch"):
                 node_param = node.get_component_parameter("branch_conditions").get(default_parameter)
-            if not node_param or (type(node_param) is not str and node_param.get("value") is None):
+            if default_parameter == "parallelism":
+                if node_param is not None and (type(node_param) is not int or node_param <= 0):
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="Node has an invalid value. Parallelism should be a positive integer.",
+                        data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    )
+            elif not node_param or (type(node_param) is not str and node_param.get("value") is None):
                 if self._is_required_property(component_property_dict, default_parameter):
                     response.add_message(
                         severity=ValidationSeverity.Error,
@@ -605,36 +615,42 @@ class PipelineValidationManager(SingletonConfigurable):
                             data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                         )
                 elif node_param.get("widget") == "enum":
-                    if node_param.get("value") == "":
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="invalidNodeProperty",
-                            message="Node is missing a value for a required property.",
-                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
-                        )
-                    else:
-                        pipelines = pipeline_definition.pipelines[0]
-                        pipeline_defaults = pipelines.get_property("pipeline_defaults")
-                        if pipeline_defaults and "input_parameters" in pipeline_defaults:
-                            input_parameters = []
-                            for item in pipeline_defaults["input_parameters"]:
-                                input_parameters.append(item["name"])
-                            if node_param.get("value") not in input_parameters:
-                                response.add_message(
-                                    severity=ValidationSeverity.Error,
-                                    message_type="invalidNodeProperty",
-                                    message="Pipeline input parameters does not contain '"
-                                    + node_param.get("value")
-                                    + "'.",
-                                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
-                                )
-                        else:
-                            response.add_message(
-                                severity=ValidationSeverity.Error,
-                                message_type="invalidNodeProperty",
-                                message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
-                                data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
-                            )
+                    self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
+                elif default_parameter == "loop_args":
+                    self._validate_loop_list()
+
+    def _validate_loop_list(self):
+        pass
+
+    def _validate_widget_enum(self, node, node_param, default_parameter, pipeline_definition, response):
+        if node_param.get("value") == "":
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="Node is missing a value for a required property.",
+                data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+            )
+        else:
+            pipelines = pipeline_definition.pipelines[0]
+            pipeline_defaults = pipelines.get_property("pipeline_defaults")
+            if pipeline_defaults and "input_parameters" in pipeline_defaults:
+                input_parameters = []
+                for item in pipeline_defaults["input_parameters"]:
+                    input_parameters.append(item["name"])
+                if node_param.get("value") not in input_parameters:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="Pipeline input parameters does not contain '" + node_param.get("value") + "'.",
+                        data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    )
+            else:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodeProperty",
+                    message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
+                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                )
 
     def _validate_container_image_name(
         self, node_id: str, node_label: str, image_name: str, response: ValidationResponse
@@ -863,6 +879,9 @@ class PipelineValidationManager(SingletonConfigurable):
                 "only lower case alphanumeric, underscores, dots, and dashes.",
                 data={"nodeID": node_id, "nodeName": node_label, "propertyName": "label", "value": node_label},
             )
+
+    def _validate_input_parameters(self, pipeline: dict, response: ValidationResponse) -> None:
+        pass
 
     def _validate_pipeline_graph(self, pipeline: dict, response: ValidationResponse) -> None:
         """

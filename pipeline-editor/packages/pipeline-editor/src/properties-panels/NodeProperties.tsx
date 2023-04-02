@@ -185,7 +185,6 @@ function NodeProperties({
     const oneOfValuesNoOpt: any[] = [];
     let workflowParameters: string[] = ["", "workflow.instance_name"];
     let eventParameters: string[] = [""];
-    let loopArgs: any[] = [];
     const pipeline_input_parameters: string[] = [""];
     const evnetObject: { [index: string]: string[] } = {
       calendar_event: ["time"],

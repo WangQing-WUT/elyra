@@ -675,6 +675,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                         input_parameters[item["name"]] = ""
                     elif item["type"]["widget"] == "Float":
                         input_parameters[item["name"]] = 0.0
+                    elif item["type"]["widget"] == "List":
+                        input_parameters[item["name"]] = []
                     else:
                         input_parameters[item["name"]] = 0
         return input_parameters
@@ -1091,7 +1093,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _parse_loop_parameter(self, parameter, args, target_ops):
         if parameter["widget"] == "Number":
-            return [i for i in range(parameter["value"])]
+            return [i for i in range(int(parameter["value"]))]
         elif parameter["widget"] == "List[str]":
             return self._process_list_value(parameter["value"])
         elif parameter["widget"] == "List[int] or List[float]":
@@ -1104,6 +1106,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     loop_arg[item["key"]] = item["value"]
                 loop_args.append(loop_arg)
             return loop_args
+        elif parameter["widget"] == "enum":
+            for arg in args:
+                if arg.name == parameter["value"]:
+                    return arg
         elif parameter["widget"] == "inputpath":
             output_node_id = parameter["value"]["value"]
             output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
@@ -1208,13 +1214,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         loop_args = self._parse_loop_parameter(component_params["loop_args"], args, target_ops)
         parallelism = None
         if "parallelism" in component_params:
-            parallelism = component_params["parallelism"]
+            parallelism = int(component_params["parallelism"])
 
         with dsl.ParallelFor(loop_args, parallelism) as item:
             global_loop_args[operation.id] = item
             self._loop(
                 args,
-                sorted_special_node_subnodes[operation.id],
+                sorted_node_operations,
                 sorted_special_node_subnodes,
                 pipeline,
                 container_runtime,
