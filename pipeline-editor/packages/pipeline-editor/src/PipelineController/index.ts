@@ -152,11 +152,19 @@ class PipelineController extends CanvasController {
     } = item;
 
     const nodeTemplate: any = this.getPaletteNode(op);
+
     const defaults =
       getDefaultFormState(validator, nodeTemplate.app_data.properties ?? {}) ??
       {};
     defaults.label = "";
     nodeTemplate.app_data = defaults;
+    nodeTemplate.app_data.ui_data = {
+      label: nodeTemplate.label,
+      image: nodeTemplate.image
+    };
+    if (nodeTemplate?.description) {
+      nodeTemplate.app_data.ui_data.description = nodeTemplate.description;
+    }
 
     const data = {
       ...rest,
@@ -198,6 +206,8 @@ class PipelineController extends CanvasController {
         };
       }
     }
+    console.log("data");
+    console.log(data);
 
     this.editActionHandler(data);
   }

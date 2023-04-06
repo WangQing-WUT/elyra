@@ -189,7 +189,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 condition, linknodes_name_to_type = self._get_condition(node_json, node)
                 parameters = self._parse_trigger_parameters(
                     node["app_data"]["component_parameters"]["trigger_parameters"],
-                    node_json,
                     data,
                     linknodes_name_to_type,
                     response,
@@ -237,7 +236,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 condition, linknodes_name_to_type = self._get_condition(node_json, node)
                 parameters = self._parse_trigger_parameters(
                     node["app_data"]["component_parameters"]["trigger_parameters"],
-                    node_json,
                     data,
                     linknodes_name_to_type,
                     response,
@@ -259,7 +257,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 condition, linknodes_name_to_type = self._get_condition(node_json, node)
                 parameters = self._parse_trigger_parameters(
                     node["app_data"]["component_parameters"]["trigger_parameters"],
-                    node_json,
                     data,
                     linknodes_name_to_type,
                     response,
@@ -526,9 +523,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         return format_input_parameters
 
     @staticmethod
-    def _parse_trigger_parameters(
-        trigger_parameters: dict, node_json: dict, data: dict, linknodes_name_to_type: dict, response
-    ):
+    def _parse_trigger_parameters(trigger_parameters: dict, data: dict, linknodes_name_to_type: dict, response):
         trigger_parameters_field = []
 
         for index, item in enumerate(trigger_parameters):
@@ -614,7 +609,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def file2zip(zip_file_name: str, file_names: list):
         with zipfile.ZipFile(zip_file_name, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             for fn in file_names:
-                parent_path, name = os.path.split(fn)
+                _, name = os.path.split(fn)
                 zf.write(fn, arcname=name)
 
     async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool):
@@ -920,6 +915,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_type = "Model Monitor Event"
         node_id = node["id"]
         node_name = node["app_data"]["label"].strip()
+        self._validate_node_name(node, name, response)
         if ("event_filter" not in node["app_data"]["component_parameters"]) or (
             len(node["app_data"]["component_parameters"]["event_filter"]) == 0
         ):

@@ -758,7 +758,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         pipeline_version,
         engine,
         export,
-        runtime_configuration,
         target_ops,
     ):
         if container_runtime:
@@ -996,7 +995,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         pipeline_version,
         engine,
         export,
-        runtime_configuration,
         target_ops,
     ):
         for operation in sorted_node_operations:
@@ -1020,7 +1018,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     pipeline_version,
                     engine,
                     export,
-                    runtime_configuration,
                     target_ops,
                 )
             elif operation.classifier.startswith("loop_start"):
@@ -1043,7 +1040,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     pipeline_version,
                     engine,
                     export,
-                    runtime_configuration,
                     target_ops,
                 )
             elif operation.classifier.startswith("loop_end"):
@@ -1066,7 +1062,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     pipeline_version,
                     engine,
                     export,
-                    runtime_configuration,
                     target_ops,
                 )
 
@@ -1094,9 +1089,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _parse_loop_parameter(self, parameter, args, target_ops):
         if parameter["widget"] == "Number":
             return [i for i in range(int(parameter["value"]))]
-        elif parameter["widget"] == "List[str]":
-            return self._process_list_value(parameter["value"])
-        elif parameter["widget"] == "List[int] or List[float]":
+        elif parameter["widget"] == "List[str|int|float]":
             return self._process_list_value(parameter["value"])
         elif parameter["widget"] == "List[Dict[str, any]]":
             loop_args = []
@@ -1146,7 +1139,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         pipeline_version,
         engine,
         export,
-        runtime_configuration,
         target_ops,
     ):
         name = operation.name
@@ -1165,7 +1157,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
             self._loop(
                 args,
-                sorted_special_node_subnodes[operation.id],
+                sorted_node_operations,
                 sorted_special_node_subnodes,
                 pipeline,
                 container_runtime,
@@ -1181,7 +1173,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 pipeline_version,
                 engine,
                 export,
-                runtime_configuration,
                 target_ops,
             )
 
@@ -1205,7 +1196,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         pipeline_version,
         engine,
         export,
-        runtime_configuration,
         target_ops,
     ):
         global global_loop_args
@@ -1236,7 +1226,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 pipeline_version,
                 engine,
                 export,
-                runtime_configuration,
                 target_ops,
             )
 
@@ -1317,7 +1306,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             pipeline_version,
             engine,
             export,
-            runtime_configuration,
             target_ops,
         )
         # Process dependencies after all the operations have been created

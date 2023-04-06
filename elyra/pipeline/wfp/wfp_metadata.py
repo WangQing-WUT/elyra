@@ -21,7 +21,7 @@ from elyra.pipeline.runtimes_metadata import RuntimesMetadata
 
 class WfpMetadata(RuntimesMetadata):
     """
-    Applies changes specific to the kfp schema
+    Applies changes specific to the wfp schema
     """
 
     def on_load(self, **kwargs: Any) -> None:

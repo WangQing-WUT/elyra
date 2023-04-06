@@ -264,6 +264,22 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
             }
           });
         }
+        if (nodeOp.indexOf("trigger") != -1) {
+          if (nodeLabel.length > 23) {
+            problems.push({
+              message: `The length of trigger name should be less than 23 characters.`,
+              path,
+              info: {
+                type: "invalidProperty",
+                pipelineID: pipeline.id,
+                nodeID: node.id,
+                property: "Name",
+                message:
+                  "The length of trigger name should be less than 23 characters."
+              }
+            });
+          }
+        }
       }
     } else if (nodeOp.indexOf("branch") != -1 && nodeLabel) {
       const rExp: RegExp = /^[a-z][a-z0-9-]*[a-z0-9]$/;

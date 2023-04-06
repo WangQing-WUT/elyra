@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import ast
 from enum import IntEnum
 from glob import glob
 import json
@@ -617,10 +618,57 @@ class PipelineValidationManager(SingletonConfigurable):
                 elif node_param.get("widget") == "enum":
                     self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
                 elif default_parameter == "loop_args":
-                    self._validate_loop_list()
+                    self._validate_loop_list(node, node_param, default_parameter, response)
 
-    def _validate_loop_list(self):
-        pass
+    def _validate_loop_list(self, node, node_param, default_parameter, response):
+        notList = False
+        if node_param.get("widget") == "List[str|int|float]":
+            value = node_param.get("value")
+            converted_list = None
+            if value.startswith("[") and value.endswith("]"):
+                try:
+                    converted_list = ast.literal_eval(value)
+                except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+                    notList = True
+            if not isinstance(converted_list, list):
+                notList = True
+            if notList:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodeProperty",
+                    message="The value of the property cannot be converted to an array.",
+                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                )
+        elif node_param.get("widget") == "Number":
+            if node_param.get("value") is not int or node_param.get("value") <= 0:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodeProperty",
+                    message="The value of the property should be a positive integer.",
+                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                )
+        elif node_param.get("widget") == "List[Dict[str, any]]":
+            dict_list = []
+            flag = True
+            for items in node_param.get("value"):
+                for item in items:
+                    if not item.get("key") or not item.get("value"):
+                        flag = False
+                        response.add_message(
+                            severity=ValidationSeverity.Error,
+                            message_type="invalidNodeProperty",
+                            message="The key or the value of the Dict cannot be empty.",
+                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        )
+                    else:
+                        dict_list.append({item.get("key"): item.get("value")})
+            if dict_list == [] and flag:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodeProperty",
+                    message="Node is missing a value for a required property.",
+                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                )
 
     def _validate_widget_enum(self, node, node_param, default_parameter, pipeline_definition, response):
         if node_param.get("value") == "":
