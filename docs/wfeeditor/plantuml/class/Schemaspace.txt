@@ -1,0 +1,39 @@
+@startuml classes
+set namespaceSeparator none
+class "CodeSnippets" as elyra.metadata.schemaspaces.CodeSnippets {
+  CODE_SNIPPETS_SCHEMASPACE_DISPLAY_NAME : str
+  CODE_SNIPPETS_SCHEMASPACE_ID : str
+  CODE_SNIPPETS_SCHEMASPACE_NAME : str
+}
+class "ComponentCatalogs" as elyra.metadata.schemaspaces.ComponentCatalogs {
+  COMPONENT_CATALOGS_SCHEMASPACE_DISPLAY_NAME : str
+  COMPONENT_CATALOGS_SCHEMASPACE_ID : str
+  COMPONENT_CATALOGS_SCHEMASPACE_NAME : str
+}
+class "RuntimeImages" as elyra.metadata.schemaspaces.RuntimeImages {
+  RUNTIMES_IMAGES_SCHEMASPACE_DISPLAY_NAME : str
+  RUNTIMES_IMAGES_SCHEMASPACE_NAME : str
+  RUNTIME_IMAGES_SCHEMASPACE_ID : str
+}
+class "Runtimes" as elyra.metadata.schemaspaces.Runtimes {
+  RUNTIMES_SCHEMASPACE_DISPLAY_NAME : str
+  RUNTIMES_SCHEMASPACE_ID : str
+  RUNTIMES_SCHEMASPACE_NAME : str
+}
+class "Schemaspace" as elyra.metadata.schema.Schemaspace {
+  deprecated_schema_names
+  description
+  display_name
+  id
+  is_deprecated
+  name
+  schemas
+  add_schema(schema: Dict) -> None
+  filter_schema(schema: Dict) -> Dict
+  migrate() -> List[str]
+}
+elyra.metadata.schemaspaces.CodeSnippets --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.ComponentCatalogs --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.RuntimeImages --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.Runtimes --|> elyra.metadata.schema.Schemaspace
+@enduml

@@ -1,0 +1,38 @@
+@startuml classes
+set namespaceSeparator none
+class "CodeSnippetsSchemas" as elyra.metadata.schemasproviders.CodeSnippetsSchemas {
+  get_schemas() -> List[Dict]
+}
+class "ComponentCatalogsSchemas" as elyra.metadata.schemasproviders.ComponentCatalogsSchemas {
+  get_schemas() -> List[Dict]
+}
+class "ElyraSchemasProvider" as elyra.metadata.schemasproviders.ElyraSchemasProvider {
+  f
+  json_file
+  local_schemas : list
+  log : RootLogger, NoneType
+  schema_dir
+  schema_file
+  schema_files
+  schema_json
+  get_local_schemas_by_schemaspace(schemaspace_id: str) -> List[Dict]
+}
+class "RuntimeImagesSchemas" as elyra.metadata.schemasproviders.RuntimeImagesSchemas {
+  get_schemas() -> List[Dict]
+}
+class "RuntimesSchemas" as elyra.metadata.schemasproviders.RuntimesSchemas {
+  get_schemas() -> List[Dict]
+}
+class "SchemasProvider" as elyra.metadata.schema.SchemasProvider {
+  log : Logger
+  log : RootLogger, NoneType, Logger
+  {abstract}get_schemas() -> List[Dict]
+  get_validator(schema: dict) -> Any
+  migrate() -> List[str]
+}
+elyra.metadata.schemasproviders.CodeSnippetsSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.ComponentCatalogsSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.ElyraSchemasProvider --|> elyra.metadata.schema.SchemasProvider
+elyra.metadata.schemasproviders.RuntimeImagesSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.RuntimesSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+@enduml

@@ -1,0 +1,60 @@
+@startuml classes
+set namespaceSeparator none
+class "ComponentCatalogMetadata" as elyra.pipeline.component_metadata.ComponentCatalogMetadata {
+  runtime_type
+  post_delete() -> None
+  post_save() -> None
+}
+class "ComponentRegistryMetadata" as elyra.pipeline.component_metadata.ComponentRegistryMetadata {
+}
+class "DirectoryCatalogMetadata" as elyra.pipeline.component_metadata.DirectoryCatalogMetadata {
+}
+class "FilenameCatalogMetadata" as elyra.pipeline.component_metadata.FilenameCatalogMetadata {
+}
+class "KfpMetadata" as elyra.pipeline.kfp.kfp_metadata.KfpMetadata {
+  on_load() -> None
+  pre_save() -> None
+}
+class "Metadata" as elyra.metadata.metadata.Metadata {
+  display_name
+  display_name : NoneType
+  metadata
+  metadata : dict
+  name
+  name : NoneType
+  reason
+  reason : NoneType
+  resource
+  resource : NoneType
+  schema_name
+  schema_name : NoneType
+  from_dict(schemaspace: str, metadata_dict: dict) -> M
+  {abstract}on_load() -> None
+  {abstract}post_delete() -> None
+  {abstract}post_save() -> None
+  {abstract}pre_delete() -> None
+  {abstract}pre_save() -> None
+  prepare_write() -> dict
+  to_dict(trim: bool) -> dict
+  to_json(trim: bool) -> str
+}
+class "NewComponentMetadata" as elyra.pipeline.component_metadata.NewComponentMetadata {
+}
+class "RuntimesMetadata" as elyra.pipeline.runtimes_metadata.RuntimesMetadata {
+  on_load() -> None
+}
+class "UrlCatalogMetadata" as elyra.pipeline.component_metadata.UrlCatalogMetadata {
+}
+class "WfpMetadata" as elyra.pipeline.wfp.wfp_metadata.WfpMetadata {
+  on_load() -> None
+}
+elyra.pipeline.component_metadata.ComponentCatalogMetadata --|> elyra.metadata.metadata.Metadata
+elyra.pipeline.component_metadata.ComponentRegistryMetadata --|> elyra.metadata.metadata.Metadata
+elyra.pipeline.component_metadata.DirectoryCatalogMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.FilenameCatalogMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.NewComponentMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.UrlCatalogMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.kfp.kfp_metadata.KfpMetadata --|> elyra.pipeline.runtimes_metadata.RuntimesMetadata
+elyra.pipeline.runtimes_metadata.RuntimesMetadata --|> elyra.metadata.metadata.Metadata
+elyra.pipeline.wfp.wfp_metadata.WfpMetadata --|> elyra.pipeline.runtimes_metadata.RuntimesMetadata
+@enduml

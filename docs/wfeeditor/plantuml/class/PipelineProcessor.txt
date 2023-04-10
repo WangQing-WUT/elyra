@@ -1,0 +1,69 @@
+@startuml classes
+set namespaceSeparator none
+class "KfpPipelineProcessor" as elyra.pipeline.kfp.processor_kfp.KfpPipelineProcessor {
+  WCD
+  supported_properties
+  add_disable_node_caching(instance: DisableNodeCaching, execution_object: Any) -> None
+  add_env_var(instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any) -> None
+  add_kubernetes_pod_annotation(instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any) -> None
+  add_kubernetes_pod_label(instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any) -> None
+  add_kubernetes_secret(instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any) -> None
+  add_kubernetes_toleration(instance: KubernetesToleration, execution_object: Any) -> None
+  add_mounted_volume(instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any) -> None
+  export(pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool)
+  get_operator_fn(op)
+  process(pipeline)
+}
+class "PipelineProcessor" as elyra.pipeline.processor.PipelineProcessor {
+  enable_pipeline_info : bool
+  name
+  root_dir : str
+  type
+  {abstract}export(pipeline, pipeline_export_format, pipeline_export_path, overwrite)
+  get_component(component_id: str) -> Optional[Component]
+  get_components() -> List[Component]
+  log_pipeline_info(pipeline_name: str, action_clause: str)
+  {abstract}process(pipeline) -> PipelineProcessorResponse
+}
+class "PipelineProcessorManager" as elyra.pipeline.processor.PipelineProcessorManager {
+  root_dir
+  export(pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool)
+  get_all_processors() -> List[PipelineProcessor]
+  get_component(runtime, component_id)
+  get_components(runtime)
+  get_processor_for_runtime(runtime_name: str)
+  get_runtime_type(runtime_name: str) -> RuntimeProcessorType
+  is_supported_runtime(runtime_name: str) -> bool
+  is_supported_runtime_type(runtime_type_name) -> bool
+  process(pipeline)
+}
+class "PipelineProcessorRegistry" as elyra.pipeline.processor.PipelineProcessorRegistry {
+  root_dir
+  add_processor(processor)
+  get_all_processors() -> List[PipelineProcessor]
+  get_processor(processor_name: str)
+  get_runtime_types_resources() -> List[RuntimeTypeResources]
+  is_valid_processor(processor_name: str) -> bool
+  is_valid_runtime_type(runtime_type_name: str) -> bool
+}
+class "RuntimePipelineProcessor" as elyra.pipeline.processor.RuntimePipelineProcessor {
+  {abstract}add_disable_node_caching(instance: DisableNodeCaching, execution_object: Any) -> None
+  {abstract}add_env_var(instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any) -> None
+  {abstract}add_kubernetes_pod_annotation(instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any) -> None
+  {abstract}add_kubernetes_pod_label(instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any) -> None
+  {abstract}add_kubernetes_secret(instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any) -> None
+  {abstract}add_kubernetes_toleration(instance: KubernetesToleration, execution_object: Any) -> None
+  {abstract}add_mounted_volume(instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any) -> None
+}
+class "WfpPipelineProcessor" as elyra.pipeline.wfp.processor_wfp.WfpPipelineProcessor {
+  create_pipeline_template(path: str, resource: str, file_list)
+  export_custom(root, parent, node_json: dict, export_path: str, overwrite: bool)
+  export_pipeline(path, runtime_config, root_dir, parent, file_list)
+  file2zip(zip_file_name: str, file_names: list)
+  upload(file_path: str, runtime_config: str, name: str, description: str)
+}
+elyra.pipeline.kfp.processor_kfp.KfpPipelineProcessor --|> elyra.pipeline.processor.RuntimePipelineProcessor
+elyra.pipeline.processor.PipelineProcessorRegistry --* elyra.pipeline.processor.PipelineProcessorManager : _registry
+elyra.pipeline.processor.RuntimePipelineProcessor --|> elyra.pipeline.processor.PipelineProcessor
+elyra.pipeline.wfp.processor_wfp.WfpPipelineProcessor --|> elyra.pipeline.processor.RuntimePipelineProcessor
+@enduml

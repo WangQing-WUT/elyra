@@ -1,0 +1,101 @@
+@startuml packages
+set namespaceSeparator none
+package "elyra.pipeline.catalog_connector" as elyra.pipeline.catalog_connector {
+}
+package "elyra.pipeline.component" as elyra.pipeline.component {
+}
+package "elyra.pipeline.component_catalog" as elyra.pipeline.component_catalog {
+}
+package "elyra.pipeline.component_parameter" as elyra.pipeline.component_parameter {
+}
+package "elyra.pipeline.elyra_engine" as elyra.pipeline.elyra_engine {
+}
+package "elyra.pipeline.handlers" as elyra.pipeline.handlers {
+}
+package "elyra.pipeline.kfp.component_parser_kfp" as elyra.pipeline.kfp.component_parser_kfp {
+}
+package "elyra.pipeline.kfp.kfp_authentication" as elyra.pipeline.kfp.kfp_authentication {
+}
+package "elyra.pipeline.kfp.kfp_component_utils" as elyra.pipeline.kfp.kfp_component_utils {
+}
+package "elyra.pipeline.kfp.processor_kfp" as elyra.pipeline.kfp.processor_kfp {
+}
+package "elyra.pipeline.parser" as elyra.pipeline.parser {
+}
+package "elyra.pipeline.pipeline" as elyra.pipeline.pipeline {
+}
+package "elyra.pipeline.pipeline_constants" as elyra.pipeline.pipeline_constants {
+}
+package "elyra.pipeline.pipeline_definition" as elyra.pipeline.pipeline_definition {
+}
+package "elyra.pipeline.processor" as elyra.pipeline.processor {
+}
+package "elyra.pipeline.runtime_type" as elyra.pipeline.runtime_type {
+}
+package "elyra.pipeline.validation" as elyra.pipeline.validation {
+}
+package "elyra.pipeline.wfp.component_parser_wfp" as elyra.pipeline.wfp.component_parser_wfp {
+}
+package "elyra.pipeline.wfp.processor_wfp" as elyra.pipeline.wfp.processor_wfp {
+}
+elyra.pipeline.catalog_connector --> elyra.pipeline.component
+elyra.pipeline.catalog_connector --> elyra.pipeline.component_parameter
+elyra.pipeline.catalog_connector --> elyra.pipeline.runtime_type
+elyra.pipeline.component --> elyra.pipeline.catalog_connector
+elyra.pipeline.component --> elyra.pipeline.component_parameter
+elyra.pipeline.component --> elyra.pipeline.runtime_type
+elyra.pipeline.component_catalog --> elyra.pipeline.catalog_connector
+elyra.pipeline.component_catalog --> elyra.pipeline.component
+elyra.pipeline.component_catalog --> elyra.pipeline.component_parameter
+elyra.pipeline.component_catalog --> elyra.pipeline.runtime_type
+elyra.pipeline.component_parameter --> elyra.pipeline.pipeline_constants
+elyra.pipeline.component_parameter --> elyra.pipeline.processor
+elyra.pipeline.handlers --> elyra.pipeline.component
+elyra.pipeline.handlers --> elyra.pipeline.component_catalog
+elyra.pipeline.handlers --> elyra.pipeline.parser
+elyra.pipeline.handlers --> elyra.pipeline.pipeline_definition
+elyra.pipeline.handlers --> elyra.pipeline.processor
+elyra.pipeline.handlers --> elyra.pipeline.runtime_type
+elyra.pipeline.handlers --> elyra.pipeline.validation
+elyra.pipeline.handlers --> elyra.pipeline.wfp.processor_wfp
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.catalog_connector
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.component
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.component_parameter
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.kfp.kfp_component_utils
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.runtime_type
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.component_catalog
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.component_parameter
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.kfp.kfp_authentication
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.pipeline
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.pipeline_constants
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.processor
+elyra.pipeline.kfp.processor_kfp --> elyra.pipeline.runtime_type
+elyra.pipeline.parser --> elyra.pipeline.pipeline
+elyra.pipeline.parser --> elyra.pipeline.pipeline_definition
+elyra.pipeline.pipeline --> elyra.pipeline.component_parameter
+elyra.pipeline.pipeline --> elyra.pipeline.pipeline_constants
+elyra.pipeline.pipeline_definition --> elyra.pipeline.component_catalog
+elyra.pipeline.pipeline_definition --> elyra.pipeline.component_parameter
+elyra.pipeline.pipeline_definition --> elyra.pipeline.pipeline
+elyra.pipeline.pipeline_definition --> elyra.pipeline.pipeline_constants
+elyra.pipeline.pipeline_definition --> elyra.pipeline.runtime_type
+elyra.pipeline.processor --> elyra.pipeline.component
+elyra.pipeline.processor --> elyra.pipeline.component_catalog
+elyra.pipeline.processor --> elyra.pipeline.component_parameter
+elyra.pipeline.processor --> elyra.pipeline.pipeline
+elyra.pipeline.processor --> elyra.pipeline.runtime_type
+elyra.pipeline.validation --> elyra.pipeline.component_catalog
+elyra.pipeline.validation --> elyra.pipeline.component_parameter
+elyra.pipeline.validation --> elyra.pipeline.pipeline
+elyra.pipeline.validation --> elyra.pipeline.pipeline_constants
+elyra.pipeline.validation --> elyra.pipeline.pipeline_definition
+elyra.pipeline.validation --> elyra.pipeline.processor
+elyra.pipeline.validation --> elyra.pipeline.runtime_type
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.catalog_connector
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.component
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.runtime_type
+elyra.pipeline.wfp.processor_wfp --> elyra.pipeline.parser
+elyra.pipeline.wfp.processor_wfp --> elyra.pipeline.processor
+elyra.pipeline.wfp.processor_wfp --> elyra.pipeline.runtime_type
+elyra.pipeline.wfp.processor_wfp --> elyra.pipeline.validation
+@enduml

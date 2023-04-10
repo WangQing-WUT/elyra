@@ -1,0 +1,31 @@
+@startuml classes
+set namespaceSeparator none
+class "ComponentCatalogConnector" as elyra.pipeline.catalog_connector.ComponentCatalogConnector {
+  max_readers : Int
+  max_readers_env : str
+  max_threads_default : int
+  {abstract}get_catalog_entries(catalog_metadata: Dict[str, Any]) -> List[Dict[str, Any]]
+  {abstract}get_entry_data(catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]) -> Optional[EntryData]
+  {abstract}get_hash_keys() -> List[Any]
+  max_readers_default()
+  {abstract}read_catalog_entry(catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]) -> Optional[str]
+  read_component_definitions(catalog_instance: Metadata) -> List[CatalogEntry]
+}
+class "FilesystemComponentCatalogConnector" as elyra.pipeline.catalog_connector.FilesystemComponentCatalogConnector {
+  get_absolute_path(path: str) -> str
+  get_catalog_entries(catalog_metadata: Dict[str, Any]) -> List[Dict[str, Any]]
+  get_entry_data(catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]) -> Optional[EntryData]
+  get_hash_keys() -> List[Any]
+}
+class "NewComponentConnector" as elyra.pipeline.catalog_connector.NewComponentConnector {
+}
+class "UrlComponentCatalogConnector" as elyra.pipeline.catalog_connector.UrlComponentCatalogConnector {
+  REQUEST_TIMEOUT : int
+  get_catalog_entries(catalog_metadata: Dict[str, Any]) -> List[Dict[str, Any]]
+  get_entry_data(catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]) -> Optional[EntryData]
+  get_hash_keys() -> List[Any]
+}
+elyra.pipeline.catalog_connector.FilesystemComponentCatalogConnector --|> elyra.pipeline.catalog_connector.ComponentCatalogConnector
+elyra.pipeline.catalog_connector.NewComponentConnector --|> elyra.pipeline.catalog_connector.ComponentCatalogConnector
+elyra.pipeline.catalog_connector.UrlComponentCatalogConnector --|> elyra.pipeline.catalog_connector.ComponentCatalogConnector
+@enduml

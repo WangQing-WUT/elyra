@@ -1,0 +1,85 @@
+@startuml classes
+set namespaceSeparator none
+class "Component" as elyra.pipeline.component.Component {
+  catalog_type
+  categories
+  component_reference
+  component_source
+  definition
+  description
+  extensions
+  file_extension
+  id
+  import_statement
+  input_properties
+  name
+  op
+  output_properties
+  parameter_refs
+  properties
+  required_properties
+  runtime_type
+  get_elyra_parameters() -> List[ComponentParameter]
+}
+class "ComponentParameter" as elyra.pipeline.component_parameter.ComponentParameter {
+  allow_no_options
+  allowed_input_types
+  description
+  items
+  json_data_type
+  name
+  ref
+  required
+  value
+  value_entry_type
+  render_parameter_details(param: ComponentParameter) -> str
+}
+class "ComponentParser" as elyra.pipeline.component.ComponentParser {
+  component_platform : Optional[RuntimeProcessorType]
+  file_types
+  create_instance(platform: RuntimeProcessorType) -> ComponentParser
+  determine_type_information(parsed_type: str) -> 'ParameterTypeInfo'
+  {abstract}parse(catalog_entry: catalog_connector.CatalogEntry) -> Optional[List[Component]]
+}
+class "KfpComponentParser" as elyra.pipeline.kfp.component_parser_kfp.KfpComponentParser {
+  component_platform
+  determine_type_information(parsed_type: str) -> SimpleNamespace
+  parse(catalog_entry: CatalogEntry) -> Optional[List[Component]]
+}
+class "KubeflowPipelinesResources" as elyra.pipeline.runtime_type.KubeflowPipelinesResources {
+  export_file_types : list
+  icon_endpoint : str
+  type : KUBEFLOW_PIPELINES
+}
+class "RuntimeProcessorType" as elyra.pipeline.runtime_type.RuntimeProcessorType {
+  name
+  get_instance_by_name(name: str) -> 'RuntimeProcessorType'
+  get_instance_by_value(value: str) -> 'RuntimeProcessorType'
+}
+class "RuntimeTypeResources" as elyra.pipeline.runtime_type.RuntimeTypeResources {
+  display_name
+  export_file_types : List[Dict[str, str]]
+  icon_endpoint : str
+  id
+  type
+  get_export_extensions() -> List[str]
+  get_instance_by_type(runtime_type: RuntimeProcessorType) -> 'RuntimeTypeResources'
+  to_dict() -> Dict[str, Any]
+}
+class "WfpComponentParser" as elyra.pipeline.wfp.component_parser_wfp.WfpComponentParser {
+  component_platform
+  parse(catalog_entry: CatalogEntry) -> Optional[List[Component]]
+}
+class "WfpPipelinesResources" as elyra.pipeline.runtime_type.WfpPipelinesResources {
+  export_file_types : list
+  icon_endpoint : str
+  type : WORKFLOW_PIPELINES
+}
+elyra.pipeline.kfp.component_parser_kfp.KfpComponentParser --|> elyra.pipeline.component.ComponentParser
+elyra.pipeline.runtime_type.KubeflowPipelinesResources --|> elyra.pipeline.runtime_type.RuntimeTypeResources
+elyra.pipeline.runtime_type.WfpPipelinesResources --|> elyra.pipeline.runtime_type.RuntimeTypeResources
+elyra.pipeline.wfp.component_parser_wfp.WfpComponentParser --|> elyra.pipeline.component.ComponentParser
+elyra.pipeline.runtime_type.RuntimeProcessorType --* elyra.pipeline.kfp.component_parser_kfp.KfpComponentParser : component_platform
+elyra.pipeline.runtime_type.RuntimeProcessorType --* elyra.pipeline.runtime_type.RuntimeTypeResources : type
+elyra.pipeline.runtime_type.RuntimeProcessorType --* elyra.pipeline.wfp.component_parser_wfp.WfpComponentParser : component_platform
+@enduml

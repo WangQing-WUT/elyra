@@ -1,0 +1,117 @@
+@startuml classes
+set namespaceSeparator none
+class "DisableNodeCaching" as elyra.pipeline.component_parameter.DisableNodeCaching {
+  custom : bool
+  generic : bool
+  property_id
+  selection
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> DisableNodeCaching
+  get_schema() -> Dict[str, Any]
+}
+class "ElyraProperty" as elyra.pipeline.component_parameter.ElyraProperty {
+  custom : bool
+  generic : bool
+  property_id : str
+  {abstract}add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any)
+  all_subclasses()
+  build_property_map() -> None
+  create_instance(prop_id: str, value: Optional[Any]) -> ElyraProperty | ElyraPropertyList | None
+  get_all_validation_errors() -> List[str]
+  get_classes_for_component_type(component_type: str, runtime_type: Optional[str]) -> Set[type]
+  get_schema() -> Dict[str, Any]
+  {abstract}get_value_for_display() -> Dict[str, Any]
+  is_empty_instance() -> bool
+  strip_if_string(var: Any) -> Any
+  unpack(value_dict: dict)
+}
+class "ElyraPropertyListItem" as elyra.pipeline.component_parameter.ElyraPropertyListItem {
+  get_key_for_dict_entry() -> str
+  get_schema() -> Dict[str, Any]
+  get_value_for_dict_entry() -> str
+  get_value_for_display() -> Dict[str, Any]
+  to_dict() -> Dict[str, Any]
+}
+class "EnvironmentVariable" as elyra.pipeline.component_parameter.EnvironmentVariable {
+  custom : bool
+  env_var
+  generic : bool
+  property_id
+  type
+  value
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> EnvironmentVariable | None
+  get_all_validation_errors() -> List[str]
+  get_schema() -> Dict[str, Any]
+  get_value_for_dict_entry() -> str
+}
+class "KubernetesAnnotation" as elyra.pipeline.component_parameter.KubernetesAnnotation {
+  custom : bool
+  generic : bool
+  key
+  property_id
+  type
+  value : str
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> KubernetesAnnotation | None
+  get_all_validation_errors() -> List[str]
+  get_value_for_dict_entry() -> str
+}
+class "KubernetesLabel" as elyra.pipeline.component_parameter.KubernetesLabel {
+  custom : bool
+  generic : bool
+  key
+  property_id
+  type
+  value : str
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> KubernetesLabel | None
+  get_all_validation_errors() -> List[str]
+  get_value_for_dict_entry() -> str
+}
+class "KubernetesSecret" as elyra.pipeline.component_parameter.KubernetesSecret {
+  custom : bool
+  env_var
+  generic : bool
+  key : str
+  key_type
+  name : str
+  name_type
+  property_id
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> KubernetesSecret | None
+  get_all_validation_errors() -> List[str]
+}
+class "KubernetesToleration" as elyra.pipeline.component_parameter.KubernetesToleration {
+  custom : bool
+  effect
+  generic : bool
+  key
+  operator
+  property_id
+  value
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> KubernetesToleration | None
+  get_all_validation_errors() -> List[str]
+  get_schema() -> Dict[str, Any]
+}
+class "VolumeMount" as elyra.pipeline.component_parameter.VolumeMount {
+  custom : bool
+  generic : bool
+  path
+  property_id
+  pvc_name : str
+  type
+  add_to_execution_object(runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any)
+  create_instance(prop_id: str, value: Optional[Any]) -> VolumeMount | None
+  get_all_validation_errors() -> List[str]
+}
+elyra.pipeline.component_parameter.DisableNodeCaching --|> elyra.pipeline.component_parameter.ElyraProperty
+elyra.pipeline.component_parameter.ElyraPropertyListItem --|> elyra.pipeline.component_parameter.ElyraProperty
+elyra.pipeline.component_parameter.EnvironmentVariable --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+elyra.pipeline.component_parameter.KubernetesAnnotation --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+elyra.pipeline.component_parameter.KubernetesLabel --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+elyra.pipeline.component_parameter.KubernetesSecret --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+elyra.pipeline.component_parameter.KubernetesToleration --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+elyra.pipeline.component_parameter.VolumeMount --|> elyra.pipeline.component_parameter.ElyraPropertyListItem
+@enduml

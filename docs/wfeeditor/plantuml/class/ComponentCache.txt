@@ -1,0 +1,58 @@
+@startuml classes
+set namespaceSeparator none
+class "CacheUpdateManager" as elyra.pipeline.component_catalog.CacheUpdateManager {
+  daemon : bool
+  log : Logger
+  name : str
+  stop_event : Event
+  init_refresh() -> None
+  is_refreshing() -> bool
+  manage_cache_tasks()
+  run()
+  stop()
+}
+class "ComponentCache" as elyra.pipeline.component_catalog.ComponentCache {
+  cache_manager
+  is_server_process : bool
+  manifest_dir
+  manifest_filename
+  observer : WindowsApiObserver, PollingObserver, KqueueObserver, FSEventsObserver, InotifyObserver
+  refresh_queue : Optional[RefreshQueue]
+  update_queue : Optional[UpdateQueue]
+  get_all_components(platform: RuntimeProcessorType) -> List[Component]
+  get_component(platform: RuntimeProcessorType, component_id: str) -> Optional[Component]
+  get_generic_component(component_id: str) -> Optional[Component]
+  get_generic_component_from_op(component_op: str) -> Optional[Component]
+  get_generic_component_ops() -> List[str]
+  get_generic_components() -> List[Component]
+  load()
+  load_jinja_template(template_name: str) -> Template
+  read_component_catalog(catalog: ComponentCatalogMetadata) -> Dict[str, Component]
+  refresh()
+  to_canvas_palette(components: List[Component]) -> Dict
+  to_canvas_properties(component: Component) -> Dict
+  update(catalog: Metadata, action: str)
+  update_manifest(filename: Optional[str], manifest: Optional[Dict[str, str]]) -> None
+  wait_for_all_cache_tasks()
+}
+class "ManifestFileChangeHandler" as elyra.pipeline.component_catalog.ManifestFileChangeHandler {
+  component_cache
+  log
+  dispatch(event)
+  on_modified(event)
+}
+class "RefreshQueue" as elyra.pipeline.component_catalog.RefreshQueue {
+  refreshing
+  refreshing : bool
+  get(block: bool, timeout: Optional[float])
+  put(item, block, timeout)
+}
+class "UpdateQueue" as elyra.pipeline.component_catalog.UpdateQueue {
+}
+elyra.pipeline.component_catalog.RefreshQueue --* elyra.pipeline.component_catalog.ComponentCache : refresh_queue
+elyra.pipeline.component_catalog.UpdateQueue --* elyra.pipeline.component_catalog.ComponentCache : update_queue
+elyra.pipeline.component_catalog.CacheUpdateManager --o elyra.pipeline.component_catalog.ComponentCache : cache_manager
+elyra.pipeline.component_catalog.ComponentCache --o elyra.pipeline.component_catalog.ManifestFileChangeHandler : component_cache
+elyra.pipeline.component_catalog.RefreshQueue --o elyra.pipeline.component_catalog.CacheUpdateManager : _refresh_queue
+elyra.pipeline.component_catalog.UpdateQueue --o elyra.pipeline.component_catalog.CacheUpdateManager : _update_queue
+@enduml

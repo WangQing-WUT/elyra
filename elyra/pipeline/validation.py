@@ -621,7 +621,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     self._validate_loop_list(node, node_param, default_parameter, response)
 
     def _validate_loop_list(self, node, node_param, default_parameter, response):
-        notList = False
+        notlist = False
         if node_param.get("widget") == "List[str|int|float]":
             value = node_param.get("value")
             converted_list = None
@@ -629,10 +629,10 @@ class PipelineValidationManager(SingletonConfigurable):
                 try:
                     converted_list = ast.literal_eval(value)
                 except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
-                    notList = True
+                    notlist = True
             if not isinstance(converted_list, list):
-                notList = True
-            if notList:
+                notlist = True
+            if notlist:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
@@ -640,7 +640,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
                 )
         elif node_param.get("widget") == "Number":
-            if node_param.get("value") is not int or node_param.get("value") <= 0:
+            if type(node_param.get("value")) is not int or node_param.get("value") <= 0:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",

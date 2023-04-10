@@ -63,8 +63,8 @@ class KfpComponentParser(ComponentParser):
     def _parse_properties(self, component_yaml: Dict[str, Any]) -> List[ComponentParameter]:
         properties: List[ComponentParameter] = []
 
-        # NOTE: Currently no runtime-specific properties are needed
-        # properties.extend(self.get_runtime_specific_properties())
+        # NOTE: Currently no runtime-specific properties are
+        # needed properties.extend(self.get_runtime_specific_properties())
 
         # Then loop through and create custom properties
         # Get parameter sub-dictionaries from YAML object

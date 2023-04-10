@@ -1,0 +1,29 @@
+@startuml classes
+set namespaceSeparator none
+class "CacheUpdateWorker" as elyra.pipeline.component_catalog.CacheUpdateWorker {
+  action : Optional[str]
+  catalog
+  daemon : bool
+  last_warn_time
+  name
+  queue : Queue
+  task_start_time
+  prepare_cache_for_catalog(runtime_type: Optional[str])
+  run()
+}
+class "ComponentCatalogMetadata" as elyra.pipeline.component_metadata.ComponentCatalogMetadata {
+  runtime_type
+  post_delete() -> None
+  post_save() -> None
+}
+class "FilenameCatalogMetadata" as elyra.pipeline.component_metadata.FilenameCatalogMetadata {
+}
+class "NewComponentMetadata" as elyra.pipeline.component_metadata.NewComponentMetadata {
+}
+class "UrlCatalogMetadata" as elyra.pipeline.component_metadata.UrlCatalogMetadata {
+}
+elyra.pipeline.component_metadata.FilenameCatalogMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.NewComponentMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.UrlCatalogMetadata --|> elyra.pipeline.component_metadata.ComponentCatalogMetadata
+elyra.pipeline.component_metadata.ComponentCatalogMetadata --o elyra.pipeline.component_catalog.CacheUpdateWorker : catalog
+@enduml

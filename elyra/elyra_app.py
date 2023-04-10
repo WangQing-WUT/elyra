@@ -74,9 +74,6 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
     ]
 
     # Local path to templates directory.
-    # template_paths = [
-    #     DEFAULT_TEMPLATE_FILES_PATH
-    # ]
 
     # Define ElyraApp configurables here..
 

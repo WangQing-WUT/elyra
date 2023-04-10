@@ -1,0 +1,45 @@
+@startuml packages
+set namespaceSeparator none
+package "elyra.metadata" as elyra.metadata {
+}
+package "elyra.metadata.error" as elyra.metadata.error {
+}
+package "elyra.metadata.handlers" as elyra.metadata.handlers {
+}
+package "elyra.metadata.manager" as elyra.metadata.manager {
+}
+package "elyra.metadata.metadata" as elyra.metadata.metadata {
+}
+package "elyra.metadata.metadata_app" as elyra.metadata.metadata_app {
+}
+package "elyra.metadata.metadata_app_utils" as elyra.metadata.metadata_app_utils {
+}
+package "elyra.metadata.schema" as elyra.metadata.schema {
+}
+package "elyra.metadata.schemaspaces" as elyra.metadata.schemaspaces {
+}
+package "elyra.metadata.schemasproviders" as elyra.metadata.schemasproviders {
+}
+package "elyra.metadata.storage" as elyra.metadata.storage {
+}
+elyra.metadata.handlers --> elyra.metadata.error
+elyra.metadata.handlers --> elyra.metadata.manager
+elyra.metadata.handlers --> elyra.metadata.metadata
+elyra.metadata.handlers --> elyra.metadata.schema
+elyra.metadata.manager --> elyra.metadata.error
+elyra.metadata.manager --> elyra.metadata.metadata
+elyra.metadata.manager --> elyra.metadata.schema
+elyra.metadata.manager --> elyra.metadata.storage
+elyra.metadata.metadata --> elyra.metadata.schema
+elyra.metadata.metadata_app --> elyra.metadata.error
+elyra.metadata.metadata_app --> elyra.metadata.manager
+elyra.metadata.metadata_app --> elyra.metadata.metadata
+elyra.metadata.metadata_app --> elyra.metadata.metadata_app_utils
+elyra.metadata.metadata_app --> elyra.metadata.schema
+elyra.metadata.metadata_app_utils --> elyra.metadata.manager
+elyra.metadata.schema --> elyra.metadata.error
+elyra.metadata.schemaspaces --> elyra.metadata.schema
+elyra.metadata.schemasproviders --> elyra.metadata.schema
+elyra.metadata.schemasproviders --> elyra.metadata.schemaspaces
+elyra.metadata.storage --> elyra.metadata.error
+@enduml

@@ -1,0 +1,42 @@
+@startuml classes
+set namespaceSeparator none
+class "FileChangeHandler" as elyra.metadata.storage.FileChangeHandler {
+  file_metadata_cache
+  log
+  dispatch(event)
+  on_deleted(event)
+  on_modified(event)
+}
+class "FileMetadataCache" as elyra.metadata.storage.FileMetadataCache {
+  enabled : Bool
+  hits : int
+  max_size : Int
+  misses : int
+  observed_dirs : set
+  observer : InotifyObserver, FSEventsObserver, PollingObserver, WindowsApiObserver, KqueueObserver
+  trims : int
+  add_item(path: str, entry: Dict[str, Any]) -> None
+  get_item(path: str) -> Optional[Dict[str, Any]]
+  remove_item(path: str) -> Optional[Dict[str, Any]]
+}
+class "FileMetadataStore" as elyra.metadata.storage.FileMetadataStore {
+  cache : NoneType
+  metadata_paths : list
+  preferred_metadata_dir
+  delete_instance(metadata: dict) -> None
+  fetch_instances(name: Optional[str], include_invalid: bool) -> List[dict]
+  metadata_path()
+  schemaspace_exists() -> bool
+  store_instance(name: str, metadata: dict, for_update: bool) -> dict
+}
+class "MetadataStore" as elyra.metadata.storage.MetadataStore {
+  log : NoneType, RootLogger
+  schemaspace
+  {abstract}delete_instance(metadata: dict) -> None
+  {abstract}fetch_instances(name: Optional[str], include_invalid: bool) -> List[dict]
+  {abstract}schemaspace_exists() -> bool
+  {abstract}store_instance(name: str, metadata: dict, for_update: bool) -> dict
+}
+elyra.metadata.storage.FileMetadataStore --|> elyra.metadata.storage.MetadataStore
+elyra.metadata.storage.FileMetadataCache --o elyra.metadata.storage.FileChangeHandler : file_metadata_cache
+@enduml

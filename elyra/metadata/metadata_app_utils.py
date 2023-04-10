@@ -146,11 +146,6 @@ class Option(object):
         # here in case we want to support that scenario, which would likely mean
         # checking the entries to ensure they are expecting string values before
         # splitting.
-        # elif value[0] == '[' and value[-1] == ']':
-        #     # we have brackets.  If not internal quotes split within the brackets.
-        #     # This handles the common (but invalid) "[item1,item2]" format.
-        #     if value[1] not in ["'", '"'] and value[-2] not in ["'", '"']:
-        #         new_value = str(value[1:-1].split(","))
         return ast.literal_eval(new_value)
 
     @staticmethod

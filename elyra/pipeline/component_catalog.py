@@ -63,8 +63,8 @@ WORKER_THREAD_WARNING_THRESHOLD = int(os.getenv("ELYRA_WORKER_THREAD_WARNING_THR
 ComponentCacheType = Dict[str, Dict[str, Dict[str, Dict[str, Union[Component, str, List[str]]]]]]
 
 
-def get_oneOf(title: str):
-    oneOf = [
+def get_oneof(title: str):
+    oneof = [
         {
             "label": "Enter a value manually",
             "properties": {
@@ -86,7 +86,7 @@ def get_oneOf(title: str):
     value = {
         "type": "object",
         "title": title,
-        "oneOf": oneOf,
+        "oneOf": oneof,
     }
     return value
 
@@ -742,22 +742,22 @@ class ComponentCache(SingletonConfigurable):
         ):
             result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"][
                 "value"
-            ] = get_oneOf("Value")
+            ] = get_oneof("Value")
             result["properties"]["component_parameters"]["properties"]["kubernetes_pod_annotations"]["items"][
                 "properties"
-            ]["value"] = get_oneOf("Value")
+            ]["value"] = get_oneof("Value")
             result["properties"]["component_parameters"]["properties"]["mounted_volumes"]["items"]["properties"][
                 "pvc_name"
-            ] = get_oneOf("Persistent Volume Claim Name")
+            ] = get_oneof("Persistent Volume Claim Name")
             result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"][
                 "key"
-            ] = get_oneOf("Secret Key")
+            ] = get_oneof("Secret Key")
             result["properties"]["component_parameters"]["properties"]["kubernetes_secrets"]["items"]["properties"][
                 "name"
-            ] = get_oneOf("Secret Name")
+            ] = get_oneof("Secret Name")
             result["properties"]["component_parameters"]["properties"]["env_vars"]["items"]["properties"][
                 "value"
-            ] = get_oneOf("Value")
+            ] = get_oneof("Value")
         return result
 
 

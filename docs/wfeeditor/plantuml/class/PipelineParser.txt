@@ -1,0 +1,76 @@
+@startuml classes
+set namespaceSeparator none
+class "AppDataBase" as elyra.pipeline.pipeline_definition.AppDataBase {
+  id
+  get(key: str, default_value) -> Any
+  set(key: str, value: Any)
+  to_dict() -> Dict
+}
+class "Node" as elyra.pipeline.pipeline_definition.Node {
+  component_links
+  component_source
+  elyra_owned_properties
+  elyra_owned_properties
+  is_generic
+  label
+  op
+  subflow_pipeline_id
+  type
+  convert_elyra_owned_properties() -> None
+  get_all_component_parameters() -> Dict[str, Any]
+  get_component_parameter(key: str, default_value) -> Any
+  pop_component_parameter(key: str, default: Optional[Any]) -> Any
+  remove_env_vars_with_matching_secrets()
+  set_component_parameter(key: str, value: Any)
+  set_elyra_owned_properties(runtime_type_name: Optional[str]) -> None
+  unset_elyra_owned_properties() -> None
+}
+class "Pipeline" as elyra.pipeline.pipeline_definition.Pipeline {
+  comments
+  name
+  nodes
+  pipeline_parameters
+  runtime
+  runtime_config
+  source
+  type
+  version
+  convert_elyra_owned_properties() -> None
+  get_property(key: str, default_value) -> Any
+  set_property(key: str, value: Any)
+}
+class "Pipeline" as elyra.pipeline.pipeline.Pipeline {
+  description
+  id
+  name
+  operations
+  pipeline_parameters
+  runtime
+  runtime_config
+  source
+  contains_generic_operations() -> bool
+}
+class "PipelineDefinition" as elyra.pipeline.pipeline_definition.PipelineDefinition {
+  id
+  pipeline_nodes
+  pipelines
+  primary_pipeline
+  schema_version
+  get_canvas_properties_from_template(package_name: str, template_name: str, runtime_type: str) -> Dict[str, Any]
+  get_node(node_id: str)
+  get_node_comments(node_id: str) -> Optional[str]
+  get_pipeline_definition(pipeline_id) -> Any
+  get_supernodes() -> List[Node]
+  is_valid() -> bool
+  propagate_pipeline_default_properties()
+  to_dict() -> Dict
+  validate() -> list
+}
+class "PipelineParser" as elyra.pipeline.parser.PipelineParser {
+  root_dir : str
+  parse(pipeline_json: Dict) -> Pipeline
+}
+elyra.pipeline.pipeline_definition.Node --|> elyra.pipeline.pipeline_definition.AppDataBase
+elyra.pipeline.pipeline_definition.Pipeline --|> elyra.pipeline.pipeline_definition.AppDataBase
+elyra.pipeline.pipeline_definition.Pipeline --* elyra.pipeline.pipeline_definition.PipelineDefinition : _primary_pipeline
+@enduml

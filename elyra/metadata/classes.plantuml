@@ -1,0 +1,454 @@
+@startuml classes
+set namespaceSeparator none
+class "AppBase" as elyra.metadata.metadata_app_utils.AppBase {
+  argv
+  argv : list
+  argv_mappings : dict
+  description : NoneType
+  log : RootLogger, NoneType, Logger
+  subcommands : dict
+  exit(status: int)
+  exit_no_subcommand(msg: str)
+  get_subcommand()
+  has_help()
+  log_and_exit(msg: Optional[str], exit_status: int, display_help: bool)
+  print_description()
+  print_help()
+  print_subcommands()
+  process_cli_option(cli_option: Option, check_help: bool)
+  process_cli_options(cli_options: List[Option])
+}
+class "CliOption" as elyra.metadata.metadata_app_utils.CliOption {
+}
+class "CodeSnippets" as elyra.metadata.schemaspaces.CodeSnippets {
+  CODE_SNIPPETS_SCHEMASPACE_DISPLAY_NAME : str
+  CODE_SNIPPETS_SCHEMASPACE_ID : str
+  CODE_SNIPPETS_SCHEMASPACE_NAME : str
+}
+class "CodeSnippetsSchemas" as elyra.metadata.schemasproviders.CodeSnippetsSchemas {
+  get_schemas() -> List[Dict]
+}
+class "ComponentCatalogs" as elyra.metadata.schemaspaces.ComponentCatalogs {
+  COMPONENT_CATALOGS_SCHEMASPACE_DISPLAY_NAME : str
+  COMPONENT_CATALOGS_SCHEMASPACE_ID : str
+  COMPONENT_CATALOGS_SCHEMASPACE_NAME : str
+}
+class "ComponentCatalogsSchemas" as elyra.metadata.schemasproviders.ComponentCatalogsSchemas {
+  get_schemas() -> List[Dict]
+}
+class "ComponentEditorHandler" as elyra.metadata.handlers.ComponentEditorHandler {
+  get(path)
+  put(path)
+}
+class "Create" as elyra.metadata.metadata_app.Create {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "ElyraSchemasProvider" as elyra.metadata.schemasproviders.ElyraSchemasProvider {
+  f
+  json_file
+  local_schemas : list
+  log : NoneType, RootLogger
+  schema_dir
+  schema_file
+  schema_files
+  schema_json
+  get_local_schemas_by_schemaspace(schemaspace_id: str) -> List[Dict]
+}
+class "Export" as elyra.metadata.metadata_app.Export {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "FileChangeHandler" as elyra.metadata.storage.FileChangeHandler {
+  file_metadata_cache
+  log
+  dispatch(event)
+  on_deleted(event)
+  on_modified(event)
+}
+class "FileMetadataCache" as elyra.metadata.storage.FileMetadataCache {
+  enabled : Bool
+  hits : int
+  max_size : Int
+  misses : int
+  observed_dirs : set
+  observer : KqueueObserver, PollingObserver, WindowsApiObserver, InotifyObserver, FSEventsObserver
+  trims : int
+  add_item(path: str, entry: Dict[str, Any]) -> None
+  get_item(path: str) -> Optional[Dict[str, Any]]
+  remove_item(path: str) -> Optional[Dict[str, Any]]
+}
+class "FileMetadataStore" as elyra.metadata.storage.FileMetadataStore {
+  cache : NoneType
+  metadata_paths : list
+  preferred_metadata_dir
+  delete_instance(metadata: dict) -> None
+  fetch_instances(name: Optional[str], include_invalid: bool) -> List[dict]
+  metadata_path()
+  schemaspace_exists() -> bool
+  store_instance(name: str, metadata: dict, for_update: bool) -> dict
+}
+class "FileOption" as elyra.metadata.metadata_app_utils.FileOption {
+  bad_value : str
+  filename : str
+  name_arg
+  get_format_hint() -> str
+  handle_value_error(value: Any) -> None
+  set_value(value: str)
+}
+class "Flag" as elyra.metadata.metadata_app_utils.Flag {
+  print_help()
+}
+class "Import" as elyra.metadata.metadata_app.Import {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "Install" as elyra.metadata.metadata_app.Install {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "JSONBasedOption" as elyra.metadata.metadata_app_utils.JSONBasedOption {
+  display_name_arg
+  metadata
+  name_arg
+  schema_name_arg
+  transfer_names_to_argvs(argv: List[str], argv_mappings: Dict[str, str])
+}
+class "JSONOption" as elyra.metadata.metadata_app_utils.JSONOption {
+  bad_value : str
+  name_arg
+  get_format_hint() -> str
+  set_value(value: str)
+}
+class "Metadata" as elyra.metadata.metadata.Metadata {
+  display_name
+  display_name : NoneType
+  metadata
+  metadata : dict
+  name
+  name : NoneType
+  reason : NoneType
+  reason : str
+  resource
+  resource : NoneType
+  schema_name
+  schema_name : NoneType
+  from_dict(schemaspace: str, metadata_dict: dict) -> M
+  {abstract}on_load() -> None
+  {abstract}post_delete() -> None
+  {abstract}post_save() -> None
+  {abstract}pre_delete() -> None
+  {abstract}pre_save() -> None
+  prepare_write() -> dict
+  to_dict(trim: bool) -> dict
+  to_json(trim: bool) -> str
+}
+class "MetadataApp" as elyra.metadata.metadata_app.MetadataApp {
+  description : str
+  name : str
+  schemaspace_schemas : dict
+  subcommands : dict
+  main()
+  print_help()
+  start()
+}
+class "<color:red>MetadataExistsError</color>" as elyra.metadata.error.MetadataExistsError {
+}
+class "MetadataHandler" as elyra.metadata.handlers.MetadataHandler {
+  get(schemaspace)
+  post(schemaspace)
+}
+class "MetadataManager" as elyra.metadata.manager.MetadataManager {
+  metadata_store
+  metadata_store_class : Type
+  schema_mgr : NoneType
+  schemaspace
+  create(name: str, metadata: Metadata) -> Metadata
+  get(name: str) -> Metadata
+  get_all(include_invalid: bool, of_schema: str) -> List[Metadata]
+  get_normalized_name(name: str) -> str
+  remove(name: str) -> None
+  save_component(component_metadata, path)
+  schemaspace_exists() -> bool
+  update(name: str, metadata: Metadata, for_migration: bool) -> Metadata
+  validate(name: str, metadata: Metadata) -> None
+}
+class "<color:red>MetadataNotFoundError</color>" as elyra.metadata.error.MetadataNotFoundError {
+}
+class "MetadataResourceHandler" as elyra.metadata.handlers.MetadataResourceHandler {
+  delete(schemaspace, resource)
+  get(schemaspace, resource)
+  put(schemaspace, resource)
+}
+class "MetadataSchemaProperty" as elyra.metadata.metadata_app_utils.MetadataSchemaProperty {
+  unsupported_meta_props
+  get_additional_info() -> str
+}
+class "MetadataStore" as elyra.metadata.storage.MetadataStore {
+  log : NoneType, RootLogger
+  schemaspace
+  {abstract}delete_instance(metadata: dict) -> None
+  {abstract}fetch_instances(name: Optional[str], include_invalid: bool) -> List[dict]
+  {abstract}schemaspace_exists() -> bool
+  {abstract}store_instance(name: str, metadata: dict, for_update: bool) -> dict
+}
+class "Migrate" as elyra.metadata.metadata_app.Migrate {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "Option" as elyra.metadata.metadata_app_utils.Option {
+  bad_value : Optional[str]
+  cli_option : str
+  default_value : Optional[Any]
+  description : Optional[str]
+  enum : Optional[List[Any]]
+  name : Optional[str]
+  processed : bool
+  required : bool
+  type : str
+  value : int, set, list, Optional[Any], tuple, NoneType, bool, float, dict
+  coerce_array_value(value: Any)
+  get_additional_info() -> str
+  get_article(type: str) -> str
+  get_format_hint() -> str
+  handle_value_error(value: Any) -> None
+  print_description()
+  print_help()
+  set_value(value: Any)
+}
+class "Remove" as elyra.metadata.metadata_app.Remove {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+class "RuntimeImages" as elyra.metadata.schemaspaces.RuntimeImages {
+  RUNTIMES_IMAGES_SCHEMASPACE_DISPLAY_NAME : str
+  RUNTIMES_IMAGES_SCHEMASPACE_NAME : str
+  RUNTIME_IMAGES_SCHEMASPACE_ID : str
+}
+class "RuntimeImagesSchemas" as elyra.metadata.schemasproviders.RuntimeImagesSchemas {
+  get_schemas() -> List[Dict]
+}
+class "Runtimes" as elyra.metadata.schemaspaces.Runtimes {
+  RUNTIMES_SCHEMASPACE_DISPLAY_NAME : str
+  RUNTIMES_SCHEMASPACE_ID : str
+  RUNTIMES_SCHEMASPACE_NAME : str
+}
+class "RuntimesSchemas" as elyra.metadata.schemasproviders.RuntimesSchemas {
+  get_schemas() -> List[Dict]
+}
+class "SchemaHandler" as elyra.metadata.handlers.SchemaHandler {
+  get(schemaspace)
+}
+class "SchemaManager" as elyra.metadata.schema.SchemaManager {
+  metadata_testing_enabled
+  schemaspace_id_to_name : Dict[str, str]
+  schemaspace_id_to_name : dict
+  schemaspace_schema_validators : Dict[str, Dict[str, Any]]
+  schemaspace_schema_validators : dict
+  schemaspace_schemasproviders : Dict[str, Dict[str, 'SchemasProvider']]
+  schemaspace_schemasproviders : dict
+  schemaspaces : Dict[str, 'Schemaspace']
+  schemaspaces : dict
+  clear_all() -> None
+  get_schema(schemaspace_name_or_id: str, schema_name: str) -> dict
+  get_schemaspace(schemaspace_name_or_id: str) -> 'Schemaspace'
+  get_schemaspace_name(schemaspace_name_or_id: str) -> str
+  get_schemaspace_names(include_deprecated: bool) -> List[str]
+  get_schemaspace_schemas(schemaspace_name_or_id: str) -> dict
+  get_schemasproviders(schemaspace_id: str) -> Dict[str, 'SchemasProvider']
+  validate_instance(schemaspace_name_or_id: str, schema_name: str, instance: dict) -> None
+}
+class "<color:red>SchemaNotFoundError</color>" as elyra.metadata.error.SchemaNotFoundError {
+}
+class "SchemaProperty" as elyra.metadata.metadata_app_utils.SchemaProperty {
+  print_meta_properties : bool
+  schema_property : Dict
+  skipped_keywords
+  unsupported_keywords : set
+  print_description()
+}
+class "SchemaResourceHandler" as elyra.metadata.handlers.SchemaResourceHandler {
+  get(schemaspace, resource)
+}
+class "SchemasProvider" as elyra.metadata.schema.SchemasProvider {
+  log : Logger
+  log : NoneType, RootLogger, Logger
+  {abstract}get_schemas() -> List[Dict]
+  get_validator(schema: dict) -> Any
+  migrate() -> List[str]
+}
+class "Schemaspace" as elyra.metadata.schema.Schemaspace {
+  deprecated_schema_names
+  description
+  display_name
+  id
+  is_deprecated
+  name
+  schemas
+  add_schema(schema: Dict) -> None
+  filter_schema(schema: Dict) -> Dict
+  migrate() -> List[str]
+}
+class "SchemaspaceBase" as elyra.metadata.metadata_app.SchemaspaceBase {
+  description : NoneType
+  options : list
+  schemas : NoneType
+  schemaspace : NoneType
+  print_help()
+  start()
+}
+class "SchemaspaceCreate" as elyra.metadata.metadata_app.SchemaspaceCreate {
+  complex_properties : List[str]
+  file_option
+  json_option
+  metadata_manager
+  name_option
+  options : List[Option]
+  schema_name_option
+  update_mode : bool
+  print_help()
+  start()
+}
+class "SchemaspaceExport" as elyra.metadata.metadata_app.SchemaspaceExport {
+  clean_flag
+  directory_option
+  include_invalid_flag
+  metadata_manager
+  options : List[Option]
+  schema_name_option
+  start()
+}
+class "SchemaspaceHandler" as elyra.metadata.handlers.SchemaspaceHandler {
+  get()
+}
+class "SchemaspaceImport" as elyra.metadata.metadata_app.SchemaspaceImport {
+  directory_option
+  metadata_manager
+  options : List[Option]
+  overwrite_flag
+  start()
+}
+class "SchemaspaceInstall" as elyra.metadata.metadata_app.SchemaspaceInstall {
+  complex_properties : List[str]
+  file_option
+  json_option
+  metadata_manager
+  name_option
+  options : List[Option]
+  replace_flag
+  schema_name_option
+  print_help()
+  start()
+}
+class "SchemaspaceList" as elyra.metadata.metadata_app.SchemaspaceList {
+  json_flag
+  metadata_manager
+  options : list
+  valid_only_flag
+  start()
+}
+class "SchemaspaceMigrate" as elyra.metadata.metadata_app.SchemaspaceMigrate {
+  options : list
+  start()
+}
+class "SchemaspaceRemove" as elyra.metadata.metadata_app.SchemaspaceRemove {
+  metadata_manager
+  name_option
+  options : list
+  start()
+}
+class "SchemaspaceResourceHandler" as elyra.metadata.handlers.SchemaspaceResourceHandler {
+  get(schemaspace)
+}
+class "SchemaspaceUpdate" as elyra.metadata.metadata_app.SchemaspaceUpdate {
+  update_mode : bool
+}
+class "SubcommandBase" as elyra.metadata.metadata_app.SubcommandBase {
+  schemaspace_base_class : NoneType
+  schemaspace_schemas
+  subcommand_description : NoneType
+  subcommands : dict
+  print_help()
+  start()
+}
+class "Update" as elyra.metadata.metadata_app.Update {
+  description : str
+  schemaspace_base_class
+  subcommand_description : str
+}
+elyra.metadata.metadata_app.Create --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.Export --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.Import --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.Install --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.MetadataApp --|> elyra.metadata.metadata_app_utils.AppBase
+elyra.metadata.metadata_app.Migrate --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.Remove --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app.SchemaspaceBase --|> elyra.metadata.metadata_app_utils.AppBase
+elyra.metadata.metadata_app.SchemaspaceCreate --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceExport --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceImport --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceInstall --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceList --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceMigrate --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceRemove --|> elyra.metadata.metadata_app.SchemaspaceBase
+elyra.metadata.metadata_app.SchemaspaceUpdate --|> elyra.metadata.metadata_app.SchemaspaceCreate
+elyra.metadata.metadata_app.SubcommandBase --|> elyra.metadata.metadata_app_utils.AppBase
+elyra.metadata.metadata_app.Update --|> elyra.metadata.metadata_app.SubcommandBase
+elyra.metadata.metadata_app_utils.CliOption --|> elyra.metadata.metadata_app_utils.Option
+elyra.metadata.metadata_app_utils.FileOption --|> elyra.metadata.metadata_app_utils.JSONBasedOption
+elyra.metadata.metadata_app_utils.Flag --|> elyra.metadata.metadata_app_utils.Option
+elyra.metadata.metadata_app_utils.JSONBasedOption --|> elyra.metadata.metadata_app_utils.CliOption
+elyra.metadata.metadata_app_utils.JSONOption --|> elyra.metadata.metadata_app_utils.JSONBasedOption
+elyra.metadata.metadata_app_utils.MetadataSchemaProperty --|> elyra.metadata.metadata_app_utils.SchemaProperty
+elyra.metadata.metadata_app_utils.SchemaProperty --|> elyra.metadata.metadata_app_utils.CliOption
+elyra.metadata.schemaspaces.CodeSnippets --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.ComponentCatalogs --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.RuntimeImages --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemaspaces.Runtimes --|> elyra.metadata.schema.Schemaspace
+elyra.metadata.schemasproviders.CodeSnippetsSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.ComponentCatalogsSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.ElyraSchemasProvider --|> elyra.metadata.schema.SchemasProvider
+elyra.metadata.schemasproviders.RuntimeImagesSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.schemasproviders.RuntimesSchemas --|> elyra.metadata.schemasproviders.ElyraSchemasProvider
+elyra.metadata.storage.FileMetadataStore --|> elyra.metadata.storage.MetadataStore
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceCreate : metadata_manager
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceExport : metadata_manager
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceImport : metadata_manager
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceInstall : metadata_manager
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceList : metadata_manager
+elyra.metadata.manager.MetadataManager --* elyra.metadata.metadata_app.SchemaspaceRemove : metadata_manager
+elyra.metadata.metadata_app.SchemaspaceCreate --* elyra.metadata.metadata_app.Create : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceExport --* elyra.metadata.metadata_app.Export : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceImport --* elyra.metadata.metadata_app.Import : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceInstall --* elyra.metadata.metadata_app.Install : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceMigrate --* elyra.metadata.metadata_app.Migrate : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceRemove --* elyra.metadata.metadata_app.Remove : schemaspace_base_class
+elyra.metadata.metadata_app.SchemaspaceUpdate --* elyra.metadata.metadata_app.Update : schemaspace_base_class
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceCreate : schema_name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceCreate : schema_name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceCreate : name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceExport : schema_name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceExport : directory_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceImport : directory_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceInstall : schema_name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceInstall : schema_name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceInstall : name_option
+elyra.metadata.metadata_app_utils.CliOption --* elyra.metadata.metadata_app.SchemaspaceRemove : name_option
+elyra.metadata.metadata_app_utils.FileOption --* elyra.metadata.metadata_app.SchemaspaceCreate : file_option
+elyra.metadata.metadata_app_utils.FileOption --* elyra.metadata.metadata_app.SchemaspaceInstall : file_option
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceExport : include_invalid_flag
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceExport : clean_flag
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceImport : overwrite_flag
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceInstall : replace_flag
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceList : json_flag
+elyra.metadata.metadata_app_utils.Flag --* elyra.metadata.metadata_app.SchemaspaceList : valid_only_flag
+elyra.metadata.metadata_app_utils.JSONOption --* elyra.metadata.metadata_app.SchemaspaceCreate : json_option
+elyra.metadata.metadata_app_utils.JSONOption --* elyra.metadata.metadata_app.SchemaspaceInstall : json_option
+elyra.metadata.storage.FileMetadataCache --o elyra.metadata.storage.FileChangeHandler : file_metadata_cache
+@enduml

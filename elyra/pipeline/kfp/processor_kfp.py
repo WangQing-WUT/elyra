@@ -461,9 +461,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             input_parameters = self._get_pipeline_input_parameters(pipeline)
 
             pipeline_function = gen_function(input_parameters)
-            # pipeline_function = lambda: self._cc_pipeline(
-            #     pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id
-            # )  # nopep8
             if engine == "Tekton":
                 self.log.info("Compiling pipeline for Tekton engine")
                 kfp_tekton_compiler.TektonCompiler().compile(pipeline_function, absolute_pipeline_export_path)
@@ -928,12 +925,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 container_op = factory_function(**sanitized_component_params)
                 container_op.set_display_name(operation.name)
 
-                # if "env_vars" in operation.elyra_params:
-                #     env_vars = operation.elyra_params["env_vars"].to_dict()
-                #     if env_vars:
-                #         for key, value in env_vars.items():
-                #             container_op.add_env_variable(V1EnvVar(name=key, value=value))
-
                 if "cpu" in resources:
                     container_op.set_cpu_request(cpu=str(resources["cpu"]))
                 if "npu310" in resources:
@@ -1308,16 +1299,6 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             export,
             target_ops,
         )
-        # Process dependencies after all the operations have been created
-        # for operation in pipeline.operations.values():
-        #     op = target_ops[operation.id]
-        #     if operation.classifier.startswith("branch"):
-        #         continue
-        #     for parent_operation_id in operation.parent_operation_ids:
-        #         parent_op = target_ops[parent_operation_id]  # Parent Operation
-        #         if isinstance(parent_op, str):
-        #             continue
-        #         op.after(parent_op)
 
         self.log_pipeline_info(pipeline_name, "pipeline dependencies processed", duration=(time.time() - t0_all))
 
@@ -1409,12 +1390,12 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     ) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
 
-        v1EnvVar = V1EnvVar(name=instance.env_var, value=instance.value)
+        v1_env_var = V1EnvVar(name=instance.env_var, value=instance.value)
         if instance.type == "enum" and instance.value:
             for pipeline_input_parameter in pipeline_input_parameters:
                 if pipeline_input_parameter.name == instance.value:
-                    v1EnvVar = V1EnvVar(name=instance.env_var, value=pipeline_input_parameter)
-        execution_object.container.add_env_variable(v1EnvVar)
+                    v1_env_var = V1EnvVar(name=instance.env_var, value=pipeline_input_parameter)
+        execution_object.container.add_env_variable(v1_env_var)
 
     def add_kubernetes_secret(
         self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs
@@ -1430,11 +1411,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             for pipeline_input_parameter in pipeline_input_parameters:
                 if pipeline_input_parameter.name == instance.name:
                     name = pipeline_input_parameter
-        v1EnvVar = V1EnvVar(
+        v1_env_var = V1EnvVar(
             name=instance.env_var,
             value_from=V1EnvVarSource(secret_key_ref=V1SecretKeySelector(name=name, key=key)),
         )
-        execution_object.container.add_env_variable(v1EnvVar)
+        execution_object.container.add_env_variable(v1_env_var)
 
     def add_mounted_volume(
         self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs
@@ -1445,7 +1426,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             name=instance.pvc_name,
             persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(claim_name=instance.pvc_name),
         )
-        volumeMount = V1VolumeMount(mount_path=instance.path, name=instance.pvc_name)
+        volume_mount = V1VolumeMount(mount_path=instance.path, name=instance.pvc_name)
 
         if instance.type == "enum" and instance.pvc_name:
             for pipeline_input_parameter in pipeline_input_parameters:
@@ -1456,10 +1437,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                             claim_name=pipeline_input_parameter
                         ),
                     )
-                    volumeMount = V1VolumeMount(mount_path=instance.path, name=pipeline_input_parameter)
+                    volume_mount = V1VolumeMount(mount_path=instance.path, name=pipeline_input_parameter)
         if volume not in execution_object.volumes:
             execution_object.add_volume(volume)
-        execution_object.container.add_volume_mount(volumeMount)
+        execution_object.container.add_volume_mount(volume_mount)
 
     def add_kubernetes_pod_annotation(
         self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs

@@ -1,0 +1,37 @@
+@startuml classes
+set namespaceSeparator none
+class "GenericOperation" as elyra.pipeline.pipeline.GenericOperation {
+  cpu
+  dependencies
+  doc
+  env_vars
+  filename
+  gpu
+  include_subdirectories
+  memory
+  name
+  node_selector
+  npu310
+  npu910
+  runtime_image
+}
+class "Operation" as elyra.pipeline.pipeline.Operation {
+  classifier
+  component_params
+  component_params_as_dict
+  doc
+  doc
+  elyra_params
+  generic_node_types : list
+  id
+  inputs
+  is_generic
+  name
+  outputs
+  parent_operation_ids
+  type
+  create_instance(id: str, type: str, name: str, classifier: str, parent_operation_ids: Optional[List[str]], component_params: Optional[Dict[str, Any]], elyra_params: Optional[Dict[str, Any]]) -> Operation
+  is_generic_operation(operation_classifier) -> bool
+}
+elyra.pipeline.pipeline.GenericOperation --|> elyra.pipeline.pipeline.Operation
+@enduml

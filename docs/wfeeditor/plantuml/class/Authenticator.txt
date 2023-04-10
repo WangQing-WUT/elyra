@@ -1,0 +1,23 @@
+@startuml classes
+set namespaceSeparator none
+class "AbstractAuthenticator" as elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator {
+  {abstract}authenticate(kf_endpoint: str, runtime_config_name: str) -> Optional[SupportedAuthProviders]
+}
+class "DEXLDAPAuthenticator" as elyra.pipeline.kfp.kfp_authentication.DEXLDAPAuthenticator {
+  authenticate(kf_endpoint: str, runtime_config_name: str, username: str, password: str) -> Optional[str]
+}
+class "DEXLegacyAuthenticator" as elyra.pipeline.kfp.kfp_authentication.DEXLegacyAuthenticator {
+  authenticate(kf_endpoint: str, runtime_config_name: str, username: Optional[str], password: Optional[str]) -> Optional[str]
+}
+class "DEXStaticPasswordAuthenticator" as elyra.pipeline.kfp.kfp_authentication.DEXStaticPasswordAuthenticator {
+  authenticate(kf_endpoint: str, runtime_config_name: str, username: str, password: str) -> Optional[str]
+}
+class "K8sServiceAccountTokenAuthenticator" as elyra.pipeline.kfp.kfp_authentication.K8sServiceAccountTokenAuthenticator {
+  authenticate(kf_endpoint: str, runtime_config_name: str) -> ServiceAccountTokenVolumeCredentials
+}
+elyra.pipeline.kfp.kfp_authentication.DEXLDAPAuthenticator --|> elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator
+elyra.pipeline.kfp.kfp_authentication.DEXLegacyAuthenticator --|> elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator
+elyra.pipeline.kfp.kfp_authentication.DEXStaticPasswordAuthenticator --|> elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator
+elyra.pipeline.kfp.kfp_authentication.K8sServiceAccountTokenAuthenticator --|> elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator
+elyra.pipeline.kfp.kfp_authentication.NoAuthenticationAuthenticator --|> elyra.pipeline.kfp.kfp_authentication.AbstractAuthenticator
+@enduml

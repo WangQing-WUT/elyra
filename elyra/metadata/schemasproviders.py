@@ -107,9 +107,6 @@ class RuntimesSchemas(ElyraSchemasProvider):
                             engine_enum.remove("Tekton")
                             schema["properties"]["metadata"]["properties"]["engine"]["enum"] = engine_enum
 
-            # For KFP schemas replace placeholders:
-            # - properties.metadata.properties.auth_type.enum ({AUTH_PROVIDER_PLACEHOLDERS})
-            # - properties.metadata.properties.auth_type.default ({DEFAULT_AUTH_PROVIDER_PLACEHOLDER})
             auth_type_enum = SupportedAuthProviders.get_provider_names()
             auth_type_default = SupportedAuthProviders.get_default_provider().name
 

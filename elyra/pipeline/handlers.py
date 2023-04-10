@@ -34,7 +34,7 @@ from elyra.metadata.manager import MetadataManager
 from elyra.metadata.schemaspaces import ComponentCatalogs
 from elyra.pipeline.component import Component
 from elyra.pipeline.component_catalog import ComponentCache
-from elyra.pipeline.component_catalog import get_oneOf
+from elyra.pipeline.component_catalog import get_oneof
 from elyra.pipeline.component_catalog import RefreshInProgressError
 from elyra.pipeline.parser import PipelineParser
 from elyra.pipeline.pipeline_definition import PipelineDefinition
@@ -110,8 +110,8 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                 if "description" in pipeline_definition["pipelines"][0]["app_data"]["properties"]:
                     description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
                 runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
-                WPPR = WfpPipelineProcessor()
-                zip_file, response = await WPPR.export_custom(
+                wfp_processor = WfpPipelineProcessor()
+                zip_file, response = await wfp_processor.export_custom(
                     self.settings["server_root_dir"],
                     parent,
                     pipeline_definition,
@@ -120,7 +120,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                 )
                 if not response.has_fatal:
                     if pipeline_upload:
-                        response = await WPPR.upload(zip_file, runtime_config, name, description)
+                        response = await wfp_processor.upload(zip_file, runtime_config, name, description)
                         if not response.has_fatal:
                             json_msg = json.dumps({"export_path": zip_file})
                             self.set_status(201)
@@ -283,22 +283,22 @@ class PipelinePropertiesHandler(HttpErrorMixin, APIHandler):
             )
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_labels"]["items"][
                 "properties"
-            ]["value"] = get_oneOf("Value")
+            ]["value"] = get_oneof("Value")
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_pod_annotations"][
                 "items"
-            ]["properties"]["value"] = get_oneOf("Value")
+            ]["properties"]["value"] = get_oneof("Value")
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["mounted_volumes"]["items"][
                 "properties"
-            ]["pvc_name"] = get_oneOf("Persistent Volume Claim Name")
+            ]["pvc_name"] = get_oneof("Persistent Volume Claim Name")
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"][
                 "properties"
-            ]["key"] = get_oneOf("Secret Key")
+            ]["key"] = get_oneof("Secret Key")
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["kubernetes_secrets"]["items"][
                 "properties"
-            ]["name"] = get_oneOf("Secret Name")
+            ]["name"] = get_oneof("Secret Name")
             pipeline_properties_json["properties"]["pipeline_defaults"]["properties"]["env_vars"]["items"][
                 "properties"
-            ]["value"] = get_oneOf("Value")
+            ]["value"] = get_oneof("Value")
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")

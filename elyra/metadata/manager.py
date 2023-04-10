@@ -186,7 +186,7 @@ class MetadataManager(LoggingConfigurable):
         output_parameters = []
         parameters_placeholder = {}
 
-        def getValue(name: str, parameter: Dict):
+        def get_value(name: str, parameter: Dict):
             if name in parameter:
                 return parameter[name]
             else:
@@ -197,8 +197,8 @@ class MetadataManager(LoggingConfigurable):
                 temp_input_parameter = {
                     "name": input_parameter["name"],
                     "type": input_parameter["value_type"],
-                    "default": getValue("default", input_parameter),
-                    "description": getValue("description", input_parameter),
+                    "default": get_value("default", input_parameter),
+                    "description": get_value("description", input_parameter),
                 }
                 input_parameters.append(temp_input_parameter)
                 parameters_placeholder[input_parameter["name"]] = input_parameter["placeholder_type"]
@@ -208,7 +208,7 @@ class MetadataManager(LoggingConfigurable):
                 temp_output_parameter = {
                     "name": output_parameter["name"],
                     "type": output_parameter["value_type"],
-                    "description": getValue("description", output_parameter),
+                    "description": get_value("description", output_parameter),
                 }
                 output_parameters.append(temp_output_parameter)
                 parameters_placeholder[output_parameter["name"]] = output_parameter["placeholder_type"]

@@ -1,0 +1,80 @@
+@startuml packages
+set namespaceSeparator none
+package "elyra.metadata.error" as elyra.metadata.error {
+}
+package "elyra.metadata.manager" as elyra.metadata.manager {
+}
+package "elyra.metadata.metadata" as elyra.metadata.metadata {
+}
+package "elyra.metadata.schema" as elyra.metadata.schema {
+}
+package "elyra.metadata.schemaspaces" as elyra.metadata.schemaspaces {
+}
+package "elyra.metadata.schemasproviders" as elyra.metadata.schemasproviders {
+}
+package "elyra.metadata.storage" as elyra.metadata.storage {
+}
+package "elyra.pipeline.catalog_connector" as elyra.pipeline.catalog_connector {
+}
+package "elyra.pipeline.component" as elyra.pipeline.component {
+}
+package "elyra.pipeline.component_catalog" as elyra.pipeline.component_catalog {
+}
+package "elyra.pipeline.component_metadata" as elyra.pipeline.component_metadata {
+}
+package "elyra.pipeline.component_parameter" as elyra.pipeline.component_parameter {
+}
+package "elyra.pipeline.kfp.component_parser_kfp" as elyra.pipeline.kfp.component_parser_kfp {
+}
+package "elyra.pipeline.kfp.kfp_component_utils" as elyra.pipeline.kfp.kfp_component_utils {
+}
+package "elyra.pipeline.kfp.kfp_metadata" as elyra.pipeline.kfp.kfp_metadata {
+}
+package "elyra.pipeline.runtime_type" as elyra.pipeline.runtime_type {
+}
+package "elyra.pipeline.runtimes_metadata" as elyra.pipeline.runtimes_metadata {
+}
+package "elyra.pipeline.wfp.component_parser_wfp" as elyra.pipeline.wfp.component_parser_wfp {
+}
+package "elyra.pipeline.wfp.wfp_metadata" as elyra.pipeline.wfp.wfp_metadata {
+}
+elyra.metadata.manager --> elyra.metadata.error
+elyra.metadata.manager --> elyra.metadata.metadata
+elyra.metadata.manager --> elyra.metadata.schema
+elyra.metadata.manager --> elyra.metadata.storage
+elyra.metadata.metadata --> elyra.metadata.schema
+elyra.metadata.schema --> elyra.metadata.error
+elyra.metadata.schemaspaces --> elyra.metadata.schema
+elyra.metadata.schemasproviders --> elyra.metadata.schema
+elyra.metadata.schemasproviders --> elyra.metadata.schemaspaces
+elyra.metadata.storage --> elyra.metadata.error
+elyra.pipeline.catalog_connector --> elyra.metadata.metadata
+elyra.pipeline.catalog_connector --> elyra.pipeline.component
+elyra.pipeline.catalog_connector --> elyra.pipeline.component_parameter
+elyra.pipeline.catalog_connector --> elyra.pipeline.runtime_type
+elyra.pipeline.component --> elyra.pipeline.component_parameter
+elyra.pipeline.component --> elyra.pipeline.runtime_type
+elyra.pipeline.component_catalog --> elyra.metadata.manager
+elyra.pipeline.component_catalog --> elyra.metadata.metadata
+elyra.pipeline.component_catalog --> elyra.metadata.schemaspaces
+elyra.pipeline.component_catalog --> elyra.pipeline.catalog_connector
+elyra.pipeline.component_catalog --> elyra.pipeline.component
+elyra.pipeline.component_catalog --> elyra.pipeline.component_metadata
+elyra.pipeline.component_catalog --> elyra.pipeline.component_parameter
+elyra.pipeline.component_catalog --> elyra.pipeline.runtime_type
+elyra.pipeline.component_metadata --> elyra.metadata.metadata
+elyra.pipeline.component_metadata --> elyra.pipeline.runtime_type
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.catalog_connector
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.component
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.component_parameter
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.kfp.kfp_component_utils
+elyra.pipeline.kfp.component_parser_kfp --> elyra.pipeline.runtime_type
+elyra.pipeline.kfp.kfp_metadata --> elyra.metadata.manager
+elyra.pipeline.kfp.kfp_metadata --> elyra.pipeline.runtimes_metadata
+elyra.pipeline.runtimes_metadata --> elyra.metadata.manager
+elyra.pipeline.runtimes_metadata --> elyra.metadata.metadata
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.catalog_connector
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.component
+elyra.pipeline.wfp.component_parser_wfp --> elyra.pipeline.runtime_type
+elyra.pipeline.wfp.wfp_metadata --> elyra.pipeline.runtimes_metadata
+@enduml
