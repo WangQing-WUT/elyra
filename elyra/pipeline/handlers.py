@@ -47,7 +47,11 @@ from elyra.pipeline.wfp.processor_wfp import WfpPipelineProcessor
 from elyra.util.http import HttpErrorMixin
 
 
-MIMETYPE_MAP = {".yaml": "text/x-yaml", ".py": "text/x-python", None: "text/plain"}
+MIMETYPE_MAP = {
+    ".yaml": "text/x-yaml",
+    ".py": "text/x-python",
+    None: "text/plain",
+}
 
 
 def get_runtime_processor_type(runtime_type: str, log: Logger, request_path: str) -> Optional[RuntimeProcessorType]:
@@ -97,11 +101,11 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
 
         self.log.debug(f"JSON payload: {json.dumps(payload, indent=2, separators=(',', ': '))}")
 
-        pipeline_definition = payload["pipeline"]
-        pipeline_export_format = payload["export_format"]
-        pipeline_export_path = payload["export_path"]
-        pipeline_overwrite = payload["overwrite"]
-        pipeline_upload = payload["upload"]
+        pipeline_definition = payload.get("pipeline")
+        pipeline_export_format = payload.get("export_format")
+        pipeline_export_path = payload.get("export_path")
+        pipeline_overwrite = payload.get("overwrite")
+        pipeline_upload = payload.get("upload")
 
         try:
             if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
@@ -112,7 +116,7 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                 runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
                 wfp_processor = WfpPipelineProcessor()
                 zip_file, response = await wfp_processor.export_custom(
-                    self.settings["server_root_dir"],
+                    self.settings.get("server_root_dir"),
                     parent,
                     pipeline_definition,
                     pipeline_export_path,
@@ -158,12 +162,16 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                 self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
 
                 if not response.has_fatal:
-                    pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
-                        pipeline_definition
-                    )
+                    pipeline = PipelineParser(
+                        root_dir=self.settings.get("server_root_dir"),
+                        parent=parent,
+                    ).parse(pipeline_definition)
 
                     pipeline_exported_path = await PipelineProcessorManager.instance().export(
-                        pipeline, pipeline_export_format, pipeline_export_path, pipeline_overwrite
+                        pipeline,
+                        pipeline_export_format,
+                        pipeline_export_path,
+                        pipeline_overwrite,
                     )
                     json_msg = json.dumps({"export_path": pipeline_export_path})
                     self.set_status(201)
@@ -210,7 +218,7 @@ class PipelineSchedulerHandler(HttpErrorMixin, APIHandler):
 
         if not response.has_fatal:
             self.log.debug("Processing the pipeline submission and executing request")
-            pipeline = PipelineParser(root_dir=self.settings["server_root_dir"], parent=parent).parse(
+            pipeline = PipelineParser(root_dir=self.settings.get("server_root_dir"), parent=parent).parse(
                 pipeline_definition
             )
             response = await PipelineProcessorManager.instance().process(pipeline)
@@ -316,19 +324,19 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
             with open(pipeline_absolute_path, "r", encoding="utf-8") as r:
                 if pipeline_absolute_path.endswith(".pipeline"):
                     pipeline = json.load(r)
-                    properties = pipeline["pipelines"][0]["app_data"]["properties"]
+                    properties = pipeline.get("pipelines")[0].get("app_data").get("properties")
                     if "pipeline_defaults" in properties:
-                        pipeline_defaults = properties["pipeline_defaults"]
+                        pipeline_defaults = properties.get("pipeline_defaults")
                         if "input_parameters" in pipeline_defaults:
-                            for input_parameter in pipeline_defaults["input_parameters"]:
+                            for input_parameter in pipeline_defaults.get("input_parameters"):
                                 if "name" in input_parameter:
-                                    result.append(input_parameter["name"])
+                                    result.append(input_parameter.get("name"))
                 elif pipeline_absolute_path.endswith(".yaml"):
                     pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
-                    input_parameters = pipeline["spec"]["arguments"]["parameters"]
+                    input_parameters = pipeline.get("spec").get("arguments").get("parameters")
                     for input_parameter in input_parameters:
                         if "name" in input_parameter:
-                            result.append(input_parameter["name"])
+                            result.append(input_parameter.get("name"))
         except Exception as err:
             raise web.HTTPError(500, repr(err)) from err
 
@@ -380,7 +388,10 @@ class PipelineComponentPropertiesHandler(HttpErrorMixin, APIHandler):
         else:
             # Return component definition content
             json_response = json.dumps(
-                {"content": component.definition, "mimeType": self.get_mimetype(component.file_extension)}
+                {
+                    "content": component.definition,
+                    "mimeType": self.get_mimetype(component.file_extension),
+                }
             )
 
         self.set_status(200)

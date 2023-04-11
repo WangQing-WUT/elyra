@@ -151,7 +151,11 @@ class KfpComponentParser(ComponentParser):
             # If the component definition does not define a container command, log a warning.
             # See https://www.kubeflow.org/docs/components/pipelines/installation/choose-executor/#emissary-executor
             if results.get("implementation", {}).get("container", {}).get("command") is None:
-                if results["name"] in ["Pipeline Branch", "ParallelFor Start", "ParallelFor End"]:
+                if results["name"] in [
+                    "Pipeline Branch",
+                    "ParallelFor Start",
+                    "ParallelFor End",
+                ]:
                     pass
                 else:
                     self.log.warning(

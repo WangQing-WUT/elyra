@@ -129,7 +129,13 @@ async def test_create_instance(jp_base_url, jp_fetch):
     valid["name"] = "valid"
     body = json.dumps(valid)
 
-    r = await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE_ID, body=body, method="POST")
+    r = await jp_fetch(
+        "elyra",
+        "metadata",
+        METADATA_TEST_SCHEMASPACE_ID,
+        body=body,
+        method="POST",
+    )
     assert r.code == 201
     assert r.headers.get("Location") == url_path_join(
         jp_base_url, "/elyra", "metadata", METADATA_TEST_SCHEMASPACE_ID, "valid"
@@ -153,7 +159,13 @@ async def test_create_hierarchy_instance(jp_fetch, setup_hierarchy):
     body = json.dumps(byo_instance)
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, body=body, method="POST")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            body=body,
+            method="POST",
+        )
     assert expected_http_error(e, 409)
 
     # Confirm the instance was not changed
@@ -177,7 +189,13 @@ async def test_create_invalid_instance(jp_fetch):
     body = json.dumps(invalid)
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, body=body, method="POST")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            body=body,
+            method="POST",
+        )
     assert expected_http_error(e, 400)
 
 
@@ -191,7 +209,13 @@ async def test_create_instance_missing_schema(jp_fetch, schemaspace_location):
     body = json.dumps(missing_schema)
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, body=body, method="POST")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            body=body,
+            method="POST",
+        )
     assert expected_http_error(e, 404)
 
     # Ensure instance was not created.  Can't use REST here since it will correctly trigger 404
@@ -215,7 +239,14 @@ async def test_update_non_existent(jp_fetch, schemaspace_location):
 
     # Update (non-existent) instance
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "valid", body=body, method="PUT")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            "valid",
+            body=body,
+            method="PUT",
+        )
     assert expected_http_error(e, 404)
 
 
@@ -230,7 +261,14 @@ async def test_update_instance(jp_fetch, schemaspace_location):
     body = json.dumps(valid)
 
     # Update instance
-    r = await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE_ID, "valid", body=body, method="PUT")
+    r = await jp_fetch(
+        "elyra",
+        "metadata",
+        METADATA_TEST_SCHEMASPACE_ID,
+        "valid",
+        body=body,
+        method="PUT",
+    )
     assert r.code == 200
     instance = json.loads(r.body.decode())
     assert instance["metadata"]["number_range_test"] == 7
@@ -260,7 +298,14 @@ async def test_invalid_update(jp_fetch, schemaspace_location):
     body2 = json.dumps(valid2)
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE_ID, "update_bad_md", body=body2, method="PUT")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE_ID,
+            "update_bad_md",
+            body=body2,
+            method="PUT",
+        )
     assert expected_http_error(e, 400)
 
     # Fetch again and ensure it matches the previous instance
@@ -279,7 +324,14 @@ async def test_update_fields(jp_fetch, schemaspace_location):
     body = json.dumps(valid)
 
     # Update instance adding number_range_test
-    r = await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "update_fields", body=body, method="PUT")
+    r = await jp_fetch(
+        "elyra",
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "update_fields",
+        body=body,
+        method="PUT",
+    )
     assert r.code == 200
     instance = json.loads(r.body.decode())
     assert instance["metadata"]["number_range_test"] == 7
@@ -289,7 +341,14 @@ async def test_update_fields(jp_fetch, schemaspace_location):
     valid["metadata"]["string_length_test"] = "valid len"
     body = json.dumps(valid)
 
-    r = await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "update_fields", body=body, method="PUT")
+    r = await jp_fetch(
+        "elyra",
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "update_fields",
+        body=body,
+        method="PUT",
+    )
     assert r.code == 200
     instance = json.loads(r.body.decode())
     assert instance["metadata"]["string_length_test"] == "valid len"
@@ -306,7 +365,14 @@ async def test_update_hierarchy_instance(jp_fetch, setup_hierarchy):
     body = json.dumps(byo_instance)
 
     # Because this is considered an update, replacement is enabled.
-    r = await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "byo_2", body=body, method="PUT")
+    r = await jp_fetch(
+        "elyra",
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "byo_2",
+        body=body,
+        method="PUT",
+    )
     assert r.code == 200
 
     # Confirm the instances and ensure byo_2 is in USER area
@@ -327,7 +393,14 @@ async def test_update_hierarchy_instance(jp_fetch, setup_hierarchy):
     body = json.dumps(byo_2)
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "byo_2", body=body, method="PUT")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            "byo_2",
+            body=body,
+            method="PUT",
+        )
     assert expected_http_error(e, 400)
 
     # Confirm no update occurred
@@ -342,7 +415,13 @@ async def test_delete_instance(jp_fetch, schemaspace_location, setup_data):
 
     # First, attempt to delete non-existent resource, exception expected.
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "missing", method="DELETE")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            "missing",
+            method="DELETE",
+        )
     assert expected_http_error(e, 404)
 
     create_json_file(schemaspace_location, "valid.json", valid_metadata_json)
@@ -352,7 +431,13 @@ async def test_delete_instance(jp_fetch, schemaspace_location, setup_data):
 
     # Confirm deletion
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "valid", method="DELETE")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            "valid",
+            method="DELETE",
+        )
     assert expected_http_error(e, 404)
 
 
@@ -360,7 +445,13 @@ async def test_delete_hierarchy_instance(jp_fetch, schemaspace_location, setup_h
     """Create a simple instance - that conflicts with factory instances and delete it only if local."""
 
     with pytest.raises(HTTPClientError) as e:
-        await jp_fetch("elyra", "metadata", METADATA_TEST_SCHEMASPACE, "byo_2", method="DELETE")
+        await jp_fetch(
+            "elyra",
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            "byo_2",
+            method="DELETE",
+        )
     assert expected_http_error(e, 403)
 
     # create local instance, delete should succeed

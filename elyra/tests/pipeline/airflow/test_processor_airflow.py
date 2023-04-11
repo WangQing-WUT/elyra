@@ -86,36 +86,77 @@ def sample_metadata():
 
 @pytest.fixture
 def sample_image_metadata():
-    image_one = {"image_name": "tensorflow/tensorflow:2.0.0-py3", "pull_policy": "IfNotPresent", "tags": []}
-    image_two = {"image_name": "elyra/examples:1.0.0-py3", "pull_policy": "Always", "tags": []}
+    image_one = {
+        "image_name": "tensorflow/tensorflow:2.0.0-py3",
+        "pull_policy": "IfNotPresent",
+        "tags": [],
+    }
+    image_two = {
+        "image_name": "elyra/examples:1.0.0-py3",
+        "pull_policy": "Always",
+        "tags": [],
+    }
 
     mocked_runtime_images = [
-        Metadata(name="test-image-metadata", display_name="test-image", schema_name="airflow", metadata=image_one),
-        Metadata(name="test-image-metadata", display_name="test-image", schema_name="airflow", metadata=image_two),
+        Metadata(
+            name="test-image-metadata",
+            display_name="test-image",
+            schema_name="airflow",
+            metadata=image_one,
+        ),
+        Metadata(
+            name="test-image-metadata",
+            display_name="test-image",
+            schema_name="airflow",
+            metadata=image_two,
+        ),
     ]
 
     return mocked_runtime_images
 
 
 @pytest.fixture
-def parsed_ordered_dict(monkeypatch, processor, parsed_pipeline, sample_metadata, sample_image_metadata):
+def parsed_ordered_dict(
+    monkeypatch,
+    processor,
+    parsed_pipeline,
+    sample_metadata,
+    sample_image_metadata,
+):
 
     mocked_runtime = Metadata(
-        name="test-metadata", display_name="test", schema_name="airflow", metadata=sample_metadata["metadata"]
+        name="test-metadata",
+        display_name="test",
+        schema_name="airflow",
+        metadata=sample_metadata["metadata"],
     )
 
-    mocked_func = mock.Mock(return_value="default", side_effect=[mocked_runtime, sample_image_metadata])
+    mocked_func = mock.Mock(
+        return_value="default",
+        side_effect=[mocked_runtime, sample_image_metadata],
+    )
 
     monkeypatch.setattr(processor, "_get_metadata_configuration", mocked_func)
-    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(
+        processor,
+        "_upload_dependencies_to_object_store",
+        lambda w, x, y, prefix: True,
+    )
     monkeypatch.setattr(processor, "_get_dependency_archive_name", lambda x: True)
     monkeypatch.setattr(processor, "_verify_cos_connectivity", lambda x: True)
 
-    return processor._cc_pipeline(parsed_pipeline, pipeline_name="some-name", pipeline_instance_id="some-instance-id")
+    return processor._cc_pipeline(
+        parsed_pipeline,
+        pipeline_name="some-name",
+        pipeline_instance_id="some-instance-id",
+    )
 
 
 def read_key_pair(key_pair, sep="="):
-    return {"key": key_pair.split(sep)[0].strip('" '), "value": key_pair.split(sep)[1].rstrip(",").strip('" ')}
+    return {
+        "key": key_pair.split(sep)[0].strip('" '),
+        "value": key_pair.split(sep)[1].rstrip(",").strip('" '),
+    }
 
 
 def string_to_list(stringed_list):
@@ -135,11 +176,18 @@ def test_fail_processor_type(processor):
 def test_pipeline_process(monkeypatch, processor, parsed_pipeline, sample_metadata):
 
     mocked_runtime = Metadata(
-        name="test-metadata", display_name="test", schema_name="airflow", metadata=sample_metadata["metadata"]
+        name="test-metadata",
+        display_name="test",
+        schema_name="airflow",
+        metadata=sample_metadata["metadata"],
     )
     mocked_path = "/some-placeholder"
 
-    monkeypatch.setattr(processor, "_get_metadata_configuration", lambda schemaspace, name: mocked_runtime)
+    monkeypatch.setattr(
+        processor,
+        "_get_metadata_configuration",
+        lambda schemaspace, name: mocked_runtime,
+    )
     monkeypatch.setattr(
         processor,
         "create_pipeline_file",
@@ -158,18 +206,35 @@ def test_pipeline_process(monkeypatch, processor, parsed_pipeline, sample_metada
 
 
 @pytest.mark.parametrize("parsed_pipeline", [PIPELINE_FILE_COMPLEX], indirect=True)
-def test_create_file(monkeypatch, processor, parsed_pipeline, parsed_ordered_dict, sample_metadata):
+def test_create_file(
+    monkeypatch,
+    processor,
+    parsed_pipeline,
+    parsed_ordered_dict,
+    sample_metadata,
+):
     pipeline_json = _read_pipeline_resource(PIPELINE_FILE_COMPLEX)
 
     export_pipeline_name = "some-name"
     export_file_type = "py"
 
     mocked_runtime = Metadata(
-        name="test-metadata", display_name="test", schema_name="airflow", metadata=sample_metadata["metadata"]
+        name="test-metadata",
+        display_name="test",
+        schema_name="airflow",
+        metadata=sample_metadata["metadata"],
     )
 
-    monkeypatch.setattr(processor, "_get_metadata_configuration", lambda name=None, schemaspace=None: mocked_runtime)
-    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(
+        processor,
+        "_get_metadata_configuration",
+        lambda name=None, schemaspace=None: mocked_runtime,
+    )
+    monkeypatch.setattr(
+        processor,
+        "_upload_dependencies_to_object_store",
+        lambda w, x, y, prefix: True,
+    )
     monkeypatch.setattr(processor, "_cc_pipeline", lambda x, y, z: parsed_ordered_dict)
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -266,11 +331,22 @@ def test_create_file_custom_components(
     export_file_type = "py"
 
     mocked_runtime = Metadata(
-        name="test-metadata", display_name="test", schema_name="airflow", metadata=sample_metadata["metadata"]
+        name="test-metadata",
+        display_name="test",
+        schema_name="airflow",
+        metadata=sample_metadata["metadata"],
     )
 
-    monkeypatch.setattr(processor, "_get_metadata_configuration", lambda name=None, schemaspace=None: mocked_runtime)
-    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(
+        processor,
+        "_get_metadata_configuration",
+        lambda name=None, schemaspace=None: mocked_runtime,
+    )
+    monkeypatch.setattr(
+        processor,
+        "_upload_dependencies_to_object_store",
+        lambda w, x, y, prefix: True,
+    )
     monkeypatch.setattr(processor, "_cc_pipeline", lambda x, y, z: parsed_ordered_dict)
 
     print(parsed_ordered_dict)
@@ -328,7 +404,17 @@ def test_create_file_custom_components(
                         # Find 'parameter=' clause in file_as_lines list
                         r = re.compile(rf"\s*{parameter}=.*")
                         parameter_clause = i + 1
-                        parameter_in_args = len(list(filter(r.match, file_as_lines[parameter_clause:]))) > 0
+                        parameter_in_args = (
+                            len(
+                                list(
+                                    filter(
+                                        r.match,
+                                        file_as_lines[parameter_clause:],
+                                    )
+                                )
+                            )
+                            > 0
+                        )
                         if parameter == MOUNTED_VOLUMES and "DeriveFromTestOperator" in node["op"]:
                             # Asserts that "DeriveFromTestOperator", which does not define its own `mounted_volumes`
                             # property, does not include the property in the Operator constructor args
@@ -461,7 +547,10 @@ def test_collect_envs(processor):
     operation_envs = [
         {"env_var": "ELYRA_RUNTIME_ENV", "value": '"bogus_runtime"'},
         {"env_var": "ELYRA_ENABLE_PIPELINE_INFO", "value": '"bogus_pipeline"'},
-        {"env_var": "ELYRA_WRITABLE_CONTAINER_DIR", "value": ""},  # simulate operation reference in pipeline
+        {
+            "env_var": "ELYRA_WRITABLE_CONTAINER_DIR",
+            "value": "",
+        },  # simulate operation reference in pipeline
         {"env_var": "AWS_ACCESS_KEY_ID", "value": '"bogus_key"'},
         {"env_var": "AWS_SECRET_ACCESS_KEY", "value": '"bogus_secret"'},
         {"env_var": "USER_EMPTY_VALUE", "value": "  "},
@@ -475,11 +564,19 @@ def test_collect_envs(processor):
         type="execution-node",
         classifier="execute-notebook-node",
         name="test",
-        component_params={"filename": pipelines_test_file, "runtime_image": "tensorflow/tensorflow:latest"},
+        component_params={
+            "filename": pipelines_test_file,
+            "runtime_image": "tensorflow/tensorflow:latest",
+        },
         elyra_params={"env_vars": converted_envs},
     )
 
-    envs = processor._collect_envs(test_operation, cos_secret=None, cos_username="Alice", cos_password="secret")
+    envs = processor._collect_envs(
+        test_operation,
+        cos_secret=None,
+        cos_username="Alice",
+        cos_password="secret",
+    )
 
     assert envs["ELYRA_RUNTIME_ENV"] == "airflow"
     assert envs["AWS_ACCESS_KEY_ID"] == "Alice"
@@ -491,7 +588,12 @@ def test_collect_envs(processor):
     assert "USER_NO_VALUE" not in envs
 
     # Repeat with non-None secret - ensure user and password envs are not present, but others are
-    envs = processor._collect_envs(test_operation, cos_secret="secret", cos_username="Alice", cos_password="secret")
+    envs = processor._collect_envs(
+        test_operation,
+        cos_secret="secret",
+        cos_username="Alice",
+        cos_password="secret",
+    )
 
     assert envs["ELYRA_RUNTIME_ENV"] == "airflow"
     assert "AWS_ACCESS_KEY_ID" not in envs
@@ -535,7 +637,11 @@ def test_unique_operation_name_non_existent(processor):
     op3 = SimpleNamespace(name="sample_operation_3")
     sample_operation_list = [op1, op2, op3]
 
-    correct_name_list = ["sample_operation", "sample_operation_2", "sample_operation_3"]
+    correct_name_list = [
+        "sample_operation",
+        "sample_operation_2",
+        "sample_operation_3",
+    ]
 
     renamed_op_list = processor._create_unique_node_names(sample_operation_list)
     name_list = [op.name for op in renamed_op_list]
@@ -580,10 +686,18 @@ def test_process_list_value_function(processor):
     assert processor._process_list_value("[]") == []
     assert processor._process_list_value("None") == []
     assert processor._process_list_value("['elem1']") == ["elem1"]
-    assert processor._process_list_value("['elem1', 'elem2', 'elem3']") == ["elem1", "elem2", "elem3"]
+    assert processor._process_list_value("['elem1', 'elem2', 'elem3']") == [
+        "elem1",
+        "elem2",
+        "elem3",
+    ]
     assert processor._process_list_value("  ['elem1',   'elem2' , 'elem3']  ") == ["elem1", "elem2", "elem3"]
     assert processor._process_list_value("[1, 2]") == [1, 2]
-    assert processor._process_list_value("[True, False, True]") == [True, False, True]
+    assert processor._process_list_value("[True, False, True]") == [
+        True,
+        False,
+        True,
+    ]
     assert processor._process_list_value("[{'obj': 'val', 'obj2': 'val2'}, {}]") == [{"obj": "val", "obj2": "val2"}, {}]
 
     # Test values that will not be successfully converted to list
@@ -604,16 +718,31 @@ def test_process_dictionary_value_function(processor):
     assert processor._process_dictionary_value("{'key': 'value'}") == {"key": "value"}
 
     dict_as_str = "{'key1': 'value', 'key2': 'value'}"
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": "value", "key2": "value"}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": "value",
+        "key2": "value",
+    }
 
     dict_as_str = "  {  'key1': 'value'  , 'key2'  : 'value'}  "
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": "value", "key2": "value"}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": "value",
+        "key2": "value",
+    }
 
     dict_as_str = "{'key1': [1, 2, 3], 'key2': ['elem1', 'elem2']}"
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": [1, 2, 3], "key2": ["elem1", "elem2"]}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": [1, 2, 3],
+        "key2": ["elem1", "elem2"],
+    }
 
     dict_as_str = "{'key1': 2, 'key2': 'value', 'key3': True, 'key4': None, 'key5': [1, 2, 3]}"
-    expected_value = {"key1": 2, "key2": "value", "key3": True, "key4": None, "key5": [1, 2, 3]}
+    expected_value = {
+        "key1": 2,
+        "key2": "value",
+        "key3": True,
+        "key4": None,
+        "key5": [1, 2, 3],
+    }
     assert processor._process_dictionary_value(dict_as_str) == expected_value
 
     dict_as_str = "{'key1': {'key2': 2, 'key3': 3, 'key4': 4}, 'key5': {}}"
@@ -647,7 +776,9 @@ def test_process_dictionary_value_function(processor):
 
 
 @pytest.mark.parametrize(
-    "parsed_pipeline", ["resources/validation_pipelines/aa_operator_same_name.pipeline"], indirect=True
+    "parsed_pipeline",
+    ["resources/validation_pipelines/aa_operator_same_name.pipeline"],
+    indirect=True,
 )
 @pytest.mark.parametrize("catalog_instance", [AIRFLOW_TEST_OPERATOR_CATALOG], indirect=True)
 def test_same_name_operator_in_pipeline(monkeypatch, processor, catalog_instance, parsed_pipeline, sample_metadata):
@@ -655,22 +786,38 @@ def test_same_name_operator_in_pipeline(monkeypatch, processor, catalog_instance
     upstream_task_id = "0eb57369-99d1-4cd0-a205-8d8d96af3ad4"
 
     mocked_runtime = Metadata(
-        name="test-metadata", display_name="test", schema_name="airflow", metadata=sample_metadata["metadata"]
+        name="test-metadata",
+        display_name="test",
+        schema_name="airflow",
+        metadata=sample_metadata["metadata"],
     )
 
-    monkeypatch.setattr(processor, "_get_metadata_configuration", lambda name=None, schemaspace=None: mocked_runtime)
-    monkeypatch.setattr(processor, "_upload_dependencies_to_object_store", lambda w, x, y, prefix: True)
+    monkeypatch.setattr(
+        processor,
+        "_get_metadata_configuration",
+        lambda name=None, schemaspace=None: mocked_runtime,
+    )
+    monkeypatch.setattr(
+        processor,
+        "_upload_dependencies_to_object_store",
+        lambda w, x, y, prefix: True,
+    )
 
     pipeline_def_operation = parsed_pipeline.operations[task_id]
     pipeline_def_operation_parameters = pipeline_def_operation.component_params_as_dict
     pipeline_def_operation_str_param = pipeline_def_operation_parameters["str_no_default"]
 
     assert pipeline_def_operation_str_param["widget"] == "inputpath"
-    assert set(pipeline_def_operation_str_param["value"].keys()) == {"value", "option"}
+    assert set(pipeline_def_operation_str_param["value"].keys()) == {
+        "value",
+        "option",
+    }
     assert pipeline_def_operation_str_param["value"]["value"] == upstream_task_id
 
     ordered_operations = processor._cc_pipeline(
-        parsed_pipeline, pipeline_name="some-name", pipeline_instance_id="some-instance-name"
+        parsed_pipeline,
+        pipeline_name="some-name",
+        pipeline_instance_id="some-instance-name",
     )
     operation_parameters = ordered_operations[task_id]["component_params"]
     operation_parameter_str_command = operation_parameters["str_no_default"]

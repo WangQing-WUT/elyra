@@ -35,7 +35,18 @@ def pipeline_dir(tmp_path):
 
 
 def test_pipeline_execution_order_in_complex_pipeline():
-    expected_operation_names = ["a", "b", "c", "d", "e", "f", "x", "y", "g", "h"]
+    expected_operation_names = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "x",
+        "y",
+        "g",
+        "h",
+    ]
     pipeline_json = _read_pipeline_resource("resources/sample_pipelines/pipeline_dependency_complex.json")
 
     pipeline = PipelineParser().parse(pipeline_json)

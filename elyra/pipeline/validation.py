@@ -42,6 +42,8 @@ from elyra.pipeline.pipeline_definition import Node
 from elyra.pipeline.pipeline_definition import PipelineDefinition
 from elyra.pipeline.processor import PipelineProcessorManager
 from elyra.pipeline.runtime_type import RuntimeProcessorType
+from elyra.util.kubernetes import is_valid_label_key
+from elyra.util.kubernetes import is_valid_label_value
 from elyra.util.path import get_expanded_path
 
 
@@ -118,8 +120,8 @@ class ValidationResponse(object):
                     "message": message,
                     "data": data,
                 }
-            if diagnostic not in self._response["issues"]:
-                self._response["issues"].append(diagnostic)
+            if diagnostic not in self._response.get("issues"):
+                self._response.get("issues").append(diagnostic)
 
         if severity is ValidationSeverity.Error:
             self._has_fatal = True
@@ -128,7 +130,7 @@ class ValidationResponse(object):
         return self._response
 
     def update_message(self, data: Dict):
-        for issue in self._response["issues"]:
+        for issue in self._response.get("issues"):
             for key, value in data.items():
                 issue["data"][key] = value
 
@@ -150,7 +152,11 @@ class PipelineValidationManager(SingletonConfigurable):
         pipeline_definition = PipelineDefinition(pipeline_definition=pipeline)
         issues = pipeline_definition.validate()
         for issue in issues:
-            response.add_message(severity=ValidationSeverity.Error, message_type="invalidJSON", message=issue)
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidJSON",
+                message=issue,
+            )
 
         try:
             primary_pipeline = pipeline_definition.primary_pipeline
@@ -251,7 +257,9 @@ class PipelineValidationManager(SingletonConfigurable):
         return runtime_type.name
 
     def _validate_pipeline_structure(
-        self, pipeline_definition: PipelineDefinition, response: ValidationResponse
+        self,
+        pipeline_definition: PipelineDefinition,
+        response: ValidationResponse,
     ) -> None:
         """
         Validates the pipeline structure based on version of schema
@@ -290,7 +298,10 @@ class PipelineValidationManager(SingletonConfigurable):
                     message_type="invalidPipeline",
                     message="Pipeline was last edited in a newer version of Elyra. "
                     "Update Elyra to use this pipeline.",
-                    data={"supported_version": PIPELINE_CURRENT_VERSION, "detected_version": pipeline_version},
+                    data={
+                        "supported_version": PIPELINE_CURRENT_VERSION,
+                        "detected_version": pipeline_version,
+                    },
                 )
         except ValueError:
             response.add_message(
@@ -364,7 +375,11 @@ class PipelineValidationManager(SingletonConfigurable):
                                     "component, but pipeline runtime is 'local'. Specify a "
                                     "runtime config or remove runtime-specific components "
                                     "from the pipeline",
-                                    data={"nodeID": node.id, "nodeOpName": node.op, "pipelineId": sub_pipeline.id},
+                                    data={
+                                        "nodeID": node.id,
+                                        "nodeOpName": node.op,
+                                        "pipelineId": sub_pipeline.id,
+                                    },
                                 )
                                 break
                             if node.type == "execution_node" and node.op not in supported_ops:
@@ -418,7 +433,9 @@ class PipelineValidationManager(SingletonConfigurable):
                 if node.type == "execution_node":
                     if Operation.is_generic_operation(node.op):
                         await self._validate_generic_node_properties(
-                            node=node, response=response, pipeline_runtime=pipeline_runtime
+                            node=node,
+                            response=response,
+                            pipeline_runtime=pipeline_runtime,
                         )
                     # Validate runtime components against specific node properties in component registry
                     else:
@@ -444,7 +461,11 @@ class PipelineValidationManager(SingletonConfigurable):
         component_props = await self._get_component_properties(node.op)
 
         self._validate_filepath(
-            node_id=node.id, node_label=node_label, property_name="filename", filename=filename, response=response
+            node_id=node.id,
+            node_label=node_label,
+            property_name="filename",
+            filename=filename,
+            response=response,
         )
 
         # If not running locally, we check resource and image name
@@ -482,7 +503,11 @@ class PipelineValidationManager(SingletonConfigurable):
                 )
 
     async def _validate_custom_component_node_properties(
-        self, node: Node, response: ValidationResponse, pipeline_definition: PipelineDefinition, pipeline_runtime: str
+        self,
+        node: Node,
+        response: ValidationResponse,
+        pipeline_definition: PipelineDefinition,
+        pipeline_runtime: str,
     ):
         """
         Validates the properties of the custom component node
@@ -513,10 +538,13 @@ class PipelineValidationManager(SingletonConfigurable):
                             resource_value=resource_value,
                             response=response,
                         )
+                node_selector = node.get_component_parameter("node_selector")
+                if node_selector:
+                    self._validate_node_selector(node.id, node.label, node_selector, response)
             self._validate_label(node_id=node.id, node_label=node_label, response=response)
             # Full dict of properties for the operation e.g. current params, optionals etc
             component_property_dict = await self._get_component_properties(node.op, pipeline_runtime)
-            current_parameters = component_property_dict["properties"]["component_parameters"]["properties"]
+            current_parameters = component_property_dict.get("properties").get("component_parameters").get("properties")
 
             for param in node.elyra_owned_properties:
                 param_required = self._is_required_property(component_property_dict, param)
@@ -537,7 +565,11 @@ class PipelineValidationManager(SingletonConfigurable):
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodeProperty",
                         message="Node has an invalid value. Parallelism should be a positive integer.",
-                        data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        data={
+                            "nodeID": node.id,
+                            "nodeName": node.label,
+                            "propertyName": default_parameter,
+                        },
                     )
             elif not node_param or (type(node_param) is not str and node_param.get("value") is None):
                 if self._is_required_property(component_property_dict, default_parameter):
@@ -545,7 +577,11 @@ class PipelineValidationManager(SingletonConfigurable):
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodeProperty",
                         message="Node is missing a value for a required property.",
-                        data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        data={
+                            "nodeID": node.id,
+                            "nodeName": node.label,
+                            "propertyName": default_parameter,
+                        },
                     )
             elif type(node_param) is not str:
                 if node_param.get("widget") == "inputpath":
@@ -588,7 +624,11 @@ class PipelineValidationManager(SingletonConfigurable):
                                     message_type="invalidNodeProperty",
                                     message="Node parameter takes output from a parent, but the parent "
                                     "node does not have the xcom_push property enabled.",
-                                    data={"nodeID": node.id, "nodeName": node.label, "parentNodeID": upstream_node_id},
+                                    data={
+                                        "nodeID": node.id,
+                                        "nodeName": node.label,
+                                        "parentNodeID": upstream_node_id,
+                                    },
                                 )
                 elif node_param.get("widget") == "file":
                     filename = node_param.get("value")
@@ -605,7 +645,11 @@ class PipelineValidationManager(SingletonConfigurable):
                             severity=ValidationSeverity.Error,
                             message_type="invalidNodeProperty",
                             message="Node is missing a value for a required property.",
-                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                            data={
+                                "nodeID": node.id,
+                                "nodeName": node.label,
+                                "propertyName": default_parameter,
+                            },
                         )
                 elif node_param.get("widget") == "string":
                     if node_param.get("value") == "":
@@ -613,10 +657,20 @@ class PipelineValidationManager(SingletonConfigurable):
                             severity=ValidationSeverity.Error,
                             message_type="invalidNodeProperty",
                             message="Node is missing a value for a required property.",
-                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                            data={
+                                "nodeID": node.id,
+                                "nodeName": node.label,
+                                "propertyName": default_parameter,
+                            },
                         )
                 elif node_param.get("widget") == "enum":
-                    self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
+                    self._validate_widget_enum(
+                        node,
+                        node_param,
+                        default_parameter,
+                        pipeline_definition,
+                        response,
+                    )
                 elif default_parameter == "loop_args":
                     self._validate_loop_list(node, node_param, default_parameter, response)
 
@@ -628,7 +682,13 @@ class PipelineValidationManager(SingletonConfigurable):
             if value.startswith("[") and value.endswith("]"):
                 try:
                     converted_list = ast.literal_eval(value)
-                except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+                except (
+                    ValueError,
+                    TypeError,
+                    SyntaxError,
+                    MemoryError,
+                    RecursionError,
+                ):
                     notlist = True
             if not isinstance(converted_list, list):
                 notlist = True
@@ -637,7 +697,11 @@ class PipelineValidationManager(SingletonConfigurable):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="The value of the property cannot be converted to an array.",
-                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    data={
+                        "nodeID": node.id,
+                        "nodeName": node.label,
+                        "propertyName": default_parameter,
+                    },
                 )
         elif node_param.get("widget") == "Number":
             if type(node_param.get("value")) is not int or node_param.get("value") <= 0:
@@ -645,7 +709,11 @@ class PipelineValidationManager(SingletonConfigurable):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="The value of the property should be a positive integer.",
-                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    data={
+                        "nodeID": node.id,
+                        "nodeName": node.label,
+                        "propertyName": default_parameter,
+                    },
                 )
         elif node_param.get("widget") == "List[Dict[str, any]]":
             dict_list = []
@@ -658,7 +726,11 @@ class PipelineValidationManager(SingletonConfigurable):
                             severity=ValidationSeverity.Error,
                             message_type="invalidNodeProperty",
                             message="The key or the value of the Dict cannot be empty.",
-                            data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                            data={
+                                "nodeID": node.id,
+                                "nodeName": node.label,
+                                "propertyName": default_parameter,
+                            },
                         )
                     else:
                         dict_list.append({item.get("key"): item.get("value")})
@@ -667,7 +739,11 @@ class PipelineValidationManager(SingletonConfigurable):
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="Node is missing a value for a required property.",
-                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    data={
+                        "nodeID": node.id,
+                        "nodeName": node.label,
+                        "propertyName": default_parameter,
+                    },
                 )
 
     def _validate_widget_enum(self, node, node_param, default_parameter, pipeline_definition, response):
@@ -676,32 +752,91 @@ class PipelineValidationManager(SingletonConfigurable):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeProperty",
                 message="Node is missing a value for a required property.",
-                data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                data={
+                    "nodeID": node.id,
+                    "nodeName": node.label,
+                    "propertyName": default_parameter,
+                },
             )
         else:
             pipelines = pipeline_definition.pipelines[0]
             pipeline_defaults = pipelines.get_property("pipeline_defaults")
             if pipeline_defaults and "input_parameters" in pipeline_defaults:
                 input_parameters = []
-                for item in pipeline_defaults["input_parameters"]:
-                    input_parameters.append(item["name"])
+                for item in pipeline_defaults.get("input_parameters"):
+                    input_parameters.append(item.get("name"))
                 if node_param.get("value") not in input_parameters:
                     response.add_message(
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodeProperty",
                         message="Pipeline input parameters does not contain '" + node_param.get("value") + "'.",
-                        data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                        data={
+                            "nodeID": node.id,
+                            "nodeName": node.label,
+                            "propertyName": default_parameter,
+                        },
                     )
             else:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
-                    data={"nodeID": node.id, "nodeName": node.label, "propertyName": default_parameter},
+                    data={
+                        "nodeID": node.id,
+                        "nodeName": node.label,
+                        "propertyName": default_parameter,
+                    },
                 )
 
+    def _validate_node_selector(
+        self,
+        node_id: str,
+        node_label: str,
+        node_selector,
+        response: ValidationResponse,
+    ) -> None:
+        if not node_selector[0].get("key") or not node_selector[0].get("value"):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="The Lable Key or the Label Value of Node Selector cannot be empty.",
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "Node Selector",
+                },
+            )
+        elif not is_valid_label_key(node_selector[0].get("key")):
+            key = node_selector[0].get("key")
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message=f"'{key}' is not a valid Kubernetes label key.",
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "Node Selector",
+                },
+            )
+        elif not is_valid_label_value(node_selector[0].get("value")):
+            value = node_selector[0].get("value")
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message=f"'{value}' is not a valid Kubernetes label value.",
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "Node Selector",
+                },
+            )
+
     def _validate_container_image_name(
-        self, node_id: str, node_label: str, image_name: str, response: ValidationResponse
+        self,
+        node_id: str,
+        node_label: str,
+        image_name: str,
+        response: ValidationResponse,
     ) -> None:
         """
         Validates the image name exists and is proper in syntax
@@ -715,7 +850,11 @@ class PipelineValidationManager(SingletonConfigurable):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeProperty",
                 message="Required property value is missing.",
-                data={"nodeID": node_id, "nodeName": node_label, "propertyName": "runtime_image"},
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "runtime_image",
+                },
             )
         else:
             image_regex = re.compile(r"[^/ ]+/[^/ ]+$")
@@ -735,7 +874,12 @@ class PipelineValidationManager(SingletonConfigurable):
                 )
 
     def _validate_resource_value(
-        self, node_id: str, node_label: str, resource_name: str, resource_value: str, response: ValidationResponse
+        self,
+        node_id: str,
+        node_label: str,
+        resource_name: str,
+        resource_value: str,
+        response: ValidationResponse,
     ) -> None:
         """
         Validates the value for hardware resources requested
@@ -828,7 +972,11 @@ class PipelineValidationManager(SingletonConfigurable):
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeProperty",
                 message="Required property value is missing.",
-                data={"nodeID": node.id, "nodeName": node_label, "propertyName": param_name},
+                data={
+                    "nodeID": node.id,
+                    "nodeName": node_label,
+                    "propertyName": param_name,
+                },
             )
 
     def _validate_filepath(
@@ -915,7 +1063,12 @@ class PipelineValidationManager(SingletonConfigurable):
                 message="Property value exceeds the max length allowed "
                 "({label_name_max_length}). This value may be truncated "
                 "by the runtime service.",
-                data={"nodeID": node_id, "nodeName": node_label, "propertyName": "label", "value": node_label},
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "label",
+                    "value": node_label,
+                },
             )
         if not matched or matched.group(0) != node_label:
             response.add_message(
@@ -925,7 +1078,12 @@ class PipelineValidationManager(SingletonConfigurable):
                 "by the runtime service. Node labels should "
                 "start with lower case alphanumeric and contain "
                 "only lower case alphanumeric, underscores, dots, and dashes.",
-                data={"nodeID": node_id, "nodeName": node_label, "propertyName": "label", "value": node_label},
+                data={
+                    "nodeID": node_id,
+                    "nodeName": node_label,
+                    "propertyName": "label",
+                    "value": node_label,
+                },
             )
 
     def _validate_input_parameters(self, pipeline: dict, response: ValidationResponse) -> None:
@@ -961,22 +1119,27 @@ class PipelineValidationManager(SingletonConfigurable):
 
         graph = nx.DiGraph()
 
-        for single_pipeline in pipeline_json["pipelines"]:
-            node_list = single_pipeline["nodes"]
+        for single_pipeline in pipeline_json.get("pipelines"):
+            node_list = single_pipeline.get("nodes")
             for node in node_list:
-                if node["type"] == "execution_node":
-                    graph.add_node(node["id"])
+                if node.get("type") == "execution_node":
+                    graph.add_node(node.get("id"))
                     if node.get("inputs"):
-                        if "links" in node["inputs"][0]:
-                            for link in node["inputs"][0]["links"]:
-                                if "_outPort" in link["port_id_ref"]:  # is ref to node, doesnt add links to supernodes
-                                    graph.add_edge(link["port_id_ref"].strip("_outPort"), node["id"])
-                                elif link["port_id_ref"] == "outPort":  # do not link to bindings
-                                    graph.add_edge(link["node_id_ref"], node["id"])
-                if node["type"] == "super_node":
-                    for link in node["inputs"][0]["links"]:
-                        child_node_id = node["inputs"][0]["id"].strip("_inPort")
-                        graph.add_edge(link["node_id_ref"], child_node_id)
+                        if "links" in node.get("inputs")[0]:
+                            for link in node.get("inputs")[0].get("links"):
+                                if "_outPort" in link.get(
+                                    "port_id_ref"
+                                ):  # is ref to node, doesnt add links to supernodes
+                                    graph.add_edge(
+                                        link.get("port_id_ref").strip("_outPort"),
+                                        node.get("id"),
+                                    )
+                                elif link.get("port_id_ref") == "outPort":  # do not link to bindings
+                                    graph.add_edge(link.get("node_id_ref"), node.get("id"))
+                if node.get("type") == "super_node":
+                    for link in node.get("inputs")[0].get("links"):
+                        child_node_id = node.get("inputs")[0].get("id").strip("_inPort")
+                        graph.add_edge(link.get("node_id_ref"), child_node_id)
 
         for isolate in nx.isolates(graph):
             if graph.number_of_nodes() > 1:
@@ -1009,11 +1172,11 @@ class PipelineValidationManager(SingletonConfigurable):
         :return: the pipeline ID of where the node is located
         """
         pipeline_json = json.loads(json.dumps(pipeline, cls=ElyraPropertyJSONEncoder))
-        for single_pipeline in pipeline_json["pipelines"]:
-            node_list = single_pipeline["nodes"]
+        for single_pipeline in pipeline_json.get("pipelines"):
+            node_list = single_pipeline.get("nodes")
             for node in node_list:
-                if node["id"] == node_id:
-                    return single_pipeline["id"]
+                if node.get("id") == node_id:
+                    return single_pipeline.get("id")
         return None
 
     async def _get_component_properties(self, node_op: str, pipeline_runtime: Optional[str] = None) -> Dict:
@@ -1029,9 +1192,9 @@ class PipelineValidationManager(SingletonConfigurable):
         component_list = await PipelineProcessorManager.instance().get_components(pipeline_runtime)
         components = ComponentCache.to_canvas_palette(component_list)
 
-        for category in components["categories"]:
-            for node_type in category["node_types"]:
-                if node_op == node_type["op"]:
+        for category in components.get("categories"):
+            for node_type in category.get("node_types"):
+                if node_op == node_type.get("op"):
                     component = None
                     if pipeline_runtime != "local":
                         component = await PipelineProcessorManager.instance().get_component(pipeline_runtime, node_op)
@@ -1053,9 +1216,9 @@ class PipelineValidationManager(SingletonConfigurable):
         pipeline_json = json.loads(json.dumps(pipeline, cls=ElyraPropertyJSONEncoder))
         for node_id in node_id_list:
             found = False
-            for single_pipeline in pipeline_json["pipelines"]:
-                for node in single_pipeline["nodes"]:
-                    if node["id"] == node_id:
+            for single_pipeline in pipeline_json.get("pipelines"):
+                for node in single_pipeline.get("nodes"):
+                    if node.get("id") == node_id:
                         node_name_list.append(self._get_node_label(node))
                         found = True
                         break
@@ -1079,12 +1242,12 @@ class PipelineValidationManager(SingletonConfigurable):
         pipeline_json = json.loads(json.dumps(pipeline, cls=ElyraPropertyJSONEncoder))
         node_labels = []
         for link_id in link_ids:
-            for single_pipeline in pipeline_json["pipelines"]:
-                for node in single_pipeline["nodes"]:
-                    if node["type"] == "execution_node":
+            for single_pipeline in pipeline_json.get("pipelines"):
+                for node in single_pipeline.get("nodes"):
+                    if node.get("type") == "execution_node":
                         for input in node.get("inputs", []):
                             for link in input.get("links", []):
-                                if link["id"] == link_id:
+                                if link.get("id") == link_id:
                                     node_labels.append(self._get_node_label(node))
         return node_labels
 
@@ -1100,9 +1263,9 @@ class PipelineValidationManager(SingletonConfigurable):
         if node is None or node.get("app_data") is None:
             return None
 
-        node_label = node["app_data"].get("label")
-        if node["type"] == "execution_node" and node["app_data"].get("ui_data"):
-            node_label = node["app_data"]["ui_data"].get("label")
+        node_label = node.get("app_data").get("label")
+        if node.get("type") == "execution_node" and node.get("app_data").get("ui_data"):
+            node_label = node.get("app_data").get("ui_data").get("label")
         return node_label
 
     def _is_legacy_pipeline(self, pipeline: dict) -> bool:
@@ -1111,7 +1274,7 @@ class PipelineValidationManager(SingletonConfigurable):
         :param pipeline: the pipeline dict
         :return:
         """
-        return pipeline["pipelines"][0]["app_data"].get("properties") is None
+        return pipeline.get("pipelines")[0].get("app_data").get("properties") is None
 
     def _is_required_property(self, property_dict: dict, node_property: str) -> bool:
         """
@@ -1120,15 +1283,18 @@ class PipelineValidationManager(SingletonConfigurable):
         :param node_property: the component property to check
         :return:
         """
-        required_parameters = property_dict["properties"]["component_parameters"].get("required")
+        required_parameters = property_dict.get("properties").get("component_parameters").get("required")
         if required_parameters:
             return node_property in required_parameters
 
-        param = property_dict["properties"]["component_parameters"]["properties"].get(node_property, {})
+        param = property_dict.get("properties").get("component_parameters").get("properties").get(node_property, {})
         return param.get("required", False)
 
     def _get_parent_id_list(
-        self, pipeline_definition: PipelineDefinition, node_id_list: list, parent_list: list
+        self,
+        pipeline_definition: PipelineDefinition,
+        node_id_list: list,
+        parent_list: list,
     ) -> List:
         """
         Helper function to return a complete list of parent node_ids

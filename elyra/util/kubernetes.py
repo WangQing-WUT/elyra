@@ -58,7 +58,11 @@ def is_valid_environment_variable(name: str) -> bool:
         return False
 
     # Check reserved names
-    if name.upper() in ["KUBERNETES_PORT", "KUBERNETES_SERVICE_HOST", "KUBERNETES_SERVICE_PORT"]:
+    if name.upper() in [
+        "KUBERNETES_PORT",
+        "KUBERNETES_SERVICE_HOST",
+        "KUBERNETES_SERVICE_PORT",
+    ]:
         return False
 
     return True
@@ -94,7 +98,13 @@ def is_valid_dns_subdomain_name(name: str) -> bool:
     if name is None or len(name) > 253:
         return False
 
-    return re.match(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$", name) is not None
+    return (
+        re.match(
+            r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+            name,
+        )
+        is not None
+    )
 
 
 def is_valid_kubernetes_key(name: str) -> bool:

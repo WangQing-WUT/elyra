@@ -50,8 +50,14 @@ component_yaml_schema = {
                     "type": "object",
                     "properties": {
                         "image": {"type": "string"},
-                        "command": {"type": "array", "items": {"type": ["string", "object"]}},
-                        "args": {"type": "array", "items": {"type": ["string", "object"]}},
+                        "command": {
+                            "type": "array",
+                            "items": {"type": ["string", "object"]},
+                        },
+                        "args": {
+                            "type": "array",
+                            "items": {"type": ["string", "object"]},
+                        },
                     },
                 }
             },

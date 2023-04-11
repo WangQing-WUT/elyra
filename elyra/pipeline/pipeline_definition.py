@@ -15,6 +15,7 @@
 #
 import json
 import os
+import re
 from typing import Any
 from typing import Dict
 from typing import List
@@ -68,7 +69,7 @@ class AppDataBase(object):  # ABC
         :param default_value: a default value in case the key is not found
         :return: the value or the default_value if the key is not found
         """
-        return self._node["app_data"].get(key, default_value)
+        return self._node.get("app_data").get(key, default_value)
 
     def set(self, key: str, value: Any):
         """
@@ -105,7 +106,7 @@ class Pipeline(AppDataBase):
         The pipeline version
         :return: The version
         """
-        version = self._node["app_data"].get("version")
+        version = self._node.get("app_data").get("version")
         if isinstance(version, (int, float)):
             return version
 
@@ -122,7 +123,7 @@ class Pipeline(AppDataBase):
         NOTE: This value should really be derived from runtime_config.
         :return: The runtime keyword
         """
-        return self._node["app_data"].get("runtime")
+        return self._node.get("app_data").get("runtime")
 
     @property
     def runtime_config(self) -> str:
@@ -130,7 +131,7 @@ class Pipeline(AppDataBase):
 
         :return: The runtime configuration key. This should be a valid key from the Runtimes metadata
         """
-        return self._node["app_data"].get("runtime_config")
+        return self._node.get("app_data").get("runtime_config")
 
     @property
     def type(self):
@@ -139,7 +140,7 @@ class Pipeline(AppDataBase):
         NOTE: This value should really be derived from runtime_config.
         :return: The runtime_type keyword associated with the pipeline.
         """
-        return self._node["app_data"].get("runtime_type")
+        return self._node.get("app_data").get("runtime_type")
 
     @property
     def name(self) -> str:
@@ -147,7 +148,10 @@ class Pipeline(AppDataBase):
         The pipeline name
         :rtype: The pipeline name or `untitled`
         """
-        return self._node["app_data"].get("name", self._node["app_data"].get("properties", {}).get("name", "untitled"))
+        return self._node.get("app_data").get(
+            "name",
+            self._node.get("app_data").get("properties", {}).get("name", "untitled"),
+        )
 
     @property
     def source(self) -> str:
@@ -155,7 +159,7 @@ class Pipeline(AppDataBase):
         The pipeline source
         :rtype: The pipeline source
         """
-        return self._node["app_data"].get("source")
+        return self._node.get("app_data").get("source")
 
     @property
     def nodes(self) -> list:
@@ -168,7 +172,7 @@ class Pipeline(AppDataBase):
 
         if self._nodes is None:
             nodes: list = list()
-            for node in self._node["nodes"]:
+            for node in self._node.get("nodes", {}):
                 nodes.append(Node(node))
 
             self._nodes = nodes
@@ -181,7 +185,7 @@ class Pipeline(AppDataBase):
         The list of user comments in the pipeline
         :rtype: list of comments
         """
-        return self._node["app_data"]["ui_data"].get("comments", [])
+        return self._node.get("app_data").get("ui_data").get("comments", [])
 
     @property
     def pipeline_parameters(self) -> Dict[str, Any]:
@@ -191,7 +195,7 @@ class Pipeline(AppDataBase):
         either pipeline meta-properties (e.g. name, description,
         and runtime) or the pipeline defaults dictionary
         """
-        all_properties = self._node["app_data"].get("properties", {})
+        all_properties = self._node.get("app_data").get("properties", {})
         excluded_properties = PIPELINE_META_PROPERTIES + [PIPELINE_DEFAULTS]
 
         pipeline_parameters = {}
@@ -209,8 +213,8 @@ class Pipeline(AppDataBase):
         :return: the value or the default_value if the key is not found
         """
         return_value = default_value
-        if "properties" in self._node["app_data"]:
-            return_value = self._node["app_data"]["properties"].get(key, default_value)
+        if "properties" in self._node.get("app_data", {}):
+            return_value = self._node.get("app_data").get("properties").get(key, default_value)
 
         return return_value
 
@@ -226,7 +230,7 @@ class Pipeline(AppDataBase):
         if not value:
             raise ValueError("Value is required")
 
-        self._node["app_data"]["properties"][key] = value
+        self._node.get("app_data").get("properties")[key] = value
 
     def convert_elyra_owned_properties(self) -> None:
         """
@@ -274,7 +278,7 @@ class Node(AppDataBase):
         The node label
         :return:  node label
         """
-        return self._node["app_data"]["ui_data"].get("label", self._node["app_data"].get("label", None))
+        return self._node.get("app_data").get("ui_data").get("label", self._node.get("app_data").get("label", None))
 
     @property
     def subflow_pipeline_id(self) -> Pipeline:
@@ -282,11 +286,11 @@ class Node(AppDataBase):
         The Super Node pipeline reference. Only available when type is a super node.
         :return:
         """
-        if self._node["type"] != "super_node":
+        if self._node.get("type") != "super_node":
             raise ValueError("Node must be a super_node in order to retrieve a subflow pipeline id")
 
         if "subflow_ref" in self._node:
-            return self._node["subflow_ref"].get("pipeline_id_ref")
+            return self._node.get("subflow_ref").get("pipeline_id_ref")
         else:
             return None
 
@@ -297,7 +301,7 @@ class Node(AppDataBase):
         :return: the list of links associated with this node or an empty list if none are found
         """
         if self.type in ["execution_node", "super_node"]:
-            return self._node["inputs"][0].get("links", [])
+            return self._node.get("inputs")[0].get("links", [])
         else:
             #  binding nodes do not contain links
             return []
@@ -309,7 +313,7 @@ class Node(AppDataBase):
         :return: None, if the node is a generic component, the component path otherwise.
         """
         if self.type == "execution_node":
-            return self._node["app_data"].get("component_source", None)
+            return self._node.get("app_data").get("component_source", None)
         return None
 
     @property
@@ -365,7 +369,7 @@ class Node(AppDataBase):
         :param default_value: a default value in case the key is not found
         :return: the value or the default value if the key is not found
         """
-        value = self._node["app_data"].get("component_parameters", {}).get(key, default_value)
+        value = self._node.get("app_data").get("component_parameters", {}).get(key, default_value)
         return None if value == "None" else value
 
     def set_component_parameter(self, key: str, value: Any):
@@ -391,13 +395,13 @@ class Node(AppDataBase):
         """
         if not key:
             raise ValueError("Key is required")
-        return self._node["app_data"]["component_parameters"].pop(key, default)
+        return self._node.get("app_data").get("component_parameters").pop(key, default)
 
     def get_all_component_parameters(self) -> Dict[str, Any]:
         """
         Retrieve all component parameter key-value pairs.
         """
-        return self._node["app_data"]["component_parameters"]
+        return self._node.get("app_data").get("component_parameters")
 
     def remove_env_vars_with_matching_secrets(self):
         """
@@ -424,7 +428,7 @@ class Node(AppDataBase):
             if converted_value is None:
                 continue
             if isinstance(converted_value, ElyraProperty) and converted_value.is_empty_instance():
-                self._node["app_data"]["component_parameters"].pop(param_id, None)
+                self._node.get("app_data").get("component_parameters").pop(param_id, None)
             else:
                 self.set_component_parameter(param_id, converted_value)
 
@@ -502,11 +506,11 @@ class PipelineDefinition(object):
         if not self._pipelines:
             if "pipelines" not in self._pipeline_definition:
                 raise ValueError("Pipeline is missing 'pipelines' field.")
-            elif len(self._pipeline_definition["pipelines"]) == 0:
+            elif len(self._pipeline_definition.get("pipelines", [])) == 0:
                 raise ValueError("Pipeline has zero length 'pipelines' field.")
 
             pipelines: list = list()
-            for pipeline in self._pipeline_definition["pipelines"]:
+            for pipeline in self._pipeline_definition.get("pipelines", []):
                 pipelines.append(Pipeline(pipeline))
 
             self._pipelines = pipelines
@@ -522,7 +526,7 @@ class PipelineDefinition(object):
         if not self._primary_pipeline:
             if "pipelines" not in self._pipeline_definition:
                 raise ValueError("Pipeline is missing 'pipelines' field.")
-            elif len(self._pipeline_definition["pipelines"]) == 0:
+            elif len(self._pipeline_definition.get("pipelines", [])) == 0:
                 raise ValueError("Pipeline has zero length 'pipelines' field.")
 
             # Find primary pipeline
@@ -554,21 +558,21 @@ class PipelineDefinition(object):
         # Validate pipeline schema version
         if "version" not in self._pipeline_definition:
             validation_issues.append("Pipeline schema version field is missing.")
-        elif not isinstance(self._pipeline_definition["version"], str):
+        elif not isinstance(self._pipeline_definition.get("version"), str):
             validation_issues.append("Pipeline schema version field should be a string.")
 
         # Validate pipelines
         if "pipelines" not in self._pipeline_definition:
             validation_issues.append("Pipeline is missing 'pipelines' field.")
-        elif not isinstance(self._pipeline_definition["pipelines"], list):
+        elif not isinstance(self._pipeline_definition.get("pipelines"), list):
             validation_issues.append("Field 'pipelines' should be a list.")
-        elif len(self._pipeline_definition["pipelines"]) == 0:
+        elif len(self._pipeline_definition.get("pipelines", [])) == 0:
             validation_issues.append("Pipeline has zero length 'pipelines' field.")
 
         # Validate primary pipeline
         if "primary_pipeline" not in self._pipeline_definition:
             validation_issues.append("Could not determine the primary pipeline.")
-        elif not isinstance(self._pipeline_definition["primary_pipeline"], str):
+        elif not isinstance(self._pipeline_definition.get("primary_pipeline"), str):
             validation_issues.append("Field 'primary_pipeline' should be a string.")
 
         primary_pipeline = self.get_pipeline_definition(self._pipeline_definition.get("primary_pipeline"))
@@ -580,35 +584,48 @@ class PipelineDefinition(object):
             if "app_data" not in primary_pipeline:
                 validation_issues.append("Primary pipeline is missing the 'app_data' field.")
             else:
-                if "version" not in primary_pipeline["app_data"]:
+                if "version" not in primary_pipeline.get("app_data", {}):
                     validation_issues.append("Primary pipeline is missing the 'version' field.")
-                if "properties" not in primary_pipeline["app_data"]:
+                if "properties" not in primary_pipeline.get("app_data", {}):
                     validation_issues.append("Node is missing 'properties' field.")
-                elif len(primary_pipeline["app_data"]["properties"]) == 0:
+                elif len(primary_pipeline.get("app_data").get("properties")) == 0:
                     validation_issues.append("Pipeline has zero length 'properties' field.")
-                elif "pipeline_defaults" in primary_pipeline["app_data"]["properties"]:
-                    if "input_parameters" in primary_pipeline["app_data"]["properties"]["pipeline_defaults"]:
+                elif "pipeline_defaults" in primary_pipeline.get("app_data").get("properties"):
+                    if "input_parameters" in primary_pipeline.get("app_data").get("properties").get(
+                        "pipeline_defaults"
+                    ):
                         input_parameter_names = []
-                        for input_parameter in primary_pipeline["app_data"]["properties"]["pipeline_defaults"][
-                            "input_parameters"
-                        ]:
+                        for i, input_parameter in enumerate(
+                            primary_pipeline.get("app_data")
+                            .get("properties")
+                            .get("pipeline_defaults")
+                            .get("input_parameters")
+                        ):
                             if "name" not in input_parameter:
                                 validation_issues.append(
-                                    "The 'Parameter Name' field of pipeline input parameters cannot be empty."
+                                    f"The 'Parameter Name' field of the {i + 1}-th "
+                                    + "pipeline input parameter cannot be empty."
                                 )
                             else:
-                                if input_parameter["name"] in input_parameter_names:
+                                name = input_parameter.get("name")
+                                if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$", name):
                                     validation_issues.append(
-                                        "The 'Parameter Name' field of pipeline input parameters cannot be duplicate."
+                                        f"The 'Parameter Name' field of {i + 1}-th pipeline input parameter "
+                                        + "does not match the regular expression ^[a-zA-Z][a-zA-Z0-9_{{0,62}}]$."
+                                    )
+                                elif name in input_parameter_names:
+                                    validation_issues.append(
+                                        f"The 'Parameter Name' field of {i + 1}-th "
+                                        + "pipeline input parameter cannot be duplicate."
                                     )
                                 else:
-                                    input_parameter_names.append(input_parameter["name"])
+                                    input_parameter_names.append(input_parameter.get("name"))
 
-            if "nodes" not in primary_pipeline or len(primary_pipeline["nodes"]) == 0:
+            if "nodes" not in primary_pipeline or len(primary_pipeline.get("nodes")) == 0:
                 validation_issues.append("At least one node must exist in the primary pipeline.")
             else:
-                for node in primary_pipeline["nodes"]:
-                    if "component_parameters" not in node["app_data"]:
+                for node in primary_pipeline.get("nodes", []):
+                    if "component_parameters" not in node.get("app_data", {}):
                         validation_issues.append("Node is missing 'component_parameters' field")
 
         return validation_issues
@@ -626,7 +643,10 @@ class PipelineDefinition(object):
             node.set_elyra_owned_properties(self.primary_pipeline.type)
             node.convert_elyra_owned_properties()
 
-            for property_name, pipeline_value in pipeline_default_properties.items():
+            for (
+                property_name,
+                pipeline_value,
+            ) in pipeline_default_properties.items():
                 if not pipeline_value:
                     continue
 
@@ -667,8 +687,8 @@ class PipelineDefinition(object):
         :return: the pipeline or None
         """
         if "pipelines" in self._pipeline_definition:
-            for pipeline in self._pipeline_definition["pipelines"]:
-                if pipeline["id"] == pipeline_id:
+            for pipeline in self._pipeline_definition.get("pipelines", []):
+                if pipeline.get("id") == pipeline_id:
                     return Pipeline(pipeline)
 
         return None
@@ -698,7 +718,7 @@ class PipelineDefinition(object):
             for comment in comment_list:
                 associated_node_id_list = comment.get("associated_id_refs", [])
                 for ref in associated_node_id_list:
-                    if ref["node_ref"] == node_id:
+                    if ref.get("node_ref") == node_id:
                         comments.append(comment.get("content", ""))
 
         # remove empty (or whitespace-only) comment strings

@@ -141,7 +141,10 @@ class ExecutionNode(ABC):
                 outputs.append(OutputNodeFile(filename))
 
         # Include ELYRA_RUN_NAME in all outputs - which are verified when used as inputs
-        payload = {"node": self.node_name, "run_name": os.getenv("ELYRA_RUN_NAME")}
+        payload = {
+            "node": self.node_name,
+            "run_name": os.getenv("ELYRA_RUN_NAME"),
+        }
         for output_file in outputs:
             output_file.write(json.dumps(payload))
 

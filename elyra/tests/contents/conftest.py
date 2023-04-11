@@ -64,7 +64,12 @@ def create_text_file(jp_root_dir, text_filename):
 
 @pytest.fixture(params=["", "@subdir"])  # Create in a "difficult" subdir https://github.com/elyra-ai/elyra/issues/2270
 def create_notebook_file(jp_root_dir, notebook_filename, request):
-    create_file(jp_root_dir, notebook_filename, json.dumps(notebook_content), subdir=request.param)
+    create_file(
+        jp_root_dir,
+        notebook_filename,
+        json.dumps(notebook_content),
+        subdir=request.param,
+    )
     yield os.path.join(request.param, notebook_filename)
 
 
@@ -82,7 +87,12 @@ def create_r_file(jp_root_dir, r_filename, request):
 
 @pytest.fixture(params=["", "@subdir"])  # Create in a "difficult" subdir https://github.com/elyra-ai/elyra/issues/2270
 def create_empty_notebook_file(jp_root_dir, notebook_filename, request):
-    create_file(jp_root_dir, notebook_filename, json.dumps(empty_notebook_content), subdir=request.param)
+    create_file(
+        jp_root_dir,
+        notebook_filename,
+        json.dumps(empty_notebook_content),
+        subdir=request.param,
+    )
     yield os.path.join(request.param, notebook_filename)
 
 

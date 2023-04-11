@@ -150,7 +150,11 @@ class CacheUpdateManager(Thread):
     """
 
     def __init__(
-        self, log: Logger, component_cache: ComponentCacheType, refresh_queue: RefreshQueue, update_queue: UpdateQueue
+        self,
+        log: Logger,
+        component_cache: ComponentCacheType,
+        refresh_queue: RefreshQueue,
+        update_queue: UpdateQueue,
     ):
         super().__init__()
 
@@ -416,12 +420,20 @@ class ComponentCache(SingletonConfigurable):
             self.observer.schedule(ManifestFileChangeHandler(self), self.manifest_dir)
 
             # Start a thread to manage updates to the component cache
-            manager = CacheUpdateManager(self.log, self._component_cache, self.refresh_queue, self.update_queue)
+            manager = CacheUpdateManager(
+                self.log,
+                self._component_cache,
+                self.refresh_queue,
+                self.update_queue,
+            )
             self.cache_manager = manager
             self.cache_manager.start()
             self.log.debug("CacheUpdateManager started...")
         else:
-            self.manifest_filename = os.path.join(self.manifest_dir, f"elyra-component-manifest-{os.getpid()}.json")
+            self.manifest_filename = os.path.join(
+                self.manifest_dir,
+                f"elyra-component-manifest-{os.getpid()}.json",
+            )
 
     @staticmethod
     def _determine_server_process(emulate_server_app: bool, **kwargs) -> bool:
@@ -525,7 +537,11 @@ class ComponentCache(SingletonConfigurable):
         self.log.debug(f"Reading manifest '{manifest}' from file '{filename}'")
         return manifest
 
-    def update_manifest(self, filename: Optional[str] = None, manifest: Optional[Dict[str, str]] = None) -> None:
+    def update_manifest(
+        self,
+        filename: Optional[str] = None,
+        manifest: Optional[Dict[str, str]] = None,
+    ) -> None:
         """Update the manifest file with the given entry."""
         filename = filename or self.manifest_filename
         manifest = manifest or {}

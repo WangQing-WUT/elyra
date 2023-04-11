@@ -62,13 +62,19 @@ another_metadata_json = {
     "schema_name": "metadata-test",
     "name": "another_instance",
     "display_name": "Another Metadata Instance (2)",
-    "metadata": {"uri_test": "http://localhost:8081/", "required_test": "required_value"},
+    "metadata": {
+        "uri_test": "http://localhost:8081/",
+        "required_test": "required_value",
+    },
 }
 
 invalid_metadata_json = {
     "schema_name": "metadata-test",
     "display_name": "Invalid Metadata Instance - bad uri",
-    "metadata": {"uri_test": "//localhost:8081/", "required_test": "required_value"},
+    "metadata": {
+        "uri_test": "//localhost:8081/",
+        "required_test": "required_value",
+    },
 }
 
 invalid_json = "{\
@@ -82,7 +88,10 @@ invalid_json = "{\
 
 invalid_no_display_name_json = {
     "schema_name": "metadata-test",
-    "metadata": {"uri_test": "//localhost:8081/", "required_test": "required_value"},
+    "metadata": {
+        "uri_test": "//localhost:8081/",
+        "required_test": "required_value",
+    },
 }
 
 valid_display_name_json = {
@@ -153,7 +162,11 @@ one_of_json = {
     "display_name": "oneOf Testing",
     "metadata": {
         "required_test": "required_value",
-        "oneOf_test": {"obj2_prop1": 42, "obj2_prop2": 24, "obj_switch": "obj2"},
+        "oneOf_test": {
+            "obj2_prop1": 42,
+            "obj2_prop2": 24,
+            "obj_switch": "obj2",
+        },
     },
 }
 
@@ -202,7 +215,10 @@ def create_instance(metadata_store: MetadataStore, location: str, name: str, con
             setattr(metadata_store, "instances", dict())
             instances = metadata_store.instances
         if not isinstance(content, dict):
-            content = {"display_name": name, "reason": f"JSON failed to load for instance '{name}'"}
+            content = {
+                "display_name": name,
+                "reason": f"JSON failed to load for instance '{name}'",
+            }
         instances[name] = content
     return resource
 
@@ -231,7 +247,12 @@ class PropertyTester(object):
         self.property = name + "_test"
 
     def run(self, script_runner, mock_data_dir):
-        expected_file = os.path.join(mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, self.name + ".json")
+        expected_file = os.path.join(
+            mock_data_dir,
+            "metadata",
+            METADATA_TEST_SCHEMASPACE,
+            self.name + ".json",
+        )
         # Cleanup from any potential previous failures
         if os.path.exists(expected_file):
             os.remove(expected_file)
@@ -416,13 +437,19 @@ class MetadataTestSchemaspace(Schemaspace):
 
 class BYOSchemaspaceBadId(Schemaspace):
     def __init__(self, *args, **kwargs):
-        super().__init__(schemaspace_id="byo_schemaspace_bad_id", name="byo-schemaspace-bad-id", **kwargs)
+        super().__init__(
+            schemaspace_id="byo_schemaspace_bad_id",
+            name="byo-schemaspace-bad-id",
+            **kwargs,
+        )
 
 
 class BYOSchemaspaceBadName(Schemaspace):
     def __init__(self, *args, **kwargs):
         super().__init__(
-            schemaspace_id="b5b391d7-24f5-4b62-93bb-5e5423e651b8", name="byo.schemaspace-bad.name", **kwargs
+            schemaspace_id="b5b391d7-24f5-4b62-93bb-5e5423e651b8",
+            name="byo.schemaspace-bad.name",
+            **kwargs,
         )
 
 
@@ -436,7 +463,9 @@ class BYOSchemaspaceBadClass(LoggingConfigurable):
 class BYOSchemaspaceCaseSensitiveName(Schemaspace):
     def __init__(self, *args, **kwargs):
         super().__init__(
-            schemaspace_id="1b1e461a-c7fa-40f2-a3a3-bf1f2fd48eeA", name="byo-schemaspace_CaseSensitiveName", **kwargs
+            schemaspace_id="1b1e461a-c7fa-40f2-a3a3-bf1f2fd48eeA",
+            name="byo-schemaspace_CaseSensitiveName",
+            **kwargs,
         )
 
 
@@ -446,7 +475,9 @@ class BYOSchemaspaceThrows(Schemaspace):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            schemaspace_id=BYOSchemaspace.BYO_SCHEMASPACE_ID, name=BYOSchemaspace.BYO_SCHEMASPACE_NAME, **kwargs
+            schemaspace_id=BYOSchemaspace.BYO_SCHEMASPACE_ID,
+            name=BYOSchemaspace.BYO_SCHEMASPACE_NAME,
+            **kwargs,
         )
         raise NotImplementedError("Test that throw from constructor is not harmful.")
 
@@ -457,7 +488,9 @@ class BYOSchemaspace(Schemaspace):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            schemaspace_id=BYOSchemaspace.BYO_SCHEMASPACE_ID, name=BYOSchemaspace.BYO_SCHEMASPACE_NAME, **kwargs
+            schemaspace_id=BYOSchemaspace.BYO_SCHEMASPACE_ID,
+            name=BYOSchemaspace.BYO_SCHEMASPACE_NAME,
+            **kwargs,
         )
 
 
@@ -497,7 +530,12 @@ class MetadataTestSchemasProvider(SchemasProvider):
         return schemas
 
 
-def schema_factory(schemaspace_id: str, schemaspace_name: str, num_good: int, bad_reasons: List[str]) -> List[Dict]:
+def schema_factory(
+    schemaspace_id: str,
+    schemaspace_name: str,
+    num_good: int,
+    bad_reasons: List[str],
+) -> List[Dict]:
     # get the metadata test schema as a primary copy
     parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     schema_file = os.path.join(parent_dir, "metadata", "schemas", "metadata-test.json")
@@ -557,5 +595,10 @@ class BYOSchemasProviderBadClass(object):
     """Test SchemasProvider that is of the wrong subclass."""
 
     def get_schemas(self) -> List[Dict]:
-        schemas = schema_factory(BYOSchemaspace.BYO_SCHEMASPACE_ID, BYOSchemaspace.BYO_SCHEMASPACE_NAME, 2, [])
+        schemas = schema_factory(
+            BYOSchemaspace.BYO_SCHEMASPACE_ID,
+            BYOSchemaspace.BYO_SCHEMASPACE_NAME,
+            2,
+            [],
+        )
         return schemas

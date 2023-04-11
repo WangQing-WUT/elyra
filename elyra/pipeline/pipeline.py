@@ -38,7 +38,11 @@ class Operation(object):
     Represents a single operation in a pipeline representing a third-party component
     """
 
-    generic_node_types = ["execute-notebook-node", "execute-python-node", "execute-r-node"]
+    generic_node_types = [
+        "execute-notebook-node",
+        "execute-python-node",
+        "execute-r-node",
+    ]
 
     @classmethod
     def create_instance(
@@ -54,8 +58,24 @@ class Operation(object):
         """Class method that creates the appropriate instance of Operation based on inputs."""
 
         if Operation.is_generic_operation(classifier):
-            return GenericOperation(id, type, name, classifier, parent_operation_ids, component_params, elyra_params)
-        return Operation(id, type, name, classifier, parent_operation_ids, component_params, elyra_params)
+            return GenericOperation(
+                id,
+                type,
+                name,
+                classifier,
+                parent_operation_ids,
+                component_params,
+                elyra_params,
+            )
+        return Operation(
+            id,
+            type,
+            name,
+            classifier,
+            parent_operation_ids,
+            component_params,
+            elyra_params,
+        )
 
     def __init__(
         self,
@@ -104,7 +124,7 @@ class Operation(object):
         if component_params.get("node_selector"):
             node_selector = {}
             for key_value in component_params.get("node_selector"):
-                node_selector[key_value["key"]] = key_value["value"]
+                node_selector[key_value.get("key")] = key_value.get("value")
             self._component_params["node_selector"] = node_selector
         else:
             self._component_params.pop("node_selector", 100)
@@ -261,7 +281,15 @@ class GenericOperation(Operation):
         :param elyra_params: dictionary of parameter key:value pairs that are owned by Elyra
         """
 
-        super().__init__(id, type, name, classifier, parent_operation_ids, component_params, elyra_params)
+        super().__init__(
+            id,
+            type,
+            name,
+            classifier,
+            parent_operation_ids,
+            component_params,
+            elyra_params,
+        )
 
         if not component_params.get("filename"):
             raise ValueError("Invalid pipeline operation: Missing field 'operation filename'.")

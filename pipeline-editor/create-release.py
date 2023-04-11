@@ -69,7 +69,10 @@ def dependency_exists(command) -> bool:
 def sed(file: str, pattern: str, replace: str) -> None:
     """Perform regex substitution on a given file"""
     try:
-        check_run(["sed", "-i", "", "-e", f"s#{pattern}#{replace}#g", file], capture_output=False)
+        check_run(
+            ["sed", "-i", "", "-e", f"s#{pattern}#{replace}#g", file],
+            capture_output=False,
+        )
     except Exception as ex:
         raise RuntimeError(f"Error processing updated to file {file}: ") from ex
 
@@ -98,9 +101,26 @@ def update_version_to_release() -> None:
 
     try:
         check_run(
-            ["lerna", "version", new_version, "--no-git-tag-version", "--no-push", "--yes"], cwd=config.source_dir
+            [
+                "lerna",
+                "version",
+                new_version,
+                "--no-git-tag-version",
+                "--no-push",
+                "--yes",
+            ],
+            cwd=config.source_dir,
         )
-        check_run(["yarn", "version", "--new-version", new_version, "--no-git-tag-version"], cwd=config.source_dir)
+        check_run(
+            [
+                "yarn",
+                "version",
+                "--new-version",
+                new_version,
+                "--no-git-tag-version",
+            ],
+            cwd=config.source_dir,
+        )
 
     except Exception as ex:
         raise UpdateVersionException from ex
@@ -127,8 +147,14 @@ def checkout_code() -> None:
     os.makedirs(config.work_dir)
     print(f"Cloning : {config.git_url} to {config.work_dir}")
     check_run(["git", "clone", config.git_url], cwd=config.work_dir)
-    check_run(["git", "config", "user.name", config.git_user_name], cwd=config.source_dir)
-    check_run(["git", "config", "user.email", config.git_user_email], cwd=config.source_dir)
+    check_run(
+        ["git", "config", "user.name", config.git_user_name],
+        cwd=config.source_dir,
+    )
+    check_run(
+        ["git", "config", "user.email", config.git_user_email],
+        cwd=config.source_dir,
+    )
 
     print("")
 
@@ -140,7 +166,11 @@ def build_and_publish_npm_packages() -> None:
     print("--------------------- Building NPM Packages ---------------------")
     print("-----------------------------------------------------------------")
 
-    check_run(["make", "clean", "install"], cwd=config.source_dir, capture_output=False)
+    check_run(
+        ["make", "clean", "install"],
+        cwd=config.source_dir,
+        capture_output=False,
+    )
 
     print("-----------------------------------------------------------------")
     print("-------------------- Pushing npm packages -----------------------")
@@ -150,7 +180,15 @@ def build_and_publish_npm_packages() -> None:
     print()
     print(f"publishing npm packages")
     check_run(
-        ["lerna", "publish", "--yes", "from-package", "--no-git-tag-version", "--no-verify-access", "--no-push"],
+        [
+            "lerna",
+            "publish",
+            "--yes",
+            "from-package",
+            "--no-git-tag-version",
+            "--no-verify-access",
+            "--no-push",
+        ],
         cwd=config.source_dir,
     )
     check_run(["make", "lint"], cwd=config.source_dir)
@@ -184,7 +222,10 @@ def release() -> None:
     # Update to new release version
     update_version_to_release()
     # commit release
-    check_run(["git", "commit", "-a", "-m", f"Release v{config.new_version}"], cwd=config.source_dir)
+    check_run(
+        ["git", "commit", "-a", "-m", f"Release v{config.new_version}"],
+        cwd=config.source_dir,
+    )
     # build and publish npm packages
     build_and_publish_npm_packages()
     # commit and tag release

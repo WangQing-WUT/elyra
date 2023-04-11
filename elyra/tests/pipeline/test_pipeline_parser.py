@@ -27,7 +27,10 @@ from elyra.tests.pipeline.util import _read_pipeline_resource
 
 @pytest.fixture
 def valid_operation():
-    env_vars = [EnvironmentVariable(env_var="var1", value="var1"), EnvironmentVariable(env_var="var2", value="var2")]
+    env_vars = [
+        EnvironmentVariable(env_var="var1", value="var1"),
+        EnvironmentVariable(env_var="var2", value="var2"),
+    ]
     component_parameters = {
         "filename": "{{filename}}",
         "runtime_image": "{{runtime_image}}",
@@ -100,7 +103,10 @@ def test_supernode_pipeline():
     # pointing at first two nodes, and final node should have one parent pointing
     # at execution node WITHIN supernode.
 
-    external_input_node_ids = ["db9f3f5b-b2e3-4824-aadd-c1c6bf652534", "f6584209-6f22-434f-9820-41327b6c749d"]
+    external_input_node_ids = [
+        "db9f3f5b-b2e3-4824-aadd-c1c6bf652534",
+        "f6584209-6f22-434f-9820-41327b6c749d",
+    ]
     supernode_excution_node_id = "079c0e12-eb5f-4fcc-983b-09e011869fee"
     external_node_id = "7628306d-2cc2-405c-94a1-fe42c95567a1"
 

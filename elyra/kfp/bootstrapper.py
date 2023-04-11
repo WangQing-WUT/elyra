@@ -99,7 +99,11 @@ class FileOpBase(ABC):
             )
 
         # get minio client
-        self.cos_client = minio.Minio(self.cos_endpoint.netloc, secure=self.secure, credentials=cred_provider)
+        self.cos_client = minio.Minio(
+            self.cos_endpoint.netloc,
+            secure=self.secure,
+            credentials=cred_provider,
+        )
 
     @abstractmethod
     def execute(self) -> None:
@@ -246,7 +250,8 @@ class FileOpBase(ABC):
         # Define HREF for COS bucket:
         # <COS_URL>/<BUCKET_NAME>/<COS_DIRECTORY>
         bucket_url = urljoin(
-            urlunparse(self.cos_endpoint), f"{self.cos_bucket}/{self.input_params.get('cos-directory', '')}/"
+            urlunparse(self.cos_endpoint),
+            f"{self.cos_bucket}/{self.input_params.get('cos-directory', '')}/",
         )
 
         # add Elyra metadata to 'outputs'
@@ -287,10 +292,15 @@ class FileOpBase(ABC):
 
         object_to_get = self.get_object_storage_filename(file_to_get)
         t0 = time.time()
-        self.cos_client.fget_object(bucket_name=self.cos_bucket, object_name=object_to_get, file_path=file_to_get)
+        self.cos_client.fget_object(
+            bucket_name=self.cos_bucket,
+            object_name=object_to_get,
+            file_path=file_to_get,
+        )
         duration = time.time() - t0
         OpUtil.log_operation_info(
-            f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}", duration
+            f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}",
+            duration,
         )
 
     def put_file_to_object_storage(self, file_to_upload: str, object_name: Optional[str] = None) -> None:
@@ -306,10 +316,15 @@ class FileOpBase(ABC):
 
         object_to_upload = self.get_object_storage_filename(object_to_upload)
         t0 = time.time()
-        self.cos_client.fput_object(bucket_name=self.cos_bucket, object_name=object_to_upload, file_path=file_to_upload)
+        self.cos_client.fput_object(
+            bucket_name=self.cos_bucket,
+            object_name=object_to_upload,
+            file_path=file_to_upload,
+        )
         duration = time.time() - t0
         OpUtil.log_operation_info(
-            f"uploaded {file_to_upload} to bucket: {self.cos_bucket} object: {object_to_upload}", duration
+            f"uploaded {file_to_upload} to bucket: {self.cos_bucket} object: {object_to_upload}",
+            duration,
         )
 
     def has_wildcard(self, filename):
@@ -452,7 +467,12 @@ class PythonFileOp(FileOpBase):
             )
             t0 = time.time()
             with open(python_script_output, "w") as log_file:
-                subprocess.run(["python3", python_script], stdout=log_file, stderr=subprocess.STDOUT, check=True)
+                subprocess.run(
+                    ["python3", python_script],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                )
 
             duration = time.time() - t0
             OpUtil.log_operation_info("python script execution completed", duration)
@@ -481,7 +501,12 @@ class RFileOp(FileOpBase):
             OpUtil.log_operation_info(f"executing R script using " f"'Rscript {r_script}' to '{r_script_output}'")
             t0 = time.time()
             with open(r_script_output, "w") as log_file:
-                subprocess.run(["Rscript", r_script], stdout=log_file, stderr=subprocess.STDOUT, check=True)
+                subprocess.run(
+                    ["Rscript", r_script],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                )
 
             duration = time.time() - t0
             OpUtil.log_operation_info("R script execution completed", duration)
@@ -523,7 +548,10 @@ class OpUtil(object):
                         f"{current_packages[package]}. This may conflict with the required "
                         f"version: {ver} . Skipping..."
                     )
-                elif isinstance(version.parse(current_packages[package]), version.LegacyVersion):
+                elif isinstance(
+                    version.parse(current_packages[package]),
+                    version.LegacyVersion,
+                ):
                     logger.warning(
                         f"WARNING: Package '{package}' found with unsupported Legacy version "
                         f"scheme {current_packages[package]} already installed. Skipping..."
@@ -545,7 +573,10 @@ class OpUtil(object):
                 to_install_list.insert(0, f"--target={user_volume_path}")
                 to_install_list.append("--no-cache-dir")
 
-            subprocess.run([sys.executable, "-m", "pip", "install"] + to_install_list, check=True)
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install"] + to_install_list,
+                check=True,
+            )
 
         if user_volume_path:
             os.environ["PIP_CONFIG_FILE"] = f"{user_volume_path}/pip.conf"
@@ -603,10 +634,18 @@ class OpUtil(object):
         logger.debug("Parsing Arguments.....")
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "-e", "--cos-endpoint", dest="cos-endpoint", help="Cloud object storage endpoint", required=True
+            "-e",
+            "--cos-endpoint",
+            dest="cos-endpoint",
+            help="Cloud object storage endpoint",
+            required=True,
         )
         parser.add_argument(
-            "-b", "--cos-bucket", dest="cos-bucket", help="Cloud object storage bucket to use", required=True
+            "-b",
+            "--cos-bucket",
+            dest="cos-bucket",
+            help="Cloud object storage bucket to use",
+            required=True,
         )
         parser.add_argument(
             "-d",
@@ -622,9 +661,27 @@ class OpUtil(object):
             help="Archive containing notebook and dependency artifacts",
             required=True,
         )
-        parser.add_argument("-f", "--file", dest="filepath", help="File to execute", required=True)
-        parser.add_argument("-o", "--outputs", dest="outputs", help="Files to output to object store", required=False)
-        parser.add_argument("-i", "--inputs", dest="inputs", help="Files to pull in from parent node", required=False)
+        parser.add_argument(
+            "-f",
+            "--file",
+            dest="filepath",
+            help="File to execute",
+            required=True,
+        )
+        parser.add_argument(
+            "-o",
+            "--outputs",
+            dest="outputs",
+            help="Files to output to object store",
+            required=False,
+        )
+        parser.add_argument(
+            "-i",
+            "--inputs",
+            dest="inputs",
+            help="Files to pull in from parent node",
+            required=False,
+        )
         parser.add_argument(
             "-p",
             "--user-volume-path",
@@ -671,7 +728,9 @@ class OpUtil(object):
 def main():
     # Configure logger format, level
     logging.basicConfig(
-        format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s", datefmt="%H:%M:%S", level=logging.DEBUG
+        format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.DEBUG,
     )
     # Setup packages and gather arguments
     input_params = OpUtil.parse_arguments(sys.argv[1:])

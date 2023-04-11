@@ -30,14 +30,42 @@ with open(os.path.join(here, "elyra", "_version.py")) as f:
     exec(f.read(), {}, version_ns)
 
 data_files_spec = [
-    ("etc/jupyter/jupyter_notebook_config.d", "etc/config/jupyter_notebook_config.d", "*.json"),
-    ("etc/jupyter/jupyter_server_config.d", "etc/config/jupyter_server_config.d", "*.json"),
+    (
+        "etc/jupyter/jupyter_notebook_config.d",
+        "etc/config/jupyter_notebook_config.d",
+        "*.json",
+    ),
+    (
+        "etc/jupyter/jupyter_server_config.d",
+        "etc/config/jupyter_server_config.d",
+        "*.json",
+    ),
     ("etc/jupyter/labconfig", "etc/config/settings", "*.json"),
-    ("share/jupyter/metadata/runtime-images", "etc/config/metadata/runtime-images", "*.json"),
-    ("share/jupyter/metadata/component-catalogs", "etc/config/metadata/component-catalogs", "*.json"),  # deprecated
-    ("share/jupyter/components", "etc/config/components", "*.json"),  # deprecated
-    ("share/jupyter/components/kfp/", "etc/config/components/kfp", "*.yaml"),  # deprecated
-    ("share/jupyter/components/airflow/", "etc/config/components/airflow", "*.py"),  # deprecated
+    (
+        "share/jupyter/metadata/runtime-images",
+        "etc/config/metadata/runtime-images",
+        "*.json",
+    ),
+    (
+        "share/jupyter/metadata/component-catalogs",
+        "etc/config/metadata/component-catalogs",
+        "*.json",
+    ),  # deprecated
+    (
+        "share/jupyter/components",
+        "etc/config/components",
+        "*.json",
+    ),  # deprecated
+    (
+        "share/jupyter/components/kfp/",
+        "etc/config/components/kfp",
+        "*.yaml",
+    ),  # deprecated
+    (
+        "share/jupyter/components/airflow/",
+        "etc/config/components/airflow",
+        "*.py",
+    ),  # deprecated
     ("share/jupyter/labextensions", "dist/labextensions", "**"),
 ]
 

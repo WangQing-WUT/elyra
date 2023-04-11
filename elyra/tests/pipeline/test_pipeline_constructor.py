@@ -42,7 +42,10 @@ def good_operation():
 @pytest.fixture
 def good_pipeline():
     test_pipeline = Pipeline(
-        id="Random-UUID-123123123123123", name="test-pipeline", runtime="kfp", runtime_config="default_kfp"
+        id="Random-UUID-123123123123123",
+        name="test-pipeline",
+        runtime="kfp",
+        runtime_config="default_kfp",
     )
     return test_pipeline
 
@@ -60,7 +63,10 @@ def test_create_operation_minimal(good_operation):
 
 
 def test_create_operation_with_dependencies():
-    dependencies = ["elyra/pipline/tests/resources", "elyra/pipline/tests/resources/archive"]
+    dependencies = [
+        "elyra/pipline/tests/resources",
+        "elyra/pipline/tests/resources/archive",
+    ]
 
     component_parameters = {
         "filename": "elyra/pipeline/tests/resources/archive/test.ipynb",
@@ -155,7 +161,10 @@ def test_create_operation_with_outputs():
 
 
 def test_create_operation_with_parent_operations():
-    parent_operation_ids = ["id-123123-123123-123123", "id-456456-456456-456456"]
+    parent_operation_ids = [
+        "id-123123-123123-123123",
+        "id-456456-456456-456456",
+    ]
 
     component_parameters = {
         "filename": "elyra/pipeline/tests/resources/archive/test.ipynb",
@@ -177,7 +186,10 @@ def test_create_operation_correct_naming():
     label = "test.ipynb"
     filename = "elyra/pipeline/tests/resources/archive/" + label
 
-    component_parameters = {"filename": filename, "runtime_image": "tensorflow/tensorflow:latest"}
+    component_parameters = {
+        "filename": filename,
+        "runtime_image": "tensorflow/tensorflow:latest",
+    }
     test_operation = GenericOperation(
         id="test-id",
         type="execution-node",
@@ -210,7 +222,10 @@ def test_fail_create_operation_missing_type():
     }
     with pytest.raises(TypeError):
         GenericOperation(
-            id="test-id", classifier="execute-notebook-node", name="test", component_params=component_parameters
+            id="test-id",
+            classifier="execute-notebook-node",
+            name="test",
+            component_params=component_parameters,
         )
 
 
@@ -220,7 +235,12 @@ def test_fail_create_operation_missing_classifier():
         "runtime_image": "tensorflow/tensorflow:latest",
     }
     with pytest.raises(TypeError):
-        Operation(id="test-id", type="execution-node", name="test", component_params=component_parameters)
+        Operation(
+            id="test-id",
+            type="execution-node",
+            name="test",
+            component_params=component_parameters,
+        )
 
 
 def test_fail_create_operation_missing_runtime_image():
@@ -250,7 +270,10 @@ def test_fail_create_operation_missing_name():
 
 
 def test_fail_operations_are_equal(good_operation):
-    parent_operation_ids = ["id-123123-123123-123123", "id-456456-456456-456456"]
+    parent_operation_ids = [
+        "id-123123-123123-123123",
+        "id-456456-456456-456456",
+    ]
     component_parameters = {
         "filename": "elyra/pipeline/tests/resources/archive/test.ipynb",
         "runtime_image": "tensorflow/tensorflow:latest",
@@ -299,32 +322,53 @@ def test_fail_create_pipeline_missing_id():
 
 def test_fail_create_pipeline_missing_name():
     with pytest.raises(TypeError):
-        Pipeline(id="Random-UUID-123123123123123", runtime="kfp", runtime_config="default_kfp")
+        Pipeline(
+            id="Random-UUID-123123123123123",
+            runtime="kfp",
+            runtime_config="default_kfp",
+        )
 
 
 def test_fail_create_pipeline_missing_runtime():
     with pytest.raises(TypeError):
-        Pipeline(id="Random-UUID-123123123123123", name="test-pipeline", runtime_config="default_kfp")
+        Pipeline(
+            id="Random-UUID-123123123123123",
+            name="test-pipeline",
+            runtime_config="default_kfp",
+        )
 
 
 def test_fail_create_pipeline_missing_runtime_config():
     with pytest.raises(TypeError):
-        Pipeline(id="Random-UUID-123123123123123", name="test-pipeline", runtime="kfp")
+        Pipeline(
+            id="Random-UUID-123123123123123",
+            name="test-pipeline",
+            runtime="kfp",
+        )
 
 
 def test_pipelines_are_equal(good_pipeline):
     compare_pipeline = Pipeline(
-        id="Random-UUID-123123123123123", name="test-pipeline", runtime="kfp", runtime_config="default_kfp"
+        id="Random-UUID-123123123123123",
+        name="test-pipeline",
+        runtime="kfp",
+        runtime_config="default_kfp",
     )
 
     assert compare_pipeline == good_pipeline
 
 
 def test_fail_pipelines_are_equal(good_pipeline):
-    test_operations_dict = {"123123123": good_operation, "234234234": good_operation}
+    test_operations_dict = {
+        "123123123": good_operation,
+        "234234234": good_operation,
+    }
 
     compare_pipeline = Pipeline(
-        id="Random-UUID-123123123123123", name="test-pipeline", runtime="kfp", runtime_config="default_kfp"
+        id="Random-UUID-123123123123123",
+        name="test-pipeline",
+        runtime="kfp",
+        runtime_config="default_kfp",
     )
 
     for key, operation in test_operations_dict.items():
@@ -335,7 +379,12 @@ def test_fail_pipelines_are_equal(good_pipeline):
 
 
 def test_env_list_to_dict_function():
-    env_variables_dict = {"KEY": "val", "KEY2": "value2", "TWO_EQUALS": "KEY=value", "": "no_key"}
+    env_variables_dict = {
+        "KEY": "val",
+        "KEY2": "value2",
+        "TWO_EQUALS": "KEY=value",
+        "": "no_key",
+    }
     env_variables = [
         {"env_var": "KEY", "value": "val"},  # valid
         {"env_var": "", "value": ""},  # empty key and value

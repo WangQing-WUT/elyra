@@ -111,7 +111,12 @@ class ArgoResources(RuntimeTypeResources):
 
     type = RuntimeProcessorType.ARGO
     icon_endpoint = "static/elyra/argo.svg"
-    export_file_types = [{"id": "py", "display_name": "Argo domain-specific language Python code"}]
+    export_file_types = [
+        {
+            "id": "py",
+            "display_name": "Argo domain-specific language Python code",
+        }
+    ]
 
 
 class ApacheAirflowResources(RuntimeTypeResources):
@@ -119,7 +124,12 @@ class ApacheAirflowResources(RuntimeTypeResources):
 
     type = RuntimeProcessorType.APACHE_AIRFLOW
     icon_endpoint = "static/elyra/airflow.svg"
-    export_file_types = [{"id": "py", "display_name": "Airflow domain-specific language Python code"}]
+    export_file_types = [
+        {
+            "id": "py",
+            "display_name": "Airflow domain-specific language Python code",
+        }
+    ]
 
 
 class KubeflowPipelinesResources(RuntimeTypeResources):
@@ -127,7 +137,12 @@ class KubeflowPipelinesResources(RuntimeTypeResources):
 
     type = RuntimeProcessorType.KUBEFLOW_PIPELINES
     icon_endpoint = "static/elyra/kubeflow.svg"
-    export_file_types = [{"id": "yaml", "display_name": "KFP static configuration file (YAML formatted)"}]
+    export_file_types = [
+        {
+            "id": "yaml",
+            "display_name": "KFP static configuration file (YAML formatted)",
+        }
+    ]
 
 
 class LocalResources(RuntimeTypeResources):
@@ -143,7 +158,12 @@ class WfpPipelinesResources(RuntimeTypeResources):
 
     type = RuntimeProcessorType.WORKFLOW_PIPELINES
     icon_endpoint = "static/elyra/workflow.svg"
-    export_file_types = [{"id": "yaml", "display_name": "WFP static configuration file (YAML formatted)"}]
+    export_file_types = [
+        {
+            "id": "yaml",
+            "display_name": "WFP static configuration file (YAML formatted)",
+        }
+    ]
 
 
 ###########################################################

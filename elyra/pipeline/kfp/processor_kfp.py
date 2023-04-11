@@ -104,11 +104,12 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # Runtime Configs
         ################
         runtime_configuration = self._get_metadata_configuration(
-            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=pipeline.runtime_config
+            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID,
+            name=pipeline.runtime_config,
         )
 
         # unpack Kubeflow Pipelines configs
-        api_endpoint = runtime_configuration.metadata["api_endpoint"].rstrip("/")
+        api_endpoint = runtime_configuration.metadata.get("api_endpoint").rstrip("/")
         public_api_endpoint = runtime_configuration.metadata.get("public_api_endpoint", api_endpoint)
         api_username = runtime_configuration.metadata.get("api_username")
         api_password = runtime_configuration.metadata.get("api_password")
@@ -121,9 +122,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             )
 
         # unpack Cloud Object Storage configs
-        cos_endpoint = runtime_configuration.metadata["cos_endpoint"]
+        cos_endpoint = runtime_configuration.metadata.get("cos_endpoint")
         cos_public_endpoint = runtime_configuration.metadata.get("public_cos_endpoint", cos_endpoint)
-        cos_bucket = runtime_configuration.metadata["cos_bucket"]
+        cos_bucket = runtime_configuration.metadata.get("cos_bucket")
 
         # Determine which provider to use to authenticate with Kubeflow
         auth_type = runtime_configuration.metadata.get("auth_type")
@@ -254,11 +255,19 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
                 def gen_function(args):
                     def new_function(*args, **kwargs):
-                        self._cc_pipeline(pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id, args=args)
+                        self._cc_pipeline(
+                            pipeline,
+                            pipeline_name,
+                            pipeline_instance_id=pipeline_instance_id,
+                            args=args,
+                        )
 
                     params = [
                         inspect.Parameter(
-                            param, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=type(value), default=value
+                            param,
+                            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                            annotation=type(value),
+                            default=value,
                         )
                         for param, value in args.items()
                     ]
@@ -277,10 +286,16 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 # compile the pipeline
                 if engine == "Tekton":
                     kfp_tekton_compiler.TektonCompiler().compile(
-                        pipeline_function, pipeline_path, pipeline_conf=pipeline_conf
+                        pipeline_function,
+                        pipeline_path,
+                        pipeline_conf=pipeline_conf,
                     )
                 else:
-                    kfp_argo_compiler.Compiler().compile(pipeline_function, pipeline_path, pipeline_conf=pipeline_conf)
+                    kfp_argo_compiler.Compiler().compile(
+                        pipeline_function,
+                        pipeline_path,
+                        pipeline_conf=pipeline_conf,
+                    )
             except RuntimeError:
                 raise
             except Exception as ex:
@@ -371,7 +386,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
                 # create pipeline run (or specified pipeline version)
                 run = client.run_pipeline(
-                    experiment_id=experiment.id, job_name=job_name, pipeline_id=pipeline_id, version_id=version_id
+                    experiment_id=experiment.id,
+                    job_name=job_name,
+                    pipeline_id=pipeline_id,
+                    version_id=version_id,
                 )
 
             except Exception as ex:
@@ -397,7 +415,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         if pipeline.contains_generic_operations():
             object_storage_url = f"{cos_public_endpoint}"
             os_path = join_paths(
-                pipeline.pipeline_parameters.get(pipeline_constants.COS_OBJECT_PREFIX), pipeline_instance_id
+                pipeline.pipeline_parameters.get(pipeline_constants.COS_OBJECT_PREFIX),
+                pipeline_instance_id,
             )
             object_storage_path = f"/{cos_bucket}/{os_path}"
         else:
@@ -411,7 +430,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             object_storage_path=object_storage_path,
         )
 
-    def export(self, pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool):
+    def export(
+        self,
+        pipeline: Pipeline,
+        pipeline_export_format: str,
+        pipeline_export_path: str,
+        overwrite: bool,
+    ):
         # Verify that the KfpPipelineProcessor supports the given export format
         self._verify_export_format(pipeline_export_format)
 
@@ -426,7 +451,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         # we're using its absolute form.
         absolute_pipeline_export_path = get_absolute_path(self.root_dir, pipeline_export_path)
         runtime_configuration = self._get_metadata_configuration(
-            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=pipeline.runtime_config
+            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID,
+            name=pipeline.runtime_config,
         )
 
         engine = runtime_configuration.metadata.get("engine")
@@ -436,7 +462,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         if os.path.exists(absolute_pipeline_export_path) and not overwrite:
             raise ValueError("File " + absolute_pipeline_export_path + " already exists.")
 
-        self.log_pipeline_info(pipeline_name, f"Exporting pipeline as a .{pipeline_export_format} file")
+        self.log_pipeline_info(
+            pipeline_name,
+            f"Exporting pipeline as a .{pipeline_export_format} file",
+        )
         # Export pipeline as static configuration file (YAML formatted)
         try:
             # Exported pipeline is not associated with an experiment
@@ -444,11 +473,19 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             # pipeline is imported into KFP by the user.
             def gen_function(args):
                 def new_function(*args, **kwargs):
-                    self._cc_pipeline(pipeline, pipeline_name, pipeline_instance_id=pipeline_instance_id, args=args)
+                    self._cc_pipeline(
+                        pipeline,
+                        pipeline_name,
+                        pipeline_instance_id=pipeline_instance_id,
+                        args=args,
+                    )
 
                 params = [
                     inspect.Parameter(
-                        param, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=type(value), default=value
+                        param,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                        annotation=type(value),
+                        default=value,
                     )
                     for param, value in args.items()
                 ]
@@ -478,7 +515,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             ) from ex
 
         self.log_pipeline_info(
-            pipeline_name, f"pipeline exported to '{pipeline_export_path}'", duration=(time.time() - t0_all)
+            pipeline_name,
+            f"pipeline exported to '{pipeline_export_path}'",
+            duration=(time.time() - t0_all),
         )
 
         return pipeline_export_path  # Return the input value, not its absolute form
@@ -503,7 +542,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _get_next(self, parent_dict: dict, pipeline_operations: dict):
         for key in parent_dict:
             for pipeline_operation_id in pipeline_operations:
-                if self._is_next(key, pipeline_operations[pipeline_operation_id].parent_operation_ids):
+                if self._is_next(
+                    key,
+                    pipeline_operations[pipeline_operation_id].parent_operation_ids,
+                ):
                     parent_dict[key][pipeline_operation_id] = {}
                     self._get_next(parent_dict[key], pipeline_operations)
 
@@ -546,7 +588,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             elif pipeline_operations[node_id].classifier.startswith("loop_start"):
                 special_node_subnodes[node_id] = []
                 special_node_sublinks[node_id] = {}
-                loop_stack.append([node_id, special_node_sublinks[node_id], special_node_subnodes[node_id]])
+                loop_stack.append(
+                    [
+                        node_id,
+                        special_node_sublinks[node_id],
+                        special_node_subnodes[node_id],
+                    ]
+                )
                 self._filter_special_node(
                     pipeline_operations,
                     link_dict[node_id],
@@ -629,7 +677,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     special_node_subnodes[node_id] = []
                     special_node_links[node_id] = {}
                     outermost_node_ids.append(node_id)
-                    loop_stack.append([node_id, special_node_links[node_id], special_node_subnodes[node_id]])
+                    loop_stack.append(
+                        [
+                            node_id,
+                            special_node_links[node_id],
+                            special_node_subnodes[node_id],
+                        ]
+                    )
                     self._filter_special_node(
                         pipeline_operations,
                         link_dict[node_id],
@@ -657,28 +711,33 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
     def _get_pipeline_input_parameters(self, pipeline):
         input_parameters = {}
         if "input_parameters" in pipeline.pipeline_parameters:
-            for item in pipeline.pipeline_parameters["input_parameters"]:
-                if "value" in item["type"]:
-                    temp_value = item["type"]["value"]
-                    if item["type"]["widget"] == "Float":
+            for item in pipeline.pipeline_parameters.get("input_parameters"):
+                if "value" in item.get("type"):
+                    temp_value = item.get("type").get("value")
+                    if item.get("type").get("widget") == "Float":
                         temp_value = float(temp_value)
-                    elif item["type"]["widget"] == "Integer":
+                    elif item.get("type").get("widget") == "Integer":
                         temp_value = int(temp_value)
-                    elif item["type"]["widget"] == "List":
+                    elif item.get("type").get("widget") == "List":
                         temp_value = self._process_list_value(temp_value)
-                    input_parameters[item["name"]] = temp_value
+                    input_parameters[item.get("name")] = temp_value
                 else:
-                    if item["type"]["widget"] == "String":
-                        input_parameters[item["name"]] = ""
-                    elif item["type"]["widget"] == "Float":
-                        input_parameters[item["name"]] = 0.0
-                    elif item["type"]["widget"] == "List":
-                        input_parameters[item["name"]] = []
+                    if item.get("type").get("widget") == "String":
+                        input_parameters[item.get("name")] = ""
+                    elif item.get("type").get("widget") == "Float":
+                        input_parameters[item.get("name")] = 0.0
+                    elif item.get("type").get("widget") == "List":
+                        input_parameters[item.get("name")] = []
                     else:
-                        input_parameters[item["name"]] = 0
+                        input_parameters[item.get("name")] = 0
         return input_parameters
 
-    def _filter_duplicate_nodes(self, special_node_links: dict, special_node_subnodes: dict, is_sorted: list):
+    def _filter_duplicate_nodes(
+        self,
+        special_node_links: dict,
+        special_node_subnodes: dict,
+        is_sorted: list,
+    ):
         for node in special_node_links:
             self._filter_duplicate_nodes(special_node_links[node], special_node_subnodes, is_sorted)
             if node not in is_sorted:
@@ -716,7 +775,12 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         is_sorted = []
 
         self._filter_component_node(
-            pipeline.operations, link_ref, outermost_node_ids, special_node_links, special_node_subnodes, is_sorted
+            pipeline.operations,
+            link_ref,
+            outermost_node_ids,
+            special_node_links,
+            special_node_subnodes,
+            is_sorted,
         )
 
         is_sorted = []
@@ -749,6 +813,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_password,
         cos_endpoint,
         cos_bucket,
+        runtime_configuration,
         pipeline_name,
         experiment_name,
         artifact_object_prefix,
@@ -770,7 +835,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
             # Collect env variables
             pipeline_envs = self._collect_envs(
-                operation, cos_secret=cos_secret, cos_username=cos_username, cos_password=cos_password
+                operation,
+                cos_secret=cos_secret,
+                cos_username=cos_username,
+                cos_password=cos_password,
             )
 
             operation_artifact_archive = self._get_dependency_archive_name(operation)
@@ -813,20 +881,19 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
             image_namespace = self._get_metadata_configuration(RuntimeImages.RUNTIME_IMAGES_SCHEMASPACE_ID)
             for image_instance in image_namespace:
-                if image_instance.metadata["image_name"] == operation.runtime_image and image_instance.metadata.get(
+                if image_instance.metadata.get("image_name") == operation.runtime_image and image_instance.metadata.get(
                     "pull_policy"
                 ):
-                    container_op.container.set_image_pull_policy(image_instance.metadata["pull_policy"])
+                    container_op.container.set_image_pull_policy(image_instance.metadata.get("pull_policy"))
 
             self.log_pipeline_info(
                 pipeline_name,
                 f"processing operation dependencies for id '{operation.id}'",
                 operation_name=operation.name,
             )
-            # TODO:delete
-            # self._upload_dependencies_to_object_store(
-            #     runtime_configuration, pipeline_name, operation, prefix=artifact_object_prefix
-            # )
+            self._upload_dependencies_to_object_store(
+                runtime_configuration, pipeline_name, operation, prefix=artifact_object_prefix
+            )
 
         # If operation is a "non-standard" component, load it's spec and create operation with factory function
         else:
@@ -850,10 +917,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 property_value = property_value_dict.get("value", None)
                 if data_entry_type == "inputpath":
                     # KFP path-based parameters accept an input from a parent
-                    output_node_id = property_value["value"]  # parent node id
-                    output_node_parameter_key = property_value["option"].replace("output_", "")  # parent param
+                    output_node_id = property_value.get("value")  # parent node id
+                    output_node_parameter_key = property_value.get("option").replace("output_", "")  # parent param
                     if target_ops[output_node_id] == "Loop Start":
-                        arg = property_value["option"].replace("ParallelFor:", "")
+                        arg = property_value.get("option").replace("ParallelFor:", "")
                         if arg == "item":
                             operation.component_params[component_property.ref] = global_loop_args[output_node_id]
                         else:
@@ -926,20 +993,20 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 container_op.set_display_name(operation.name)
 
                 if "cpu" in resources:
-                    container_op.set_cpu_request(cpu=str(resources["cpu"]))
+                    container_op.set_cpu_request(cpu=str(resources.get("cpu")))
                 if "npu310" in resources:
-                    container_op.add_resource_request("huawei.com/Ascend310", str(resources["npu310"]))
-                    container_op.add_resource_limit("huawei.com/Ascend310", str(resources["npu310"]))
+                    container_op.add_resource_request("huawei.com/Ascend310", str(resources.get("npu310")))
+                    container_op.add_resource_limit("huawei.com/Ascend310", str(resources.get("npu310")))
                 if "npu910" in resources:
-                    container_op.add_resource_request("huawei.com/Ascend910", str(resources["npu910"]))
-                    container_op.add_resource_limit("huawei.com/Ascend910", str(resources["npu910"]))
+                    container_op.add_resource_request("huawei.com/Ascend910", str(resources.get("npu910")))
+                    container_op.add_resource_limit("huawei.com/Ascend910", str(resources.get("npu910")))
                 if "memory" in resources:
-                    container_op.set_memory_request(memory=str(resources["memory"]) + "G")
+                    container_op.set_memory_request(memory=str(resources.get("memory")) + "G")
                 if "gpu" in resources:
                     gpu_vendor = "nvidia"
-                    container_op.set_gpu_limit(gpu=str(resources["gpu"]), vendor=gpu_vendor)
+                    container_op.set_gpu_limit(gpu=str(resources.get("gpu")), vendor=gpu_vendor)
                 if "node_selector" in resources:
-                    for key, value in resources["node_selector"].items():
+                    for key, value in resources.get("node_selector").items():
                         container_op.add_node_selector_constraint(key, value)
 
             except Exception as e:
@@ -955,7 +1022,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         for value in operation.elyra_params.values():
             if isinstance(value, (ElyraProperty, ElyraPropertyList)):
                 value.add_to_execution_object(
-                    runtime_processor=self, execution_object=container_op, pipeline_input_parameters=args
+                    runtime_processor=self,
+                    execution_object=container_op,
+                    pipeline_input_parameters=args,
                 )
 
         # Add ContainerOp to target_ops dict
@@ -980,6 +1049,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_password,
         cos_endpoint,
         cos_bucket,
+        runtime_configuration,
         pipeline_name,
         experiment_name,
         artifact_object_prefix,
@@ -1003,6 +1073,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     cos_password,
                     cos_endpoint,
                     cos_bucket,
+                    runtime_configuration,
                     pipeline_name,
                     experiment_name,
                     artifact_object_prefix,
@@ -1025,6 +1096,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     cos_password,
                     cos_endpoint,
                     cos_bucket,
+                    runtime_configuration,
                     pipeline_name,
                     experiment_name,
                     artifact_object_prefix,
@@ -1047,6 +1119,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     cos_password,
                     cos_endpoint,
                     cos_bucket,
+                    runtime_configuration,
                     pipeline_name,
                     experiment_name,
                     artifact_object_prefix,
@@ -1058,17 +1131,17 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _parse_branch_parameter(self, parameter, args, target_ops):
         global global_loop_args
-        if parameter["widget"] == "string":
-            return parameter["value"]
-        elif parameter["widget"] == "enum":
+        if parameter.get("widget") == "string":
+            return parameter.get("value")
+        elif parameter.get("widget") == "enum":
             for arg in args:
-                if arg.name == parameter["value"]:
+                if arg.name == parameter.get("value"):
                     return arg
-        elif parameter["widget"] == "inputpath":
-            output_node_id = parameter["value"]["value"]
-            output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
+        elif parameter.get("widget") == "inputpath":
+            output_node_id = parameter.get("value").get("value")
+            output_node_parameter_key = parameter.get("value").get("option").replace("output_", "")
             if target_ops[output_node_id] == "Loop Start":
-                arg = parameter["value"]["option"].replace("ParallelFor:", "")
+                arg = parameter.get("value").get("option").replace("ParallelFor:", "")
                 if arg == "item":
                     return global_loop_args[output_node_id]
                 else:
@@ -1078,25 +1151,25 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 return target_ops[output_node_id].outputs[output_node_parameter_key]
 
     def _parse_loop_parameter(self, parameter, args, target_ops):
-        if parameter["widget"] == "Number":
-            return [i for i in range(int(parameter["value"]))]
-        elif parameter["widget"] == "List[str|int|float]":
-            return self._process_list_value(parameter["value"])
-        elif parameter["widget"] == "List[Dict[str, any]]":
+        if parameter.get("widget") == "Number":
+            return [i for i in range(int(parameter.get("value")))]
+        elif parameter.get("widget") == "List[str|int|float]":
+            return self._process_list_value(parameter.get("value"))
+        elif parameter.get("widget") == "List[Dict[str, any]]":
             loop_args = []
             loop_arg = {}
-            for items in parameter["value"]:
+            for items in parameter.get("value"):
                 for item in items:
-                    loop_arg[item["key"]] = item["value"]
+                    loop_arg[item.get("key")] = item.get("value")
                 loop_args.append(loop_arg)
             return loop_args
-        elif parameter["widget"] == "enum":
+        elif parameter.get("widget") == "enum":
             for arg in args:
-                if arg.name == parameter["value"]:
+                if arg.name == parameter.get("value"):
                     return arg
-        elif parameter["widget"] == "inputpath":
-            output_node_id = parameter["value"]["value"]
-            output_node_parameter_key = parameter["value"]["option"].replace("output_", "")
+        elif parameter.get("widget") == "inputpath":
+            output_node_id = parameter.get("value").get("value")
+            output_node_parameter_key = parameter.get("value").get("option").replace("output_", "")
             return target_ops[output_node_id].outputs[output_node_parameter_key]
 
     @staticmethod
@@ -1124,6 +1197,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_password,
         cos_endpoint,
         cos_bucket,
+        runtime_configuration,
         pipeline_name,
         experiment_name,
         artifact_object_prefix,
@@ -1138,14 +1212,21 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         target_ops[operation.id] = "branch"
         component_params = operation.component_params
         branch_parameter1 = self._parse_branch_parameter(
-            component_params["branch_conditions"]["branch_parameter1"], args, target_ops
+            component_params.get("branch_conditions").get("branch_parameter1"),
+            args,
+            target_ops,
         )
         branch_parameter2 = self._parse_branch_parameter(
-            component_params["branch_conditions"]["branch_parameter2"], args, target_ops
+            component_params.get("branch_conditions").get("branch_parameter2"),
+            args,
+            target_ops,
         )
-        operate = component_params["branch_conditions"]["operate"]
+        operate = component_params.get("branch_conditions").get("operate")
 
-        with dsl.Condition(self.get_operator_fn(operate)(branch_parameter1, branch_parameter2), name):
+        with dsl.Condition(
+            self.get_operator_fn(operate)(branch_parameter1, branch_parameter2),
+            name,
+        ):
             self._loop(
                 args,
                 sorted_node_operations,
@@ -1158,6 +1239,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 cos_password,
                 cos_endpoint,
                 cos_bucket,
+                runtime_configuration,
                 pipeline_name,
                 experiment_name,
                 artifact_object_prefix,
@@ -1181,6 +1263,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         cos_password,
         cos_endpoint,
         cos_bucket,
+        runtime_configuration,
         pipeline_name,
         experiment_name,
         artifact_object_prefix,
@@ -1192,10 +1275,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         global global_loop_args
         target_ops[operation.id] = "Loop Start"
         component_params = operation.component_params
-        loop_args = self._parse_loop_parameter(component_params["loop_args"], args, target_ops)
+        loop_args = self._parse_loop_parameter(component_params.get("loop_args"), args, target_ops)
         parallelism = None
         if "parallelism" in component_params:
-            parallelism = int(component_params["parallelism"])
+            parallelism = int(component_params.get("parallelism"))
 
         with dsl.ParallelFor(loop_args, parallelism) as item:
             global_loop_args[operation.id] = item
@@ -1211,6 +1294,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 cos_password,
                 cos_endpoint,
                 cos_bucket,
+                runtime_configuration,
                 pipeline_name,
                 experiment_name,
                 artifact_object_prefix,
@@ -1231,20 +1315,22 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         args=None,
     ):
         runtime_configuration = self._get_metadata_configuration(
-            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID, name=pipeline.runtime_config
+            schemaspace=Runtimes.RUNTIMES_SCHEMASPACE_ID,
+            name=pipeline.runtime_config,
         )
 
-        cos_endpoint = runtime_configuration.metadata["cos_endpoint"]
+        cos_endpoint = runtime_configuration.metadata.get("cos_endpoint")
         cos_username = runtime_configuration.metadata.get("cos_username")
         cos_password = runtime_configuration.metadata.get("cos_password")
         cos_secret = runtime_configuration.metadata.get("cos_secret")
         cos_bucket = runtime_configuration.metadata.get("cos_bucket")
-        engine = runtime_configuration.metadata["engine"]
+        engine = runtime_configuration.metadata.get("engine")
 
         pipeline_instance_id = pipeline_instance_id or pipeline_name
 
         artifact_object_prefix = join_paths(
-            pipeline.pipeline_parameters.get(pipeline_constants.COS_OBJECT_PREFIX), pipeline_instance_id
+            pipeline.pipeline_parameters.get(pipeline_constants.COS_OBJECT_PREFIX),
+            pipeline_instance_id,
         )
 
         self.log_pipeline_info(
@@ -1264,11 +1350,10 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         sorted_operations = PipelineProcessor._sort_operations(pipeline.operations)
 
         # Determine whether access to cloud storage is required
-        # TODO:delete
-        # for operation in sorted_operations:
-        #     if isinstance(operation, GenericOperation):
-        #         self._verify_cos_connectivity(runtime_configuration)
-        #         break
+        for operation in sorted_operations:
+            if isinstance(operation, GenericOperation):
+                self._verify_cos_connectivity(runtime_configuration)
+                break
 
         sorted_outermost_node_operations, sorted_special_node_subnodes = self._graph_parse(pipeline)
 
@@ -1291,6 +1376,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             cos_password,
             cos_endpoint,
             cos_bucket,
+            runtime_configuration,
             pipeline_name,
             experiment_name,
             artifact_object_prefix,
@@ -1300,7 +1386,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             target_ops,
         )
 
-        self.log_pipeline_info(pipeline_name, "pipeline dependencies processed", duration=(time.time() - t0_all))
+        self.log_pipeline_info(
+            pipeline_name,
+            "pipeline dependencies processed",
+            duration=(time.time() - t0_all),
+        )
 
         return target_ops
 
@@ -1329,7 +1419,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         for operation in pipeline.operations.values():
             if isinstance(operation, GenericOperation):
                 for image_instance in image_namespace:
-                    if image_instance.metadata["image_name"] == operation.runtime_image:
+                    if image_instance.metadata.get("image_name") == operation.runtime_image:
                         if image_instance.metadata.get("pull_secret"):
                             container_image_pull_secret_names.append(image_instance.metadata.get("pull_secret"))
                         break
@@ -1386,7 +1476,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             execution_object.execution_options.caching_strategy.max_cache_staleness = "P0D"
 
     def add_env_var(
-        self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: EnvironmentVariable,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
 
@@ -1398,7 +1492,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         execution_object.container.add_env_variable(v1_env_var)
 
     def add_kubernetes_secret(
-        self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesSecret,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
         name = instance.name
@@ -1418,7 +1516,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         execution_object.container.add_env_variable(v1_env_var)
 
     def add_mounted_volume(
-        self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: VolumeMount,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add VolumeMount instance to the execution object for the given runtime processor"""
 
@@ -1443,7 +1545,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
         execution_object.container.add_volume_mount(volume_mount)
 
     def add_kubernetes_pod_annotation(
-        self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesAnnotation,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         if instance.key not in execution_object.pod_annotations:
@@ -1455,7 +1561,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 execution_object.add_pod_annotation(instance.key, instance.value or "")
 
     def add_kubernetes_pod_label(
-        self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesLabel,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         if instance.key not in execution_object.pod_labels:

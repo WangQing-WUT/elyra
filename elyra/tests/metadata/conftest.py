@@ -69,21 +69,34 @@ def store_manager(tests_manager):
 
 
 @pytest.fixture(
-    params=["elyra.metadata.storage.FileMetadataStore", "elyra.tests.metadata.test_utils.MockMetadataStore"]
+    params=[
+        "elyra.metadata.storage.FileMetadataStore",
+        "elyra.tests.metadata.test_utils.MockMetadataStore",
+    ]
 )  # Add types as needed
 def tests_manager(jp_environ, schemaspace_location, request):
-    metadata_mgr = MetadataManager(schemaspace=METADATA_TEST_SCHEMASPACE, metadata_store_class=request.param)
+    metadata_mgr = MetadataManager(
+        schemaspace=METADATA_TEST_SCHEMASPACE,
+        metadata_store_class=request.param,
+    )
     store_mgr = metadata_mgr.metadata_store
     create_instance(store_mgr, schemaspace_location, "valid", valid_metadata_json)
     create_instance(store_mgr, schemaspace_location, "another", another_metadata_json)
     create_instance(store_mgr, schemaspace_location, "invalid", invalid_metadata_json)
     create_instance(store_mgr, schemaspace_location, "bad", invalid_json)
-    create_instance(store_mgr, schemaspace_location, "invalid_schema_name", invalid_schema_name_json)
+    create_instance(
+        store_mgr,
+        schemaspace_location,
+        "invalid_schema_name",
+        invalid_schema_name_json,
+    )
     return metadata_mgr
 
 
 @pytest.fixture
-def tests_hierarchy_manager(setup_hierarchy):  # Only uses FileMetadataStore for storage right now.
+def tests_hierarchy_manager(
+    setup_hierarchy,
+):  # Only uses FileMetadataStore for storage right now.
     return MetadataManager(schemaspace=METADATA_TEST_SCHEMASPACE)
 
 

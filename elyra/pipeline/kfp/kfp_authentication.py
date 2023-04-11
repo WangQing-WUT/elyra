@@ -159,7 +159,9 @@ class AuthenticationError(Exception):
         self._provider = provider
         self._request_history = request_history
 
-    def get_request_history(self) -> Optional[List[Tuple[str, requests.Response]]]:
+    def get_request_history(
+        self,
+    ) -> Optional[List[Tuple[str, requests.Response]]]:
         """
         Returns the HTTP request history that led to this exception.
 
@@ -261,14 +263,20 @@ class KFPAuthenticator:
                 # static id/password checking; the authenticator returns
                 # a cookie value
                 auth_info["cookies"] = DEXStaticPasswordAuthenticator().authenticate(
-                    kf_url, runtime_config_name, username=auth_parm_1, password=auth_parm_2
+                    kf_url,
+                    runtime_config_name,
+                    username=auth_parm_1,
+                    password=auth_parm_2,
                 )
                 auth_info["kf_secured"] = True
             elif auth_type == SupportedAuthProviders.DEX_LEGACY:
                 # see implementation for details; the authenticator returns
                 # a cookie value
                 auth_info["cookies"] = DEXLegacyAuthenticator().authenticate(
-                    kf_url, runtime_config_name, username=auth_parm_1, password=auth_parm_2
+                    kf_url,
+                    runtime_config_name,
+                    username=auth_parm_1,
+                    password=auth_parm_2,
                 )
                 if auth_info.get("cookies") is not None:
                     auth_info["kf_secured"] = True
@@ -277,7 +285,10 @@ class KFPAuthenticator:
                 # DEX/LDAP authentication; the authenticator returns
                 # a cookie value
                 auth_info["cookies"] = DEXLDAPAuthenticator().authenticate(
-                    kf_url, runtime_config_name, username=auth_parm_1, password=auth_parm_2
+                    kf_url,
+                    runtime_config_name,
+                    username=auth_parm_1,
+                    password=auth_parm_2,
                 )
                 if auth_info.get("cookies") is not None:
                     auth_info["kf_secured"] = True
@@ -296,7 +307,7 @@ class KFPAuthenticator:
             raise
         except Exception as ex:
             raise AuthenticationError(
-                f"Authentication using authentication type " f'\'{auth_info["auth_type"]}\' failed: {ex}'
+                f"Authentication using authentication type " f'\'{auth_info.get("auth_type")}\' failed: {ex}'
             )
 
         # sanity check: upon completion auth_info must not contain
@@ -379,7 +390,11 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
     _type = SupportedAuthProviders.DEX_STATIC_PASSWORDS
 
     def authenticate(
-        self, kf_endpoint: str, runtime_config_name: str, username: str = None, password: str = None
+        self,
+        kf_endpoint: str,
+        runtime_config_name: str,
+        username: str = None,
+        password: str = None,
     ) -> Optional[str]:
         """
         Authenticate using static password authentication. An AuthenticationError is raised
@@ -482,7 +497,11 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
             ################
             # Attempt Dex Login
             ################
-            resp = s.post(dex_login_url, data={"login": username, "password": password}, allow_redirects=True)
+            resp = s.post(
+                dex_login_url,
+                data={"login": username, "password": password},
+                allow_redirects=True,
+            )
             request_history.append((dex_login_url, resp))
 
             if len(resp.history) == 0:
@@ -505,7 +524,11 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
     _type = SupportedAuthProviders.DEX_LDAP
 
     def authenticate(
-        self, kf_endpoint: str, runtime_config_name: str, username: str = None, password: str = None
+        self,
+        kf_endpoint: str,
+        runtime_config_name: str,
+        username: str = None,
+        password: str = None,
     ) -> Optional[str]:
         """
         Authenticate using LDAP. An AuthenticationError is raised
@@ -607,7 +630,11 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
             ################
             # Attempt Dex Login
             ################
-            resp = s.post(dex_login_url, data={"login": username, "password": password}, allow_redirects=True)
+            resp = s.post(
+                dex_login_url,
+                data={"login": username, "password": password},
+                allow_redirects=True,
+            )
             request_history.append((dex_login_url, resp))
 
             if len(resp.history) == 0:
@@ -703,7 +730,11 @@ class DEXLegacyAuthenticator(AbstractAuthenticator):
     _type = SupportedAuthProviders.DEX_LEGACY
 
     def authenticate(
-        self, kf_endpoint: str, runtime_config_name: str, username: Optional[str] = None, password: Optional[str] = None
+        self,
+        kf_endpoint: str,
+        runtime_config_name: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
     ) -> Optional[str]:
         """
         Authentication using the following flow:

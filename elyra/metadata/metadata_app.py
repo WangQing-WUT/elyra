@@ -63,7 +63,12 @@ class SchemaspaceBase(AppBase):
 class SchemaspaceList(SchemaspaceBase):
     """Handles the 'list' subcommand functionality for a specific schemaspace."""
 
-    json_flag = Flag("--json", name="json", description="List complete instances as JSON", default_value=False)
+    json_flag = Flag(
+        "--json",
+        name="json",
+        description="List complete instances as JSON",
+        default_value=False,
+    )
 
     valid_only_flag = Flag(
         "--valid-only",
@@ -100,7 +105,10 @@ class SchemaspaceList(SchemaspaceBase):
             validity_clause = "includes invalid" if include_invalid else "valid only"
             print(f"Available metadata instances for {self.schemaspace} ({validity_clause}):")
 
-            sorted_instances = sorted(metadata_instances, key=lambda inst: (inst.schema_name, inst.name))
+            sorted_instances = sorted(
+                metadata_instances,
+                key=lambda inst: (inst.schema_name, inst.name),
+            )
             # pad to width of longest instance
             max_schema_name_len = len("Schema")
             max_name_len = len("Instance")
@@ -133,7 +141,10 @@ class SchemaspaceRemove(SchemaspaceBase):
     """Handles the 'remove' subcommand functionality for a specific schemaspace."""
 
     name_option = CliOption(
-        "--name", name="name", description="The name of the metadata instance to remove", required=True
+        "--name",
+        name="name",
+        description="The name of the metadata instance to remove",
+        required=True,
     )
 
     # 'Remove' options
@@ -177,7 +188,10 @@ class SchemaspaceCreate(SchemaspaceBase):
         "Can be used to bypass individual property arguments.",
     )
     # 'create' options
-    options: List[Option] = [file_option, json_option]  # defer name option until after schema
+    options: List[Option] = [
+        file_option,
+        json_option,
+    ]  # defer name option until after schema
 
     update_mode = False
 
@@ -267,7 +281,12 @@ class SchemaspaceCreate(SchemaspaceBase):
                 updated_instance.metadata.update(metadata)
                 new_instance = self.metadata_manager.update(name, updated_instance)
             else:  # create a new instance
-                instance = Metadata(schema_name=schema_name, name=name, display_name=display_name, metadata=metadata)
+                instance = Metadata(
+                    schema_name=schema_name,
+                    name=name,
+                    display_name=display_name,
+                    metadata=metadata,
+                )
                 new_instance = self.metadata_manager.create(name, instance)
         except Exception as ex:
             ex_msg = str(ex)
@@ -304,7 +323,10 @@ class SchemaspaceCreate(SchemaspaceBase):
 
         # if both are set, raise error
         if self.json_option.value is not None and self.file_option.value is not None:
-            self.log_and_exit("At most one of '--json' or '--file' can be set at a time.", display_help=True)
+            self.log_and_exit(
+                "At most one of '--json' or '--file' can be set at a time.",
+                display_help=True,
+            )
         elif self.json_option.value is not None:
             bulk_metadata = True
             self.json_option.transfer_names_to_argvs(self.argv, self.argv_mappings)
@@ -354,7 +376,10 @@ class SchemaspaceCreate(SchemaspaceBase):
 
         # ...  and top-level (schema) Properties if we're not replacing (updating)
         if self.update_mode is False:
-            required_props = set(schema.get("required")) - {"schema_name", "metadata"}  # skip schema_name & metadata
+            required_props = set(schema.get("required")) - {
+                "schema_name",
+                "metadata",
+            }  # skip schema_name & metadata
             for required in required_props:
                 options.get(required).required = True
         return list(options.values())
@@ -395,8 +420,17 @@ class SchemaspaceInstall(SchemaspaceBase):
 
     # Known options, others will be derived from schema based on schema_name...
 
-    replace_flag = Flag("--replace", name="replace", description="Replace an existing instance", default_value=False)
-    name_option = CliOption("--name", name="name", description="The name of the metadata instance to install")
+    replace_flag = Flag(
+        "--replace",
+        name="replace",
+        description="Replace an existing instance",
+        default_value=False,
+    )
+    name_option = CliOption(
+        "--name",
+        name="name",
+        description="The name of the metadata instance to install",
+    )
     file_option = FileOption(
         "--file",
         name="file",
@@ -410,7 +444,11 @@ class SchemaspaceInstall(SchemaspaceBase):
         "Can be used to bypass individual property arguments.",
     )
     # 'Install' options
-    options: List[Option] = [replace_flag, file_option, json_option]  # defer name option until after schema
+    options: List[Option] = [
+        replace_flag,
+        file_option,
+        json_option,
+    ]  # defer name option until after schema
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -502,7 +540,12 @@ class SchemaspaceInstall(SchemaspaceBase):
                 updated_instance.metadata.update(metadata)
                 new_instance = self.metadata_manager.update(name, updated_instance)
             else:  # create a new instance
-                instance = Metadata(schema_name=schema_name, name=name, display_name=display_name, metadata=metadata)
+                instance = Metadata(
+                    schema_name=schema_name,
+                    name=name,
+                    display_name=display_name,
+                    metadata=metadata,
+                )
                 new_instance = self.metadata_manager.create(name, instance)
         except Exception as ex:
             ex_msg = str(ex)
@@ -539,7 +582,10 @@ class SchemaspaceInstall(SchemaspaceBase):
 
         # if both are set, raise error
         if self.json_option.value is not None and self.file_option.value is not None:
-            self.log_and_exit("At most one of '--json' or '--file' can be set at a time.", display_help=True)
+            self.log_and_exit(
+                "At most one of '--json' or '--file' can be set at a time.",
+                display_help=True,
+            )
         elif self.json_option.value is not None:
             bulk_metadata = True
             self.json_option.transfer_names_to_argvs(self.argv, self.argv_mappings)
@@ -589,7 +635,10 @@ class SchemaspaceInstall(SchemaspaceBase):
 
         # ...  and top-level (schema) Properties if we're not replacing (updating)
         if self.replace_flag.value is False:
-            required_props = set(schema.get("required")) - {"schema_name", "metadata"}  # skip schema_name & metadata
+            required_props = set(schema.get("required")) - {
+                "schema_name",
+                "metadata",
+            }  # skip schema_name & metadata
             for required in required_props:
                 options.get(required).required = True
         return list(options.values())
@@ -657,7 +706,10 @@ class SchemaspaceExport(SchemaspaceBase):
     )
 
     clean_flag = Flag(
-        "--clean", name="clean", description="Clear out contents of the export directory", default_value=False
+        "--clean",
+        name="clean",
+        description="Clear out contents of the export directory",
+        default_value=False,
     )
 
     directory_option = CliOption(
@@ -668,7 +720,12 @@ class SchemaspaceExport(SchemaspaceBase):
     )
 
     # 'Export' flags
-    options: List[Option] = [schema_name_option, include_invalid_flag, clean_flag, directory_option]
+    options: List[Option] = [
+        schema_name_option,
+        include_invalid_flag,
+        clean_flag,
+        directory_option,
+    ]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -810,7 +867,12 @@ class SchemaspaceImport(SchemaspaceBase):
                 display_name = metadata_file["display_name"]
                 metadata = metadata_file["metadata"]
             except KeyError as e:
-                non_imported_files.append([file, f"Could not find '{e.args[0]}' key in the import file '{filepath}'"])
+                non_imported_files.append(
+                    [
+                        file,
+                        f"Could not find '{e.args[0]}' key in the import file '{filepath}'",
+                    ]
+                )
                 continue
 
             try:
@@ -826,12 +888,18 @@ class SchemaspaceImport(SchemaspaceBase):
                         self.metadata_manager.update(name, updated_instance)
                     except MetadataNotFoundError:  # no existing instance - create new
                         instance = Metadata(
-                            schema_name=schema_name, name=name, display_name=display_name, metadata=metadata
+                            schema_name=schema_name,
+                            name=name,
+                            display_name=display_name,
+                            metadata=metadata,
                         )
                         self.metadata_manager.create(name, instance)
                 else:
                     instance = Metadata(
-                        schema_name=schema_name, name=name, display_name=display_name, metadata=metadata
+                        schema_name=schema_name,
+                        name=name,
+                        display_name=display_name,
+                        metadata=metadata,
                     )
                     self.metadata_manager.create(name, instance)
             except Exception as e:
@@ -888,9 +956,16 @@ class SubcommandBase(AppBase):
             schemaspace_class = type(
                 schemaspace,
                 (self.schemaspace_base_class,),
-                {"description": subcommand_description, "schemaspace": schemaspace, "schemas": schemas},
+                {
+                    "description": subcommand_description,
+                    "schemaspace": schemaspace,
+                    "schemas": schemas,
+                },
             )
-            self.subcommands[schemaspace] = (schemaspace_class, schemaspace_class.description)
+            self.subcommands[schemaspace] = (
+                schemaspace_class,
+                schemaspace_class.description,
+            )
 
     def start(self):
         subcommand = self.get_subcommand()
@@ -924,7 +999,11 @@ class Remove(SubcommandBase):
         super().__init__(**kwargs)
 
 
-@deprecated(deprecated_in="3.7.0", removed_in="4.0", details="Use Create or Update instead")
+@deprecated(
+    deprecated_in="3.7.0",
+    removed_in="4.0",
+    details="Use Create or Update instead",
+)
 class Install(SubcommandBase):
     """DEPRECATED. Installs a metadata instance into a given schemaspace."""
 
@@ -1022,7 +1101,12 @@ class MetadataApp(AppBase):
         args = kwargs.get("argv", [])
         if len(args) > 0:
             # identify commands that can operate on deprecated schemaspaces
-            include_deprecated = args[0] not in ["install", "create", "update", "import"]
+            include_deprecated = args[0] not in [
+                "install",
+                "create",
+                "update",
+                "import",
+            ]
         schemaspace_names = schema_mgr.get_schemaspace_names(include_deprecated=include_deprecated)
         for name in schemaspace_names:
             self.schemaspace_schemas[name] = schema_mgr.get_schemaspace_schemas(name)

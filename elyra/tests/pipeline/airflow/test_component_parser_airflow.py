@@ -43,7 +43,16 @@ def invalid_url(request):
 
 def _get_resource_path(filename):
     root = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    resource_path = os.path.join(root, "..", "..", "..", "tests/pipeline", "resources", "components", filename)
+    resource_path = os.path.join(
+        root,
+        "..",
+        "..",
+        "..",
+        "tests/pipeline",
+        "resources",
+        "components",
+        filename,
+    )
     resource_path = os.path.normpath(resource_path)
 
     return resource_path
@@ -73,7 +82,10 @@ async def test_modify_component_catalogs(component_cache, metadata_manager_with_
         "paths": urls,
     }
     registry_instance = Metadata(
-        schema_name="url-catalog", name=TEST_CATALOG_NAME, display_name="New Test Registry", metadata=instance_metadata
+        schema_name="url-catalog",
+        name=TEST_CATALOG_NAME,
+        display_name="New Test Registry",
+        metadata=instance_metadata,
     )
 
     if create_inprocess:
@@ -195,7 +207,11 @@ def test_parse_airflow_component_file():
     # Construct a catalog instance
     catalog_type = "local-file-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -209,7 +225,11 @@ def test_parse_airflow_component_file():
 
     # Split components list into its constituent operators
     components = sorted(components, key=lambda component: component.id)
-    import_test_op, derive_test_op, test_op = components[0], components[1], components[2]
+    import_test_op, derive_test_op, test_op = (
+        components[0],
+        components[1],
+        components[2],
+    )
 
     # Helper method to retrieve the requested parameter value from the dictionary
     def get_parameter_value(param_name):
@@ -239,7 +259,12 @@ def test_parse_airflow_component_file():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
     # Ensure component parameters are prefixed with 'elyra_' and values are as expected
@@ -384,7 +409,11 @@ def test_parse_airflow_component_url():
     # Construct a catalog instance
     catalog_type = "url-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -399,7 +428,12 @@ def test_parse_airflow_component_url():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
     # Helper method to retrieve the requested parameter value from the dictionary
@@ -426,7 +460,11 @@ def test_parse_airflow_component_file_no_inputs():
     # Construct a catalog instance
     catalog_type = "local-file-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -452,7 +490,12 @@ def test_parse_airflow_component_file_no_inputs():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
 

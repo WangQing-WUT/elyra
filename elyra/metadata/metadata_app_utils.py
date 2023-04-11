@@ -29,7 +29,10 @@ from elyra.metadata.manager import MetadataManager
 
 """Utility functions and classes used for metadata applications and classes."""
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)1.1s %(asctime)s.%(msecs).03d] %(message)s",
+)
 
 
 class Option(object):
@@ -228,7 +231,14 @@ class SchemaProperty(CliOption):
 
     # The following keywords are not supported. If encountered, an exception will be
     # raised indicating that --file or --json be used, or, if an object-valued property
-    unsupported_keywords = {"$ref", "$defs", "$anchor", "oneOf", "anyOf", "allOf"}
+    unsupported_keywords = {
+        "$ref",
+        "$defs",
+        "$anchor",
+        "oneOf",
+        "anyOf",
+        "allOf",
+    }
 
     # Skip the following keywords when building the description.  We will already
     # have description and type and the others are difficult to display in a succinct manner.
@@ -489,7 +499,12 @@ class AppBase(object):
         if log_option:
             self.argv.remove(log_option)
 
-    def log_and_exit(self, msg: Optional[str] = None, exit_status: int = 1, display_help: bool = False):
+    def log_and_exit(
+        self,
+        msg: Optional[str] = None,
+        exit_status: int = 1,
+        display_help: bool = False,
+    ):
         if msg:
             # Prefix message with 'ERROR: ' if we're going to follow it up with full usage so
             # the error is not lost amongst the usage.
@@ -551,7 +566,10 @@ class AppBase(object):
                     self.log_and_exit(cli_option.bad_value, display_help=True)
                 if cli_option.required:
                     if not cli_option.value:
-                        self.log_and_exit(f"Parameter '{cli_option.cli_option}' requires a value.", display_help=True)
+                        self.log_and_exit(
+                            f"Parameter '{cli_option.cli_option}' requires a value.",
+                            display_help=True,
+                        )
                     elif cli_option.enum:  # ensure value is in set
                         if cli_option.value not in cli_option.enum:
                             self.log_and_exit(
@@ -562,7 +580,10 @@ class AppBase(object):
             self._remove_argv_entry(option)
         elif cli_option.required and cli_option.value is None:
             if cli_option.enum is None:
-                self.log_and_exit(f"'{cli_option.cli_option}' is a required parameter.", display_help=True)
+                self.log_and_exit(
+                    f"'{cli_option.cli_option}' is a required parameter.",
+                    display_help=True,
+                )
             else:
                 self.log_and_exit(
                     f"'{cli_option.cli_option}' is a required parameter and must be one of the "

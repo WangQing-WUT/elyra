@@ -867,7 +867,11 @@ def test_describe_custom_component_dependencies_json():
     assert dependencies["custom_components"][0]["catalog_type"] == "elyra-kfp-examples-catalog"
     assert dependencies["custom_components"][1]["catalog_type"] == "elyra-kfp-examples-catalog"
     assert dependencies["custom_components"][2]["catalog_type"] == "elyra-kfp-examples-catalog"
-    expected_component_ids = ["download_data.yaml", "filter_text_using_shell_and_grep.yaml", "calculate_hash.yaml"]
+    expected_component_ids = [
+        "download_data.yaml",
+        "filter_text_using_shell_and_grep.yaml",
+        "calculate_hash.yaml",
+    ]
     assert dependencies["custom_components"][0]["component_ref"]["component-id"] in expected_component_ids
     expected_component_ids.remove(dependencies["custom_components"][0]["component_ref"]["component-id"])
     assert dependencies["custom_components"][1]["component_ref"]["component-id"] in expected_component_ids
@@ -883,14 +887,26 @@ def test_describe_custom_component_dependencies_json():
 # ------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)
+@pytest.mark.parametrize(
+    "catalog_instance_no_server_process",
+    [KFP_COMPONENT_CACHE_INSTANCE],
+    indirect=True,
+)
 def test_validate_with_kfp_components(
-    jp_environ, kubeflow_pipelines_runtime_instance, catalog_instance_no_server_process
+    jp_environ,
+    kubeflow_pipelines_runtime_instance,
+    catalog_instance_no_server_process,
 ):
     runner = CliRunner()
     pipeline_file_path = Path(__file__).parent / "resources" / "pipelines" / "kfp_3_node_custom.pipeline"
     result = runner.invoke(
-        pipeline, ["validate", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance]
+        pipeline,
+        [
+            "validate",
+            str(pipeline_file_path),
+            "--runtime-config",
+            kubeflow_pipelines_runtime_instance,
+        ],
     )
     assert "Validating pipeline..." in result.output
     assert result.exit_code == 0, result.output
@@ -909,7 +925,13 @@ def test_validate_with_missing_kfp_component(jp_environ, kubeflow_pipelines_runt
                 pipeline_file.write(json.dumps(valid_data))
 
         result = runner.invoke(
-            pipeline, ["validate", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance]
+            pipeline,
+            [
+                "validate",
+                str(pipeline_file_path),
+                "--runtime-config",
+                kubeflow_pipelines_runtime_instance,
+            ],
         )
         assert "Validating pipeline..." in result.output
         assert "[Error][Calculate data hash] - This component was not found in the catalog." in result.output
@@ -935,7 +957,9 @@ def test_validate_with_no_runtime_config(jp_environ):
 # ------------------------------------------------------------------
 
 
-def test_submit_invalid_monitor_interval_option(kubeflow_pipelines_runtime_instance):
+def test_submit_invalid_monitor_interval_option(
+    kubeflow_pipelines_runtime_instance,
+):
     """Verify that the '--monitor-timeout' option works as expected"""
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -1045,7 +1069,10 @@ def test_export_incompatible_runtime_config(kubeflow_pipelines_runtime_instance,
     assert p.is_file()
 
     # try export using Airflow runtime configuration
-    result = runner.invoke(pipeline, ["export", str(p), "--runtime-config", airflow_runtime_instance])
+    result = runner.invoke(
+        pipeline,
+        ["export", str(p), "--runtime-config", airflow_runtime_instance],
+    )
 
     assert result.exit_code != 0, result.output
     assert (
@@ -1059,7 +1086,15 @@ def test_export_incompatible_runtime_config(kubeflow_pipelines_runtime_instance,
     assert p.is_file()
 
     # try export using KFP runtime configuration
-    result = runner.invoke(pipeline, ["export", str(p), "--runtime-config", kubeflow_pipelines_runtime_instance])
+    result = runner.invoke(
+        pipeline,
+        [
+            "export",
+            str(p),
+            "--runtime-config",
+            kubeflow_pipelines_runtime_instance,
+        ],
+    )
 
     assert result.exit_code != 0, result.output
     assert (
@@ -1068,9 +1103,15 @@ def test_export_incompatible_runtime_config(kubeflow_pipelines_runtime_instance,
     )
 
 
-@pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)
+@pytest.mark.parametrize(
+    "catalog_instance_no_server_process",
+    [KFP_COMPONENT_CACHE_INSTANCE],
+    indirect=True,
+)
 def test_export_kubeflow_output_option(
-    jp_environ, kubeflow_pipelines_runtime_instance, catalog_instance_no_server_process
+    jp_environ,
+    kubeflow_pipelines_runtime_instance,
+    catalog_instance_no_server_process,
 ):
     """Verify that the '--output' option works as expected for Kubeflow Pipelines"""
     runner = CliRunner()
@@ -1091,7 +1132,13 @@ def test_export_kubeflow_output_option(
 
         # this should succeed
         result = runner.invoke(
-            pipeline, ["export", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance]
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                kubeflow_pipelines_runtime_instance,
+            ],
         )
 
         assert result.exit_code == 0, result.output
@@ -1160,7 +1207,13 @@ def test_export_airflow_output_option(airflow_runtime_instance):
 
         # this should fail: default output file already exists
         result = runner.invoke(
-            pipeline, ["export", str(pipeline_file_path), "--runtime-config", airflow_runtime_instance]
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                airflow_runtime_instance,
+            ],
         )
 
         assert result.exit_code != 0, result.output
@@ -1221,9 +1274,15 @@ def test_export_airflow_output_option(airflow_runtime_instance):
         ), result.output
 
 
-@pytest.mark.parametrize("catalog_instance_no_server_process", [KFP_COMPONENT_CACHE_INSTANCE], indirect=True)
+@pytest.mark.parametrize(
+    "catalog_instance_no_server_process",
+    [KFP_COMPONENT_CACHE_INSTANCE],
+    indirect=True,
+)
 def test_export_kubeflow_overwrite_option(
-    jp_environ, kubeflow_pipelines_runtime_instance, catalog_instance_no_server_process
+    jp_environ,
+    kubeflow_pipelines_runtime_instance,
+    catalog_instance_no_server_process,
 ):
     """Verify that the '--overwrite' option works as expected for Kubeflow Pipelines"""
     runner = CliRunner()
@@ -1244,7 +1303,13 @@ def test_export_kubeflow_overwrite_option(
 
         # this should succeed
         result = runner.invoke(
-            pipeline, ["export", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance]
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                kubeflow_pipelines_runtime_instance,
+            ],
         )
 
         assert result.exit_code == 0, result.output
@@ -1253,7 +1318,13 @@ def test_export_kubeflow_overwrite_option(
         # Test: '--overwrite' not specified; the output already exists
         # this should fail
         result = runner.invoke(
-            pipeline, ["export", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance]
+            pipeline,
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                kubeflow_pipelines_runtime_instance,
+            ],
         )
 
         assert result.exit_code != 0, result.output
@@ -1265,7 +1336,13 @@ def test_export_kubeflow_overwrite_option(
         # this should succeed
         result = runner.invoke(
             pipeline,
-            ["export", str(pipeline_file_path), "--runtime-config", kubeflow_pipelines_runtime_instance, "--overwrite"],
+            [
+                "export",
+                str(pipeline_file_path),
+                "--runtime-config",
+                kubeflow_pipelines_runtime_instance,
+                "--overwrite",
+            ],
         )
 
         assert result.exit_code == 0, result.output

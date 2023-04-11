@@ -114,7 +114,12 @@ class Metadata(object):
     def to_dict(self, trim: bool = False) -> dict:
         # Exclude resource, and reason only if trim is True since we don't want to persist that information.
         #  Method prepare_write will be used to remove name prior to writes.
-        d = dict(name=self.name, display_name=self.display_name, metadata=self.metadata, schema_name=self.schema_name)
+        d = dict(
+            name=self.name,
+            display_name=self.display_name,
+            metadata=self.metadata,
+            schema_name=self.schema_name,
+        )
         if not trim:
             if self.resource:
                 d["resource"] = self.resource

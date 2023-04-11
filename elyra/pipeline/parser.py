@@ -69,7 +69,7 @@ class PipelineParser(LoggingConfigurable):
         pipelines = pipeline_definition.pipelines[0]
         pipeline_defaults = pipelines.get_property("pipeline_defaults")
         if pipeline_defaults and "input_parameters" in pipeline_defaults:
-            pipeline_object.pipeline_parameters["input_parameters"] = pipeline_defaults["input_parameters"]
+            pipeline_object.pipeline_parameters["input_parameters"] = pipeline_defaults.get("input_parameters")
 
         nodes = primary_pipeline.nodes
         for pipeline in pipeline_definition.pipelines:
@@ -122,7 +122,11 @@ class PipelineParser(LoggingConfigurable):
             pipeline_object.operations[operation.id] = operation
 
     def _super_node_to_operations(
-        self, pipeline_definition: PipelineDefinition, node: Node, pipeline_object: Pipeline, super_node: Node
+        self,
+        pipeline_definition: PipelineDefinition,
+        node: Node,
+        pipeline_object: Pipeline,
+        super_node: Node,
     ) -> None:
         """Converts nodes within a super_node to operations."""
 
@@ -143,7 +147,10 @@ class PipelineParser(LoggingConfigurable):
             parent_operations.extend(PipelineParser._get_parent_operation_links(super_node.to_dict(), node.id))
 
         # Split properties into component- and Elyra-owned
-        component_params, elyra_params = node.get("component_parameters", {}), {}
+        component_params, elyra_params = (
+            node.get("component_parameters", {}),
+            {},
+        )
 
         for param_id in list(component_params.keys()):
             if param_id in node.elyra_owned_properties:
@@ -168,12 +175,12 @@ class PipelineParser(LoggingConfigurable):
         """
         node_id = None
         if "port_id_ref" in link:
-            if link["port_id_ref"] == "outPort":  # Regular execution node
+            if link.get("port_id_ref") == "outPort":  # Regular execution node
                 if "node_id_ref" in link:
-                    node_id = link["node_id_ref"]
-            elif link["port_id_ref"].endswith("_outPort"):  # Super node
+                    node_id = link.get("node_id_ref")
+            elif link.get("port_id_ref").endswith("_outPort"):  # Super node
                 # node_id_ref is the super-node, but the prefix of port_id_ref, is the actual node-id
-                node_id = link["port_id_ref"].split("_")[0]
+                node_id = link.get("port_id_ref").split("_")[0]
         return node_id
 
     @staticmethod
@@ -183,7 +190,7 @@ class PipelineParser(LoggingConfigurable):
         """
         input_node_ids = []
         if "links" in node_input:
-            for link in node_input["links"]:
+            for link in node_input.get("links", {}):
                 node_id = PipelineParser._get_port_node_id(link)
                 if node_id:
                     input_node_ids.append(node_id)
@@ -197,7 +204,7 @@ class PipelineParser(LoggingConfigurable):
         """
         links = []
         if "inputs" in node:
-            for node_input in node["inputs"]:
+            for node_input in node.get("inputs", {}):
                 if embedded_node_id:  # node is a super_node, handle matches to {embedded_node_id}_inPort
                     input_id = node_input.get("id")
                     if input_id == embedded_node_id + "_inPort":

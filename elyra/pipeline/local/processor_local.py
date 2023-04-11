@@ -169,7 +169,12 @@ class FileOperationProcessor(OperationProcessor):
             raise ValueError(f"Not a file: {filepath}")
         return filepath
 
-    def log_and_raise(self, file_name: str, ex: Exception, data_capture_msg: Optional[str] = None) -> None:
+    def log_and_raise(
+        self,
+        file_name: str,
+        ex: Exception,
+        data_capture_msg: Optional[str] = None,
+    ) -> None:
         """Log and raise the exception that occurs when processing file_name.
 
         If the exception's message is longer than MAX_ERROR_LEN, it will be

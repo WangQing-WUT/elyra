@@ -155,7 +155,8 @@ class PipelineProcessorManager(SingletonConfigurable):
         processor = self.get_processor_for_runtime(runtime_name=runtime)
 
         res = await asyncio.get_event_loop().run_in_executor(
-            None, functools.partial(processor.get_component, component_id=component_id)
+            None,
+            functools.partial(processor.get_component, component_id=component_id),
         )
         return res
 
@@ -165,11 +166,22 @@ class PipelineProcessorManager(SingletonConfigurable):
         res = await asyncio.get_event_loop().run_in_executor(None, processor.process, pipeline)
         return res
 
-    async def export(self, pipeline: Pipeline, pipeline_export_format: str, pipeline_export_path: str, overwrite: bool):
+    async def export(
+        self,
+        pipeline: Pipeline,
+        pipeline_export_format: str,
+        pipeline_export_path: str,
+        overwrite: bool,
+    ):
         processor = self.get_processor_for_runtime("kfp")  # pipeline.runtime
 
         res = await asyncio.get_event_loop().run_in_executor(
-            None, processor.export, pipeline, pipeline_export_format, pipeline_export_path, overwrite
+            None,
+            processor.export,
+            pipeline,
+            pipeline_export_format,
+            pipeline_export_path,
+            overwrite,
         )
         return res
 
@@ -180,7 +192,9 @@ class PipelineProcessorResponse:
     _name: str = None
 
     @property
-    def type(self) -> str:  # Return the string value of the name so that JSON serialization works
+    def type(
+        self,
+    ) -> str:  # Return the string value of the name so that JSON serialization works
         if self._type is None:
             raise NotImplementedError("_type must have a value!")
         return self._type.name
@@ -364,7 +378,9 @@ class PipelineProcessor(LoggingConfigurable):  # ABC
                     parent_operation = operations_by_id[parent_operation_id]
                     if parent_operation not in ordered_operations:
                         PipelineProcessor._sort_operation_dependencies(
-                            operations_by_id, ordered_operations, parent_operation
+                            operations_by_id,
+                            ordered_operations,
+                            parent_operation,
                         )
             ordered_operations.append(operation)
 
@@ -394,7 +410,11 @@ class RuntimePipelineProcessor(PipelineProcessor):
         return archive_artifact
 
     def _upload_dependencies_to_object_store(
-        self, runtime_configuration: str, pipeline_name: str, operation: GenericOperation, prefix: str = ""
+        self,
+        runtime_configuration: str,
+        pipeline_name: str,
+        operation: GenericOperation,
+        prefix: str = "",
     ) -> None:
         """
         Create dependency archive for the generic operation identified by operation
@@ -433,14 +453,18 @@ class RuntimePipelineProcessor(PipelineProcessor):
 
         except FileNotFoundError as ex:
             self.log.error(
-                f"Dependencies were not found building archive for operation: {operation.name}", exc_info=True
+                f"Dependencies were not found building archive for operation: {operation.name}",
+                exc_info=True,
             )
             raise FileNotFoundError(
                 f"Node '{operation.name}' referenced dependencies that were not found: {ex}"
             ) from ex
         except MaxRetryError as ex:
             cos_endpoint = runtime_configuration.metadata.get("cos_endpoint")
-            self.log.error(f"Connection was refused when attempting to connect to : {cos_endpoint}", exc_info=True)
+            self.log.error(
+                f"Connection was refused when attempting to connect to : {cos_endpoint}",
+                exc_info=True,
+            )
             raise RuntimeError(
                 f"Connection was refused when attempting to upload artifacts to : '{cos_endpoint}'. "
                 "Please check your object storage settings."
@@ -469,7 +493,8 @@ class RuntimePipelineProcessor(PipelineProcessor):
                 ) from ex
         except BaseException as ex:
             self.log.error(
-                f"Error uploading artifacts to object storage for operation: {operation.name}", exc_info=True
+                f"Error uploading artifacts to object storage for operation: {operation.name}",
+                exc_info=True,
             )
             raise ex from ex
 
@@ -497,7 +522,10 @@ class RuntimePipelineProcessor(PipelineProcessor):
             else:
                 return MetadataManager(schemaspace=schemaspace).get(name)
         except BaseException as err:
-            self.log.error(f"Error retrieving metadata configuration for {name}", exc_info=True)
+            self.log.error(
+                f"Error retrieving metadata configuration for {name}",
+                exc_info=True,
+            )
             raise RuntimeError(f"Error retrieving metadata configuration for {name}", err) from err
 
     def _verify_export_format(self, pipeline_export_format: str) -> None:
@@ -562,7 +590,13 @@ class RuntimePipelineProcessor(PipelineProcessor):
         if value.startswith("{") and value.endswith("}"):
             try:
                 converted_dict = ast.literal_eval(value)
-            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            except (
+                ValueError,
+                TypeError,
+                SyntaxError,
+                MemoryError,
+                RecursionError,
+            ):
                 pass  # Can raise any of these exceptions
 
         # Value could not be successfully converted to dictionary
@@ -589,7 +623,13 @@ class RuntimePipelineProcessor(PipelineProcessor):
         if value.startswith("[") and value.endswith("]"):
             try:
                 converted_list = ast.literal_eval(value)
-            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            except (
+                ValueError,
+                TypeError,
+                SyntaxError,
+                MemoryError,
+                RecursionError,
+            ):
                 pass  # Can raise any of these exceptions
 
         # Value could not be successfully converted to list
@@ -604,31 +644,51 @@ class RuntimePipelineProcessor(PipelineProcessor):
         pass
 
     def add_env_var(
-        self, instance: EnvironmentVariable, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: EnvironmentVariable,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add EnvironmentVariable instance to the execution object for the given runtime processor"""
         pass
 
     def add_kubernetes_secret(
-        self, instance: KubernetesSecret, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesSecret,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesSecret instance to the execution object for the given runtime processor"""
         pass
 
     def add_mounted_volume(
-        self, instance: VolumeMount, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: VolumeMount,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add VolumeMount instance to the execution object for the given runtime processor"""
         pass
 
     def add_kubernetes_pod_annotation(
-        self, instance: KubernetesAnnotation, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesAnnotation,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesAnnotation instance to the execution object for the given runtime processor"""
         pass
 
     def add_kubernetes_pod_label(
-        self, instance: KubernetesLabel, execution_object: Any, pipeline_input_parameters: Any, **kwargs
+        self,
+        instance: KubernetesLabel,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
+        **kwargs,
     ) -> None:
         """Add KubernetesLabel instance to the execution object for the given runtime processor"""
         pass

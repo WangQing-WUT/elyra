@@ -32,7 +32,15 @@ class CosClient(LoggingConfigurable):
 
     client = None
 
-    def __init__(self, config=None, endpoint=None, access_key=None, secret_key=None, bucket=None, **kwargs):
+    def __init__(
+        self,
+        config=None,
+        endpoint=None,
+        access_key=None,
+        secret_key=None,
+        bucket=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
 
         cred_provider = None
@@ -140,7 +148,11 @@ class CosClient(LoggingConfigurable):
 
         try:
             # upload local_file_path as object_name
-            self.client.fput_object(bucket_name=self.bucket, object_name=fq_object_name, file_path=local_file_path)
+            self.client.fput_object(
+                bucket_name=self.bucket,
+                object_name=fq_object_name,
+                file_path=local_file_path,
+            )
         except BaseException as ex:
             self.log.error(
                 f"Error uploading file '{local_file_path}' to bucket '{self.bucket}' as '{fq_object_name}'",
@@ -160,7 +172,11 @@ class CosClient(LoggingConfigurable):
         # sanitize object name; S3 does not accept leading /
         fq_object_name = join_paths(object_name)
         try:
-            self.client.fget_object(bucket_name=self.bucket, object_name=fq_object_name, file_path=local_file_path)
+            self.client.fget_object(
+                bucket_name=self.bucket,
+                object_name=fq_object_name,
+                file_path=local_file_path,
+            )
         except BaseException as ex:
             self.log.error(
                 f"Error downloading '{fq_object_name}' from bucket '{self.bucket}' to '{local_file_path}'",

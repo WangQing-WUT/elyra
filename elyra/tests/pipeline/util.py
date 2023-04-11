@@ -127,7 +127,13 @@ class NotebookNode(NodeBase):
         fail: Optional[bool] = False,
     ):
 
-        super().__init__(name, num_outputs=num_outputs, input_nodes=input_nodes, image_name=image_name, fail=fail)
+        super().__init__(
+            name,
+            num_outputs=num_outputs,
+            input_nodes=input_nodes,
+            image_name=image_name,
+            fail=fail,
+        )
         self.classifier = "execute-notebook-node"
         self.filename = f"{self.name}.ipynb"
 
@@ -142,7 +148,13 @@ class PythonNode(NodeBase):
         fail: Optional[bool] = False,
     ):
 
-        super().__init__(name, num_outputs=num_outputs, input_nodes=input_nodes, image_name=image_name, fail=fail)
+        super().__init__(
+            name,
+            num_outputs=num_outputs,
+            input_nodes=input_nodes,
+            image_name=image_name,
+            fail=fail,
+        )
         self.classifier = "execute-python-node"
         self.filename = f"{self.name}.py"
 
@@ -172,6 +184,9 @@ def construct_pipeline(
         shutil.copy(src_file, os.path.join(location, node.filename))
 
     # copy the node_util directory into the "working directory"
-    shutil.copytree(os.path.join(os.path.dirname(__file__), "resources/node_util"), os.path.join(location, "node_util"))
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), "resources/node_util"),
+        os.path.join(location, "node_util"),
+    )
 
     return pipeline

@@ -54,7 +54,12 @@ def test_component_catalog_load(component_cache, catalog_instance):
 
 
 @pytest.mark.parametrize("create_inprocess", [True, False])
-async def test_modify_component_catalogs(jp_environ, component_cache, metadata_manager_with_teardown, create_inprocess):
+async def test_modify_component_catalogs(
+    jp_environ,
+    component_cache,
+    metadata_manager_with_teardown,
+    create_inprocess,
+):
     # Get initial set of components
     initial_components = component_cache.get_all_components(RUNTIME_PROCESSOR)
 
@@ -140,7 +145,10 @@ async def test_directory_based_component_catalog(
     catalog_dir.mkdir()
     # Copy a few YAML files from ../resources/components to
     # the catalog directory
-    directory_entries = {"download_data.yaml": None, "kfp_test_operator_no_inputs.yaml": None}
+    directory_entries = {
+        "download_data.yaml": None,
+        "kfp_test_operator_no_inputs.yaml": None,
+    }
     for file in directory_entries:
         with open(_get_resource_path(file), "r") as fh_in:
             # read file
@@ -212,7 +220,11 @@ def test_parse_kfp_component_file():
     # Construct a catalog instance
     catalog_type = "local-file-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -254,7 +266,12 @@ def test_parse_kfp_component_file():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
     assert get_parameter_value("test_string_no_default") == ""
@@ -314,7 +331,11 @@ def test_parse_kfp_component_url():
     # Construct a catalog instance
     catalog_type = "url-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -338,7 +359,12 @@ def test_parse_kfp_component_url():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
     assert get_parameter_value("notebook") is None  # Default value for type `inputpath`
@@ -363,7 +389,11 @@ def test_parse_kfp_component_file_no_inputs():
     # Construct a catalog instance
     catalog_type = "local-file-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -390,7 +420,12 @@ def test_parse_kfp_component_file_no_inputs():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
 
@@ -415,7 +450,11 @@ async def test_parse_components_invalid_yaml(caplog):
     catalog_entry_data = {"path": path}
     catalog_type = "local-file-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -463,7 +502,11 @@ async def test_parse_components_additional_metatypes():
     # Construct a catalog instance
     catalog_type = "url-catalog"
     catalog_instance = ComponentCatalogMetadata(
-        schema_name=catalog_type, metadata={"categories": ["Test"], "runtime_type": RUNTIME_PROCESSOR.name}
+        schema_name=catalog_type,
+        metadata={
+            "categories": ["Test"],
+            "runtime_type": RUNTIME_PROCESSOR.name,
+        },
     )
 
     # Build the catalog entry data structures required for parsing
@@ -486,7 +529,12 @@ async def test_parse_components_additional_metatypes():
     # Ensure system parameters are present
     assert properties_json["properties"]["label"] is not None
 
-    component_source = json.dumps({"catalog_type": catalog_type, "component_ref": catalog_entry.entry_reference})
+    component_source = json.dumps(
+        {
+            "catalog_type": catalog_type,
+            "component_ref": catalog_entry.entry_reference,
+        }
+    )
     assert properties_json["properties"]["component_source"]["default"] == component_source
 
     assert get_parameter_value("training_features") is None  # inputPath

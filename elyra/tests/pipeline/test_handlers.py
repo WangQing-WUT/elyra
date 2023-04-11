@@ -91,7 +91,11 @@ async def cli_catalog_instance(jp_fetch):
 
     body = json.dumps(instance.to_dict())
     r = await jp_fetch(
-        "elyra", "metadata", ComponentCatalogs.COMPONENT_CATALOGS_SCHEMASPACE_ID, body=body, method="POST"
+        "elyra",
+        "metadata",
+        ComponentCatalogs.COMPONENT_CATALOGS_SCHEMASPACE_ID,
+        body=body,
+        method="POST",
     )
     assert r.code == 201
     r = await jp_fetch("elyra", "metadata", ComponentCatalogs.COMPONENT_CATALOGS_SCHEMASPACE_ID)
@@ -130,7 +134,14 @@ async def test_get_components_runtime_name_vs_type(jp_fetch, caplog):
 async def test_get_component_properties_config(jp_fetch):
     # Ensure all valid component_entry properties can be found
     runtime_type = RuntimeProcessorType.LOCAL
-    response = await jp_fetch("elyra", "pipeline", "components", runtime_type.name, "notebook", "properties")
+    response = await jp_fetch(
+        "elyra",
+        "pipeline",
+        "components",
+        runtime_type.name,
+        "notebook",
+        "properties",
+    )
     assert response.code == 200
     payload = json.loads(response.body.decode())
 
@@ -196,7 +207,12 @@ async def test_runtime_types_resources(jp_fetch):
     runtime_types = resources["runtime_types"]
     assert len(runtime_types) >= 1  # We should have Local for sure
     for runtime_type_resources in runtime_types:
-        assert runtime_type_resources.get("id") in ["LOCAL", "KUBEFLOW_PIPELINES", "APACHE_AIRFLOW", "ARGO"]
+        assert runtime_type_resources.get("id") in [
+            "LOCAL",
+            "KUBEFLOW_PIPELINES",
+            "APACHE_AIRFLOW",
+            "ARGO",
+        ]
 
         # Acquire corresponding instance and compare that results are the same
         runtime_type = RuntimeProcessorType.get_instance_by_name(runtime_type_resources.get("id"))
@@ -252,7 +268,12 @@ async def test_get_pipeline_properties_definition(jp_fetch):
         payload = json.loads(response.body.decode())
         # Spot check
 
-        pipeline_properties = ["name", "runtime", "description", PIPELINE_DEFAULTS]
+        pipeline_properties = [
+            "name",
+            "runtime",
+            "description",
+            PIPELINE_DEFAULTS,
+        ]
         assert all(prop in payload["properties"] for prop in pipeline_properties)
 
         default_properties = [
@@ -272,14 +293,27 @@ async def test_get_pipeline_properties_definition(jp_fetch):
 
 
 async def test_pipeline_success(jp_fetch, monkeypatch):
-    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+    request_body = {
+        "pipeline": "body",
+        "export_format": "py",
+        "export_path": "test.py",
+        "overwrite": True,
+    }
 
     # Create a response that will trigger the valid code path
     validation_response = ValidationResponse()
 
-    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(validation_response))
+    monkeypatch.setattr(
+        PipelineValidationManager,
+        "validate",
+        lambda x, y: _async_return(validation_response),
+    )
     monkeypatch.setattr(PipelineParser, "parse", lambda x, y: "Dummy_Data")
-    monkeypatch.setattr(PipelineProcessorManager, "export", lambda x, y, z, aa, bb: _async_return("test.py"))
+    monkeypatch.setattr(
+        PipelineProcessorManager,
+        "export",
+        lambda x, y, z, aa, bb: _async_return("test.py"),
+    )
 
     json_body = json.dumps(request_body)
 
@@ -289,13 +323,26 @@ async def test_pipeline_success(jp_fetch, monkeypatch):
 
 
 async def test_pipeline_failure(jp_fetch, monkeypatch):
-    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+    request_body = {
+        "pipeline": "body",
+        "export_format": "py",
+        "export_path": "test.py",
+        "overwrite": True,
+    }
 
     # Create a response that will trigger the fatal code path
     bad_validation_response = ValidationResponse()
-    bad_validation_response.add_message(severity=ValidationSeverity.Error, message_type="invalidJSON", message="issue")
+    bad_validation_response.add_message(
+        severity=ValidationSeverity.Error,
+        message_type="invalidJSON",
+        message="issue",
+    )
 
-    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(bad_validation_response))
+    monkeypatch.setattr(
+        PipelineValidationManager,
+        "validate",
+        lambda x, y: _async_return(bad_validation_response),
+    )
 
     json_body = json.dumps(request_body)
 
@@ -305,9 +352,18 @@ async def test_pipeline_failure(jp_fetch, monkeypatch):
 
 
 async def test_validation_handler(jp_fetch, monkeypatch):
-    request_body = {"pipeline": "body", "export_format": "py", "export_path": "test.py", "overwrite": True}
+    request_body = {
+        "pipeline": "body",
+        "export_format": "py",
+        "export_path": "test.py",
+        "overwrite": True,
+    }
 
-    monkeypatch.setattr(PipelineValidationManager, "validate", lambda x, y: _async_return(ValidationResponse()))
+    monkeypatch.setattr(
+        PipelineValidationManager,
+        "validate",
+        lambda x, y: _async_return(ValidationResponse()),
+    )
     json_body = json.dumps(request_body)
     http_response = await jp_fetch("elyra", "pipeline", "validate", body=json_body, method="POST")
 

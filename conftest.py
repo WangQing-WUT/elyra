@@ -28,7 +28,10 @@ TEST_CATALOG_NAME = "new_test_catalog"
 
 KFP_COMPONENT_CACHE_INSTANCE = {
     "display_name": "KFP Example Components",
-    "metadata": {"runtime_type": "KUBEFLOW_PIPELINES", "categories": ["examples"]},
+    "metadata": {
+        "runtime_type": "KUBEFLOW_PIPELINES",
+        "categories": ["examples"],
+    },
     "schema_name": "elyra-kfp-examples-catalog",
 }
 

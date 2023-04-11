@@ -69,7 +69,7 @@ class ContentHandler(HttpErrorMixin, APIHandler):
         this handler, it should always be a path relative to root_dir.
         """
 
-        root_dir = get_expanded_path(self.settings["server_root_dir"])
+        root_dir = get_expanded_path(self.settings.get("server_root_dir"))
         if path[0] == "/":  # if path starts with a slash, use the follow characters so join can be performed
             path = path[1:]
         absolute_path = os.path.normpath(os.path.join(root_dir, path))

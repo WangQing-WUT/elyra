@@ -52,7 +52,13 @@ def load_pipeline():
 
 @pytest.fixture
 def validation_manager(setup_factory_data, component_cache):
-    root = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), "resources/validation_pipelines"))
+    root = os.path.realpath(
+        os.path.join(
+            os.getcwd(),
+            os.path.dirname(__file__),
+            "resources/validation_pipelines",
+        )
+    )
     yield PipelineValidationManager.instance(root_dir=root)
     PipelineValidationManager.clear_instance()
 
@@ -222,13 +228,20 @@ async def test_invalid_node_property_structure(validation_manager, monkeypatch, 
     node_property = "runtime_image"
     pvm = validation_manager
 
-    monkeypatch.setattr(pvm, "_validate_filepath", lambda node_id, node_label, property_name, filename, response: True)
+    monkeypatch.setattr(
+        pvm,
+        "_validate_filepath",
+        lambda node_id, node_label, property_name, filename, response: True,
+    )
 
     monkeypatch.setattr(pvm, "_validate_label", lambda node_id, node_label, response: True)
 
     pipeline_definition = PipelineDefinition(pipeline_definition=pipeline)
     await pvm._validate_node_properties(
-        pipeline_definition=pipeline_definition, response=response, pipeline_type="GENERIC", pipeline_runtime="kfp"
+        pipeline_definition=pipeline_definition,
+        response=response,
+        pipeline_type="GENERIC",
+        pipeline_runtime="kfp",
     )
 
     issues = response.to_json().get("issues")
@@ -248,7 +261,11 @@ async def test_missing_node_property_for_kubeflow_pipeline(
     node_property = "notebook"
     pvm = validation_manager
 
-    monkeypatch.setattr(pvm, "_validate_filepath", lambda node_id, file_dir, property_name, filename, response: True)
+    monkeypatch.setattr(
+        pvm,
+        "_validate_filepath",
+        lambda node_id, file_dir, property_name, filename, response: True,
+    )
 
     pipeline_definition = PipelineDefinition(pipeline_definition=pipeline)
     await pvm._validate_node_properties(
@@ -268,7 +285,10 @@ async def test_missing_node_property_for_kubeflow_pipeline(
 
 def test_invalid_node_property_image_name(validation_manager, load_pipeline):
     pipeline, response = load_pipeline("generic_invalid_node_property_image_name.pipeline")
-    node_ids = ["88ab83dc-d5f0-443a-8837-788ed16851b7", "7ae74ba6-d49f-48ea-9e4f-e44d13594b2f"]
+    node_ids = [
+        "88ab83dc-d5f0-443a-8837-788ed16851b7",
+        "7ae74ba6-d49f-48ea-9e4f-e44d13594b2f",
+    ]
     node_property = "runtime_image"
 
     for i, node_id in enumerate(node_ids):
@@ -314,7 +334,9 @@ def test_invalid_node_property_image_name_list(validation_manager):
     assert len(issues) == len(failing_image_names)
 
 
-def test_invalid_node_property_dependency_filepath_workspace(validation_manager):
+def test_invalid_node_property_dependency_filepath_workspace(
+    validation_manager,
+):
     response = ValidationResponse()
     node = {"id": "test-id", "app_data": {"label": "test"}}
     property_name = "test-property"
@@ -334,7 +356,9 @@ def test_invalid_node_property_dependency_filepath_workspace(validation_manager)
     assert issues[0]["data"]["nodeID"] == node["id"]
 
 
-def test_invalid_node_property_dependency_filepath_non_existent(validation_manager):
+def test_invalid_node_property_dependency_filepath_non_existent(
+    validation_manager,
+):
     response = ValidationResponse()
     node = {"id": "test-id", "app_data": {"label": "test"}}
     property_name = "test-property"
@@ -357,7 +381,8 @@ def test_invalid_node_property_dependency_filepath_non_existent(validation_manag
 def test_valid_node_property_dependency_filepath(validation_manager):
     response = ValidationResponse()
     valid_filename = os.path.join(
-        os.path.dirname(__file__), "resources/validation_pipelines/generic_single_cycle.pipeline"
+        os.path.dirname(__file__),
+        "resources/validation_pipelines/generic_single_cycle.pipeline",
     )
     node = {"id": "test-id", "app_data": {"label": "test"}}
     property_name = "test-property"
@@ -378,11 +403,18 @@ def test_valid_node_property_dependency_filepath(validation_manager):
 async def test_valid_node_property_pipeline_filepath(monkeypatch, validation_manager, load_pipeline):
     pipeline, response = load_pipeline("generic_basic_filepath_check.pipeline")
 
-    monkeypatch.setattr(validation_manager, "_validate_label", lambda node_id, node_label, response: True)
+    monkeypatch.setattr(
+        validation_manager,
+        "_validate_label",
+        lambda node_id, node_label, response: True,
+    )
 
     pipeline_definition = PipelineDefinition(pipeline_definition=pipeline)
     await validation_manager._validate_node_properties(
-        pipeline_definition=pipeline_definition, response=response, pipeline_type="GENERIC", pipeline_runtime="kfp"
+        pipeline_definition=pipeline_definition,
+        response=response,
+        pipeline_type="GENERIC",
+        pipeline_runtime="kfp",
     )
 
     assert not response.has_fatal
@@ -412,7 +444,14 @@ def test_invalid_node_property_resource_value(validation_manager, load_pipeline)
 
 def test_invalid_node_property_env_var(validation_manager):
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
 
     invalid_env_vars = ElyraPropertyList(
         [
@@ -424,7 +463,11 @@ def test_invalid_node_property_env_var(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=ENV_VARIABLES, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=ENV_VARIABLES,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert issues[0]["severity"] == 1
@@ -442,7 +485,14 @@ def test_invalid_node_property_env_var(validation_manager):
 
 def test_valid_node_property_volumes(validation_manager):
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
 
     volumes = ElyraPropertyList(
         [
@@ -454,7 +504,11 @@ def test_valid_node_property_volumes(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=MOUNTED_VOLUMES, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=MOUNTED_VOLUMES,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 0
@@ -462,7 +516,14 @@ def test_valid_node_property_volumes(validation_manager):
 
 def test_invalid_node_property_volumes(validation_manager):
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
 
     volumes = ElyraPropertyList(
         [
@@ -479,7 +540,11 @@ def test_invalid_node_property_volumes(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=MOUNTED_VOLUMES, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=MOUNTED_VOLUMES,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 9, issues
@@ -505,21 +570,37 @@ def test_valid_node_property_kubernetes_toleration(validation_manager):
     https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core
     """
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     tolerations = ElyraPropertyList(
         [
             KubernetesToleration(key="", operator="Exists", value="", effect="NoExecute"),
             KubernetesToleration(key="key0", operator="Exists", value="", effect=""),
             KubernetesToleration(key="key1", operator="Exists", value="", effect="NoSchedule"),
             KubernetesToleration(key="key2", operator="Equal", value="value2", effect="NoExecute"),
-            KubernetesToleration(key="key3", operator="Equal", value="value3", effect="PreferNoSchedule"),
+            KubernetesToleration(
+                key="key3",
+                operator="Equal",
+                value="value3",
+                effect="PreferNoSchedule",
+            ),
         ]
     )
     node_dict["app_data"]["component_parameters"][KUBERNETES_TOLERATIONS] = tolerations
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_TOLERATIONS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_TOLERATIONS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 0, response.to_json()
@@ -532,7 +613,14 @@ def test_valid_node_property_kubernetes_pod_annotation(validation_manager):
     https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/#syntax-and-character-set
     """
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     annotations = ElyraPropertyList(
         [
             KubernetesAnnotation(key="key", value=""),
@@ -554,7 +642,11 @@ def test_valid_node_property_kubernetes_pod_annotation(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_POD_ANNOTATIONS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_POD_ANNOTATIONS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 0, response.to_json()
@@ -567,7 +659,14 @@ def test_invalid_node_property_kubernetes_toleration(validation_manager):
     https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core
     """
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     invalid_tolerations = ElyraPropertyList(
         [
             KubernetesToleration(key="", operator="", value="", effect=""),  # cannot be all empty
@@ -603,7 +702,11 @@ def test_invalid_node_property_kubernetes_toleration(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_TOLERATIONS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_TOLERATIONS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == len(invalid_tolerations), response.to_json()
@@ -623,7 +726,14 @@ def test_invalid_node_property_kubernetes_pod_annotation(validation_manager):
     https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/#syntax-and-character-set
     """
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     TOO_SHORT_LENGTH = 0
     MAX_PREFIX_LENGTH = 253
     MAX_NAME_LENGTH = 63
@@ -682,7 +792,11 @@ def test_invalid_node_property_kubernetes_pod_annotation(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_POD_ANNOTATIONS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_POD_ANNOTATIONS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == len(
@@ -699,7 +813,14 @@ def test_invalid_node_property_kubernetes_pod_annotation(validation_manager):
 
 def test_valid_node_property_secrets(validation_manager):
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     secrets = ElyraPropertyList(
         [
             KubernetesSecret(env_var="ENV_VAR1", name="test-secret", key="test-key1"),  # valid
@@ -710,7 +831,11 @@ def test_valid_node_property_secrets(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_SECRETS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_SECRETS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 0, issues
@@ -718,7 +843,14 @@ def test_valid_node_property_secrets(validation_manager):
 
 def test_invalid_node_property_secrets(validation_manager):
     response = ValidationResponse()
-    node_dict = {"id": "test-id", "app_data": {"label": "test", "ui_data": {}, "component_parameters": {}}}
+    node_dict = {
+        "id": "test-id",
+        "app_data": {
+            "label": "test",
+            "ui_data": {},
+            "component_parameters": {},
+        },
+    }
     secrets = ElyraPropertyList(
         [
             KubernetesSecret(env_var="", name="test-secret", key="test-key1"),  # missing env var name
@@ -737,7 +869,11 @@ def test_invalid_node_property_secrets(validation_manager):
 
     node = Node(node_dict)
     validation_manager._validate_elyra_owned_property(
-        node_id=node.id, node_label=node.label, node=node, param_name=KUBERNETES_SECRETS, response=response
+        node_id=node.id,
+        node_label=node.label,
+        node=node,
+        param_name=KUBERNETES_SECRETS,
+        response=response,
     )
     issues = response.to_json().get("issues")
     assert len(issues) == 14, issues
@@ -789,7 +925,9 @@ def test_valid_node_property_label_min_length(validation_manager):
     assert len(issues) == 0
 
 
-def test_invalid_node_property_label_filename_exceeds_max_length(validation_manager):
+def test_invalid_node_property_label_filename_exceeds_max_length(
+    validation_manager,
+):
     response = ValidationResponse()
     node = {"id": "test-id", "app_data": {"label": "test"}}
     valid_label_name = "deadbread-deadbread-deadbread-deadbread-deadbread-deadbread-de.py"
@@ -811,7 +949,9 @@ def test_invalid_node_property_label_max_length(validation_manager):
     assert issues[0]["data"]["nodeID"] == "test-id"
 
 
-def test_valid_node_property_label_filename_has_relative_path(validation_manager):
+def test_valid_node_property_label_filename_has_relative_path(
+    validation_manager,
+):
     response = ValidationResponse()
     node = {"id": "test-id", "app_data": {"label": "test"}}
     valid_label_name = "deadbread.py"

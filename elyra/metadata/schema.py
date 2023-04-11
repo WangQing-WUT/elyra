@@ -264,7 +264,11 @@ class SchemaManager(SingletonConfigurable):
         """Validates the given schema against the meta-schema."""
         try:
             self.log.debug(f"Validating schema '{schema_name}' of schemaspace {schemaspace_name}...")
-            validate(instance=schema, schema=self._meta_schema, format_checker=draft7_format_checker)
+            validate(
+                instance=schema,
+                schema=self._meta_schema,
+                format_checker=draft7_format_checker,
+            )
         except ValidationError as ve:
             # Because validation errors are so verbose, only provide the first line.
             first_line = str(ve).partition("\n")[0]
@@ -396,7 +400,10 @@ class Schemaspace(LoggingConfigurable):
     def _validate_id(id) -> bool:
         """Validate that id is uuidv4 compliant"""
         is_valid = False
-        uuidv4_regex = re.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+        uuidv4_regex = re.compile(
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            re.I,
+        )
         if uuidv4_regex.match(id):
             is_valid = True
 

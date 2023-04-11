@@ -40,7 +40,13 @@ async def test_file_is_not_directory(jp_fetch, create_directory, directory_name)
 
 
 async def test_invalid_post_request(jp_fetch, create_python_file, python_filename):
-    response = await jp_fetch("elyra", "contents/properties", python_filename, body=json.dumps(""), method="POST")
+    response = await jp_fetch(
+        "elyra",
+        "contents/properties",
+        python_filename,
+        body=json.dumps(""),
+        method="POST",
+    )
     response_body = json.loads(response.body)
 
     assert response_body["title"] == "Operation not supported."

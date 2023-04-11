@@ -74,11 +74,24 @@ def start_minio():
     stop_minio_container()
 
 
-def start_minio_container(raise_on_failure: bool = False) -> Optional[CompletedProcess]:
+def start_minio_container(
+    raise_on_failure: bool = False,
+) -> Optional[CompletedProcess]:
     minio = None
     try:
         minio = run(
-            ["docker", "run", "--name", "test_minio", "-d", "-p", "9000:9000", "minio/minio", "server", "/data"],
+            [
+                "docker",
+                "run",
+                "--name",
+                "test_minio",
+                "-d",
+                "-p",
+                "9000:9000",
+                "minio/minio",
+                "server",
+                "/data",
+            ],
             check=True,
         )
     except CalledProcessError as ex:
@@ -95,7 +108,12 @@ def stop_minio_container():
 @pytest.fixture(scope="function")
 def s3_setup():
     bucket_name = "test-bucket"
-    cos_client = minio.Minio(MINIO_HOST_PORT, access_key="minioadmin", secret_key="minioadmin", secure=False)
+    cos_client = minio.Minio(
+        MINIO_HOST_PORT,
+        access_key="minioadmin",
+        secret_key="minioadmin",
+        secure=False,
+    )
     cos_client.make_bucket(bucket_name)
 
     yield cos_client
@@ -152,7 +170,8 @@ def main_method_setup_execution(monkeypatch, s3_setup, tmpdir, argument_dict):
         for file in test_file_list:
             if file != "test-notebookA-output.ipynb":
                 assert s3_setup.stat_object(
-                    bucket_name=argument_dict["cos-bucket"], object_name="test-directory/" + file
+                    bucket_name=argument_dict["cos-bucket"],
+                    object_name="test-directory/" + file,
                 )
                 if file == "test-notebookA.html":
                     with open("test-notebookA.html") as html_file:
@@ -636,7 +655,9 @@ def test_get_file_object_store(monkeypatch, s3_setup, tmpdir):
     bucket_name = "test-bucket"
 
     s3_setup.fput_object(
-        bucket_name=bucket_name, object_name=file_to_get, file_path=os.path.join(ELYRA_ROOT_DIR, file_to_get)
+        bucket_name=bucket_name,
+        object_name=file_to_get,
+        file_path=os.path.join(ELYRA_ROOT_DIR, file_to_get),
     )
 
     with tmpdir.as_cwd():
@@ -662,7 +683,10 @@ def test_put_file_object_store(monkeypatch, s3_setup, tmpdir):
     file_to_put = "LICENSE"
 
     op = _get_operation_instance(monkeypatch, s3_setup)
-    op.put_file_to_object_storage(object_name=file_to_put, file_to_upload=os.path.join(ELYRA_ROOT_DIR, file_to_put))
+    op.put_file_to_object_storage(
+        object_name=file_to_put,
+        file_to_upload=os.path.join(ELYRA_ROOT_DIR, file_to_put),
+    )
 
     with tmpdir.as_cwd():
         s3_setup.fget_object(bucket_name, file_to_put, file_to_put)
@@ -768,19 +792,46 @@ def test_parse_arguments():
 
 
 def test_fail_missing_notebook_parse_arguments():
-    test_args = ["-e", "http://test.me.now", "-d", "test-directory", "-t", "test-archive.tgz", "-b", "test-bucket"]
+    test_args = [
+        "-e",
+        "http://test.me.now",
+        "-d",
+        "test-directory",
+        "-t",
+        "test-archive.tgz",
+        "-b",
+        "test-bucket",
+    ]
     with pytest.raises(SystemExit):
         bootstrapper.OpUtil.parse_arguments(test_args)
 
 
 def test_fail_missing_endpoint_parse_arguments():
-    test_args = ["-d", "test-directory", "-t", "test-archive.tgz", "-f", "test-notebook.ipynb", "-b", "test-bucket"]
+    test_args = [
+        "-d",
+        "test-directory",
+        "-t",
+        "test-archive.tgz",
+        "-f",
+        "test-notebook.ipynb",
+        "-b",
+        "test-bucket",
+    ]
     with pytest.raises(SystemExit):
         bootstrapper.OpUtil.parse_arguments(test_args)
 
 
 def test_fail_missing_archive_parse_arguments():
-    test_args = ["-e", "http://test.me.now", "-d", "test-directory", "-f", "test-notebook.ipynb", "-b", "test-bucket"]
+    test_args = [
+        "-e",
+        "http://test.me.now",
+        "-d",
+        "test-directory",
+        "-f",
+        "test-notebook.ipynb",
+        "-b",
+        "test-bucket",
+    ]
     with pytest.raises(SystemExit):
         bootstrapper.OpUtil.parse_arguments(test_args)
 
@@ -801,7 +852,16 @@ def test_fail_missing_bucket_parse_arguments():
 
 
 def test_fail_missing_directory_parse_arguments():
-    test_args = ["-e", "http://test.me.now", "-t", "test-archive.tgz", "-f", "test-notebook.ipynb", "-b", "test-bucket"]
+    test_args = [
+        "-e",
+        "http://test.me.now",
+        "-t",
+        "test-archive.tgz",
+        "-f",
+        "test-notebook.ipynb",
+        "-b",
+        "test-bucket",
+    ]
     with pytest.raises(SystemExit):
         bootstrapper.OpUtil.parse_arguments(test_args)
 

@@ -102,7 +102,10 @@ def test_invalid_input_get_catalog_entries():
     resource_location = Path(__file__).parent / ".." / "resources" / "components"
     resource_url = resource_location.as_uri()
     ce = apc.get_catalog_entries(
-        {"airflow_provider_package_download_url": resource_url, "display_name": "file://is-a-dir-test"}
+        {
+            "airflow_provider_package_download_url": resource_url,
+            "display_name": "file://is-a-dir-test",
+        }
     )
     assert isinstance(ce, list), resource_url
     assert len(ce) == 0
@@ -111,7 +114,10 @@ def test_invalid_input_get_catalog_entries():
     resource_location = Path(__file__).parent / ".." / "resources" / "components" / "no-such.whl"
     resource_url = resource_location.as_uri()
     ce = apc.get_catalog_entries(
-        {"airflow_provider_package_download_url": resource_url, "display_name": "file://no-such-file-test"}
+        {
+            "airflow_provider_package_download_url": resource_url,
+            "display_name": "file://no-such-file-test",
+        }
     )
     assert isinstance(ce, list), resource_url
     assert len(ce) == 0

@@ -188,51 +188,61 @@ class MetadataManager(LoggingConfigurable):
 
         def get_value(name: str, parameter: Dict):
             if name in parameter:
-                return parameter[name]
+                return parameter.get(name)
             else:
                 return ""
 
         if "input_parameters" in new_metadata:
-            for input_parameter in new_metadata["input_parameters"]:
+            for input_parameter in new_metadata.get("input_parameters", {}):
                 temp_input_parameter = {
-                    "name": input_parameter["name"],
-                    "type": input_parameter["value_type"],
+                    "name": input_parameter.get("name"),
+                    "type": input_parameter.get("value_type"),
                     "default": get_value("default", input_parameter),
                     "description": get_value("description", input_parameter),
                 }
                 input_parameters.append(temp_input_parameter)
-                parameters_placeholder[input_parameter["name"]] = input_parameter["placeholder_type"]
+                parameters_placeholder[input_parameter.get("name")] = input_parameter.get("placeholder_type")
 
         if "output_parameters" in new_metadata:
-            for output_parameter in new_metadata["output_parameters"]:
+            for output_parameter in new_metadata.get("output_parameters", {}):
                 temp_output_parameter = {
-                    "name": output_parameter["name"],
-                    "type": output_parameter["value_type"],
+                    "name": output_parameter.get("name"),
+                    "type": output_parameter.get("value_type"),
                     "description": get_value("description", output_parameter),
                 }
                 output_parameters.append(temp_output_parameter)
-                parameters_placeholder[output_parameter["name"]] = output_parameter["placeholder_type"]
+                parameters_placeholder[output_parameter.get("name")] = output_parameter.get("placeholder_type")
         return input_parameters, output_parameters, parameters_placeholder
 
     def _metedata_to_component(self, new_metadata: Dict):
-        implementation = new_metadata["implementation"]
+        implementation = new_metadata.get("implementation")
         component_yaml = {
-            "name": new_metadata["component_name"],
+            "name": new_metadata.get("component_name"),
             "description": "",
             "inputs": [],
             "outputs": [],
-            "implementation": {"container": {"image": implementation["image_name"], "command": [], "args": []}},
+            "implementation": {
+                "container": {
+                    "image": implementation.get("image_name"),
+                    "command": [],
+                    "args": [],
+                }
+            },
         }
         if "component_description" in new_metadata:
-            component_yaml["description"] = new_metadata["component_description"]
+            component_yaml["description"] = new_metadata.get("component_description")
         else:
             del component_yaml["description"]
 
-        input_parameters, output_parameters, parameters_placeholder = self._parse_component_parameters(new_metadata)
+        (
+            input_parameters,
+            output_parameters,
+            parameters_placeholder,
+        ) = self._parse_component_parameters(new_metadata)
 
         component_yaml["inputs"] = input_parameters
         component_yaml["outputs"] = output_parameters
-        command = yaml.load(implementation["command"], Loader=yaml.FullLoader)
+        command = yaml.load(implementation.get("command"), Loader=yaml.FullLoader)
         pss_command = []
         for item in command:
             if type(item) is dict:
@@ -254,7 +264,7 @@ class MetadataManager(LoggingConfigurable):
         component_yaml["implementation"]["container"]["command"] = pss_command
         args = []
         if "args" in implementation:
-            args = yaml.load(implementation["args"], Loader=yaml.FullLoader)
+            args = yaml.load(implementation.get("args"), Loader=yaml.FullLoader)
             if args:
                 temp_args = []
                 for item in args:
@@ -280,7 +290,13 @@ class MetadataManager(LoggingConfigurable):
         with open(path, "w") as file:
             yaml_loader.dump(component_yaml, file)
 
-    def _save(self, name: str, metadata: Metadata, for_update: bool = False, for_migration: bool = False) -> Metadata:
+    def _save(
+        self,
+        name: str,
+        metadata: Metadata,
+        for_update: bool = False,
+        for_migration: bool = False,
+    ) -> Metadata:
         if not metadata:
             raise ValueError("An instance of class 'Metadata' was not provided.")
 
@@ -319,37 +335,40 @@ class MetadataManager(LoggingConfigurable):
         self.validate(name, metadata)
         metadata_dict = metadata.to_dict()
 
-        if metadata_dict["schema_name"] == "new-component":
-            new_metadata = metadata_dict["metadata"]
-            save_path = new_metadata["save_path"]
-            file_name = new_metadata["file_name"]
+        if metadata_dict.get("schema_name") == "new-component":
+            new_metadata = metadata_dict.get("metadata")
+            save_path = new_metadata.get("save_path")
+            file_name = new_metadata.get("file_name")
             component_yaml = self._metedata_to_component(new_metadata)
             yaml_loader = YAML()
             file_path = os.path.join(save_path, file_name + ".yaml")
             with open(file_path, "w") as file:
                 yaml_loader.dump(component_yaml, file)
             try:
-                update_metadata = self.get(new_metadata["categories"][0])
+                update_metadata = self.get(new_metadata.get("categories")[0])
                 update_metadata_dict = update_metadata.to_dict()
-                name = update_metadata_dict["name"]
+                name = update_metadata_dict.get("name")
                 update_metadata_dict["metadata"]["paths"].append(
-                    os.path.relpath(file_path, update_metadata_dict["metadata"]["base_path"])
+                    os.path.relpath(
+                        file_path,
+                        update_metadata_dict.get("metadata").get("base_path"),
+                    )
                 )
                 for_update = True
                 metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
             except MetadataNotFoundError:
                 new_metadata_dict = {
-                    "display_name": metadata_dict["display_name"],
+                    "display_name": metadata_dict.get("display_name"),
                     "metadata": {
-                        "categories": [new_metadata["categories"][0]],
-                        "paths": [os.path.relpath(file_path, new_metadata["root_dir"])],
-                        "base_path": new_metadata["root_dir"],
+                        "categories": [new_metadata.get("categories")[0]],
+                        "paths": [os.path.relpath(file_path, new_metadata.get("root_dir"))],
+                        "base_path": new_metadata.get("root_dir"),
                         "runtime_type": "KUBEFLOW_PIPELINES",
                     },
                     "schema_name": "local-file-catalog",
                 }
                 if "description" in new_metadata:
-                    new_metadata_dict["metadata"]["description"] = new_metadata["description"]
+                    new_metadata_dict["metadata"]["description"] = new_metadata.get("description")
                 metadata = Metadata.from_dict(self.schemaspace, new_metadata_dict)
                 metadata.pre_save(for_update=for_update)
                 self._apply_defaults(metadata)
@@ -366,12 +385,23 @@ class MetadataManager(LoggingConfigurable):
             if for_update:
                 self._rollback(name, orig_value, "update", ex)
             else:  # Use the metadata instance prior to post op
-                self._rollback(name, Metadata.from_dict(self.schemaspace, metadata_dict), "create", ex)
+                self._rollback(
+                    name,
+                    Metadata.from_dict(self.schemaspace, metadata_dict),
+                    "create",
+                    ex,
+                )
             raise ex
 
         return self.get(name)  # Retrieve updated/new instance so load hook can be called
 
-    def _rollback(self, name: str, orig_value: Union[Metadata, Dict], operation: str, exception: Exception):
+    def _rollback(
+        self,
+        name: str,
+        orig_value: Union[Metadata, Dict],
+        operation: str,
+        exception: Exception,
+    ):
         """Rolls back the original value depending on the operation.
 
         For rolled back creation attempts, we must remove the created instance.  For rolled back
@@ -415,7 +445,11 @@ class MetadataManager(LoggingConfigurable):
 
         schema = self.schema_mgr.get_schema(self.schemaspace, metadata.schema_name)
 
-        def _update_instance(target_prop: str, schema_properties: Dict, instance: Union[Metadata, Dict]) -> None:
+        def _update_instance(
+            target_prop: str,
+            schema_properties: Dict,
+            instance: Union[Metadata, Dict],
+        ) -> None:
             property_defaults = {}
             for name, property in schema_properties.items():
                 if target_prop in property:
@@ -433,7 +467,11 @@ class MetadataManager(LoggingConfigurable):
                             instance_properties[name] = default
 
         # Update default properties of instance properties
-        _update_instance("default", schema["properties"]["metadata"]["properties"], metadata.metadata)
+        _update_instance(
+            "default",
+            schema.get("properties").get("metadata").get("properties"),
+            metadata.metadata,
+        )
 
         # Update const properties of schema properties
-        _update_instance("const", schema["properties"], metadata)
+        _update_instance("const", schema.get("properties"), metadata)

@@ -34,19 +34,49 @@ os.environ["METADATA_TESTING"] = "1"  # Enable metadata-tests schemaspace
 
 
 schemaspace_map = {
-    "metadata-tests": ("elyra.tests.metadata.test_utils", "MetadataTestSchemaspace"),
-    "byo_schemaspace_bad_id": ("elyra.tests.metadata.test_utils", "BYOSchemaspaceBadId"),
-    "byo.schemaspace-bad.name": ("elyra.tests.metadata.test_utils", "BYOSchemaspaceBadName"),
-    "byo.schemaspace_CaseSensitiveName": ("elyra.tests.metadata.test_utils", "BYOSchemaspaceCaseSensitiveName"),
+    "metadata-tests": (
+        "elyra.tests.metadata.test_utils",
+        "MetadataTestSchemaspace",
+    ),
+    "byo_schemaspace_bad_id": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemaspaceBadId",
+    ),
+    "byo.schemaspace-bad.name": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemaspaceBadName",
+    ),
+    "byo.schemaspace_CaseSensitiveName": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemaspaceCaseSensitiveName",
+    ),
     "byo-schemaspace": ("elyra.tests.metadata.test_utils", "BYOSchemaspace"),
-    "byo-schemaspace-bad-class": ("elyra.tests.metadata.test_utils", "BYOSchemaspaceBadClass"),
-    "byo-schemaspace-throws": ("elyra.tests.metadata.test_utils", "BYOSchemaspaceThrows"),
+    "byo-schemaspace-bad-class": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemaspaceBadClass",
+    ),
+    "byo-schemaspace-throws": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemaspaceThrows",
+    ),
 }
 schemas_provider_map = {
-    "metadata-tests": ("elyra.tests.metadata.test_utils", "MetadataTestSchemasProvider"),
-    "byo-schemas-provider-throws": ("elyra.tests.metadata.test_utils", "BYOSchemasProviderThrows"),
-    "byo-schemas-provider-bad-class": ("elyra.tests.metadata.test_utils", "BYOSchemasProviderBadClass"),
-    "byo-schemas-provider": ("elyra.tests.metadata.test_utils", "BYOSchemasProvider"),
+    "metadata-tests": (
+        "elyra.tests.metadata.test_utils",
+        "MetadataTestSchemasProvider",
+    ),
+    "byo-schemas-provider-throws": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemasProviderThrows",
+    ),
+    "byo-schemas-provider-bad-class": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemasProviderBadClass",
+    ),
+    "byo-schemas-provider": (
+        "elyra.tests.metadata.test_utils",
+        "BYOSchemasProvider",
+    ),
 }
 
 
@@ -59,7 +89,9 @@ def mock_get_schemaspaces(ep_map: Optional[dict] = None) -> List[EntryPoint]:
     return result
 
 
-def mock_get_schemas_providers(ep_map: Optional[dict] = None) -> List[EntryPoint]:
+def mock_get_schemas_providers(
+    ep_map: Optional[dict] = None,
+) -> List[EntryPoint]:
     result = []
     if ep_map is None:
         ep_map = schemas_provider_map
@@ -168,14 +200,18 @@ def test_schemaspace_bad_name(byo_schemaspaces, caplog):
     """Ensure a Schemaspace with a bad name (not alphanumeric, w/ dash, underscore) is handled cleanly."""
 
     validate_log_output(
-        caplog, "The 'name' property (byo.schemaspace-bad.name) must " "be alphanumeric with dash or underscore only!"
+        caplog,
+        "The 'name' property (byo.schemaspace-bad.name) must " "be alphanumeric with dash or underscore only!",
     )
 
 
 def test_schemaspace_bad_class(byo_schemaspaces, caplog):
     """Ensure a Schemaspace that is registered but not a subclass of Schemaspace is handled cleanly."""
 
-    validate_log_output(caplog, "'byo-schemaspace-bad-class' is not an instance of 'Schemaspace'")
+    validate_log_output(
+        caplog,
+        "'byo-schemaspace-bad-class' is not an instance of 'Schemaspace'",
+    )
 
 
 def test_schemaspace_throws(byo_schemaspaces, caplog):
@@ -197,7 +233,10 @@ def test_schemasprovider_bad_class(byo_schemaspaces, caplog):
 def test_schemasprovider_throws(byo_schemaspaces, caplog):
     """Ensure exception thrown by SchemasProvider doesn't affect the loads of other schemas."""
 
-    validate_log_output(caplog, "Error loading schemas for SchemasProvider 'byo-schemas-provider-throws'")
+    validate_log_output(
+        caplog,
+        "Error loading schemas for SchemasProvider 'byo-schemas-provider-throws'",
+    )
 
 
 def test_schemasprovider_no_schemaspace(byo_schemaspaces, caplog):

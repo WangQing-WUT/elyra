@@ -235,7 +235,10 @@ class ExecuteFileOp(ContainerOp):
         # We must deal with the envs after the superclass initialization since these amend the
         # container attribute that isn't available until now.
         if self.pipeline_envs:
-            for key, value in self.pipeline_envs.items():  # Convert dict entries to format kfp needs
+            for (
+                key,
+                value,
+            ) in self.pipeline_envs.items():  # Convert dict entries to format kfp needs
                 self.container.add_env_variable(V1EnvVar(name=key, value=value))
 
         # If crio volume size is found then assume kubeflow pipelines environment is using CRI-o as
@@ -249,7 +252,10 @@ class ExecuteFileOp(ContainerOp):
             )
 
             self.container.add_volume_mount(
-                V1VolumeMount(mount_path=self.container_work_dir_root_path, name=self.emptydir_volume_name)
+                V1VolumeMount(
+                    mount_path=self.container_work_dir_root_path,
+                    name=self.emptydir_volume_name,
+                )
             )
 
             # Append to PYTHONPATH location of elyra dependencies in installed in Volume
@@ -307,15 +313,30 @@ class ExecuteFileOp(ContainerOp):
 
         # Attach metadata to the pod
         # Node type (a static type for this op)
-        self.add_pod_label("elyra/node-type", ExecuteFileOp._normalize_label_value("notebook-script"))
+        self.add_pod_label(
+            "elyra/node-type",
+            ExecuteFileOp._normalize_label_value("notebook-script"),
+        )
         # Pipeline name
-        self.add_pod_label("elyra/pipeline-name", ExecuteFileOp._normalize_label_value(self.pipeline_name))
+        self.add_pod_label(
+            "elyra/pipeline-name",
+            ExecuteFileOp._normalize_label_value(self.pipeline_name),
+        )
         # Pipeline version
-        self.add_pod_label("elyra/pipeline-version", ExecuteFileOp._normalize_label_value(self.pipeline_version))
+        self.add_pod_label(
+            "elyra/pipeline-version",
+            ExecuteFileOp._normalize_label_value(self.pipeline_version),
+        )
         # Experiment name
-        self.add_pod_label("elyra/experiment-name", ExecuteFileOp._normalize_label_value(self.experiment_name))
+        self.add_pod_label(
+            "elyra/experiment-name",
+            ExecuteFileOp._normalize_label_value(self.experiment_name),
+        )
         # Pipeline node name
-        self.add_pod_label("elyra/node-name", ExecuteFileOp._normalize_label_value(kwargs.get("name")))
+        self.add_pod_label(
+            "elyra/node-name",
+            ExecuteFileOp._normalize_label_value(kwargs.get("name")),
+        )
         # Pipeline node file
         self.add_pod_annotation("elyra/node-file-name", self.notebook)
 

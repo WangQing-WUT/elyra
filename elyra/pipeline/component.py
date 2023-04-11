@@ -142,7 +142,12 @@ class Component(object):
         this component originates and the reference information used to
         locate it within that catalog.
         """
-        return json.dumps({"catalog_type": self.catalog_type, "component_ref": self.component_reference})
+        return json.dumps(
+            {
+                "catalog_type": self.catalog_type,
+                "component_ref": self.component_reference,
+            }
+        )
 
     @property
     def definition(self) -> str:
@@ -299,7 +304,9 @@ class ComponentParser(LoggingConfigurable):  # ABC
 
                 # Since we know the type, create our return value and bail
                 data_type_info = ParameterTypeInfo(
-                    parsed_data=parsed_type_lowered, json_data_type=data_type, default_value=default_value
+                    parsed_data=parsed_type_lowered,
+                    json_data_type=data_type,
+                    default_value=default_value,
                 )
                 break
         else:  # None of the container types were found...
@@ -311,15 +318,21 @@ class ComponentParser(LoggingConfigurable):  # ABC
                 )
             elif any(word in parsed_type_lowered for word in ["int", "integer", "number"]):
                 data_type_info = ParameterTypeInfo(
-                    parsed_data=parsed_type_lowered, json_data_type="number", default_value=0
+                    parsed_data=parsed_type_lowered,
+                    json_data_type="number",
+                    default_value=0,
                 )
             elif any(word in parsed_type_lowered for word in ["float"]):
                 data_type_info = ParameterTypeInfo(
-                    parsed_data=parsed_type_lowered, json_data_type="number", default_value=0.0
+                    parsed_data=parsed_type_lowered,
+                    json_data_type="number",
+                    default_value=0.0,
                 )
             elif any(word in parsed_type_lowered for word in ["bool", "boolean"]):
                 data_type_info = ParameterTypeInfo(
-                    parsed_data=parsed_type_lowered, json_data_type="boolean", default_value=False
+                    parsed_data=parsed_type_lowered,
+                    json_data_type="boolean",
+                    default_value=False,
                 )
             else:  # Let this be undetermined. Callers should check for this status and adjust
                 data_type_info = ParameterTypeInfo(parsed_data=parsed_type_lowered, undetermined=True)

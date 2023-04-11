@@ -30,7 +30,7 @@ items:
             app: wfeeditor
         spec:
           containers:
-            - image: 1442459023/wfeeditor:1.2.0
+            - image: 1442459023/wfeeditor:latest
               name: wfeeditor
               imagePullPolicy: IfNotPresent
               ports:

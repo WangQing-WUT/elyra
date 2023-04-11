@@ -57,23 +57,24 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
 
         schemaspace = url_unescape(schemaspace)
         parent = self.settings.get("elyra")
+        server_root_dir = self.settings.get("server_root_dir")
         try:
             instance = self._validate_body(schemaspace)
             instance_dict = instance.to_dict()
-            if instance_dict["schema_name"] == "new-component":
-                if "save_path" not in instance_dict["metadata"]:
-                    instance_dict["metadata"]["save_path"] = self.settings["server_root_dir"]
+            if instance_dict.get("schema_name") == "new-component":
+                if "save_path" not in instance_dict.get("metadata"):
+                    instance_dict["metadata"]["save_path"] = server_root_dir
                 else:
-                    if "." not in instance_dict["metadata"]["save_path"]:
+                    if "." not in instance_dict.get("metadata").get("save_path"):
                         instance_dict["metadata"]["save_path"] += "/"
-                    dirname = os.path.dirname(instance_dict["metadata"]["save_path"])
-                    instance_dict["metadata"]["save_path"] = os.path.join(self.settings["server_root_dir"], dirname)
-                if "file_name" not in instance_dict["metadata"]:
-                    instance_dict["metadata"]["file_name"] = instance_dict["metadata"]["component_name"]
-                instance_dict["metadata"]["root_dir"] = self.settings["server_root_dir"]
+                    dirname = os.path.dirname(instance_dict.get("metadata").get("save_path"))
+                    instance_dict["metadata"]["save_path"] = os.path.join(server_root_dir, dirname)
+                if "file_name" not in instance_dict.get("metadata"):
+                    instance_dict["metadata"]["file_name"] = instance_dict.get("metadata").get("component_name")
+                instance_dict["metadata"]["root_dir"] = server_root_dir
                 instance = Metadata.from_dict(schemaspace, instance_dict)
             elif instance_dict["schema_name"] == "local-file-catalog":
-                instance_dict["metadata"]["base_path"] = self.settings["server_root_dir"]
+                instance_dict["metadata"]["base_path"] = server_root_dir
                 instance = Metadata.from_dict(schemaspace, instance_dict)
 
             self.log.debug(
@@ -150,7 +151,7 @@ class MetadataResourceHandler(HttpErrorMixin, APIHandler):
             # Get the current resource to ensure its pre-existence
             metadata_manager = MetadataManager(schemaspace=schemaspace, parent=parent)
             metadata_manager.get(resource)
-            payload["metadata"]["base_path"] = self.settings["server_root_dir"]
+            payload["metadata"]["base_path"] = self.settings.get("server_root_dir")
             # Check if name is in the payload and varies from resource, if so, raise 400
             if "name" in payload and payload["name"] != resource:
                 raise NotImplementedError(
@@ -207,7 +208,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         payload = self.get_json_body()
         try:
             metadata_manager = MetadataManager(schemaspace="component-catalogs", parent=parent)
-            metadata_manager.save_component(payload["metadata"], path)
+            metadata_manager.save_component(payload.get("metadata"), path)
         except (ValidationError, ValueError, NotImplementedError) as err:
             raise web.HTTPError(400, str(err)) from err
         except MetadataNotFoundError as err:
@@ -228,21 +229,21 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         try:
             with open(component_absolute_path, "r", encoding="utf-8") as r:
                 component_yaml = yaml.load(r.read(), Loader=yaml.FullLoader)
-                metadata = component_metadata["metadata"]
+                metadata = component_metadata.get("metadata")
                 input_parameters_placeholder = {}
                 if "name" in component_yaml:
-                    metadata["component_name"] = component_yaml["name"]
+                    metadata["component_name"] = component_yaml.get("name")
                 if "description" in component_yaml:
-                    metadata["component_description"] = component_yaml["description"]
+                    metadata["component_description"] = component_yaml.get("description")
                 if "implementation" in component_yaml:
-                    if "container" in component_yaml["implementation"]:
-                        container = component_yaml["implementation"]["container"]
+                    if "container" in component_yaml.get("implementation"):
+                        container = component_yaml.get("implementation").get("container")
                         metadata["implementation"] = {}
                         if "image" in container:
-                            metadata["implementation"]["image_name"] = container["image"]
+                            metadata["implementation"]["image_name"] = container.get("image")
                         if "command" in container:
                             command_str = ""
-                            for item in container["command"]:
+                            for item in container.get("command"):
                                 if "\n" in item:
                                     command_str += "- |\n  " + item.replace("\n", "\n  ").rstrip() + "\n"
                                 else:
@@ -253,42 +254,42 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
                             metadata["implementation"]["command"] = command_str
                         if "args" in container:
                             args_str = ""
-                            for item in container["args"]:
+                            for item in container.get("args"):
                                 args_str += "- " + str(item) + "\n"
                             metadata["implementation"]["args"] = args_str
                 if "inputs" in component_yaml:
                     metadata["input_parameters"] = []
-                    for input_parameter in component_yaml["inputs"]:
+                    for input_parameter in component_yaml.get("inputs"):
                         temp_input_parameter = {}
                         if "name" in input_parameter:
-                            temp_input_parameter["name"] = input_parameter["name"]
+                            temp_input_parameter["name"] = input_parameter.get("name")
                             if input_parameter["name"] in input_parameters_placeholder:
                                 temp_input_parameter["placeholder_type"] = input_parameters_placeholder[
-                                    input_parameter["name"]
+                                    input_parameter.get("name")
                                 ]
                             else:
                                 temp_input_parameter["placeholder_type"] = "inputValue"
                         if "type" in input_parameter:
-                            temp_input_parameter["value_type"] = input_parameter["type"]
+                            temp_input_parameter["value_type"] = input_parameter.get("type")
                         if "default" in input_parameter:
-                            temp_input_parameter["default"] = input_parameter["default"]
+                            temp_input_parameter["default"] = input_parameter.get("default")
                         if "description" in input_parameter:
-                            temp_input_parameter["description"] = input_parameter["description"]
+                            temp_input_parameter["description"] = input_parameter.get("description")
                         metadata["input_parameters"].append(temp_input_parameter)
                 if "outputs" in component_yaml:
                     metadata["output_parameters"] = []
-                    for output_parameter in component_yaml["outputs"]:
+                    for output_parameter in component_yaml.get("outputs"):
                         temp_output_parameter = {}
                         if "name" in output_parameter:
-                            temp_output_parameter["name"] = output_parameter["name"]
+                            temp_output_parameter["name"] = output_parameter.get("name")
                         if "type" in output_parameter:
-                            temp_output_parameter["value_type"] = output_parameter["type"]
+                            temp_output_parameter["value_type"] = output_parameter.get("type")
                         else:
                             temp_output_parameter["value_type"] = "String"
                         if "description" in output_parameter:
-                            temp_output_parameter["description"] = output_parameter["description"]
+                            temp_output_parameter["description"] = output_parameter.get("description")
                         temp_output_parameter["placeholder_type"] = "outputPath"
-                        metadata["output_parameters"].append(temp_output_parameter)
+                        metadata.get("output_parameters").append(temp_output_parameter)
         except (ValidationError, ValueError, SchemaNotFoundError) as err:
             raise web.HTTPError(404, str(err)) from err
         except Exception as err:

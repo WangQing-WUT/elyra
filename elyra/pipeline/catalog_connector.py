@@ -108,7 +108,13 @@ class CatalogEntry(object):
     runtime_type: RuntimeProcessorType
     categories: List[str]
 
-    def __init__(self, entry_data: EntryData, entry_reference: Any, catalog_instance: Metadata, hash_keys: List[str]):
+    def __init__(
+        self,
+        entry_data: EntryData,
+        entry_reference: Any,
+        catalog_instance: Metadata,
+        hash_keys: List[str],
+    ):
         self.entry_data = entry_data
         self.entry_reference = entry_reference
         self.catalog_type = catalog_instance.schema_name
@@ -143,13 +149,18 @@ class CatalogEntry(object):
         # Use only the first 12 characters of the resulting hash
         hash_digest = f"{hashlib.sha256(hash_str.encode()).hexdigest()[:12]}"
         if self.categories[0] in specific_categories:
-            file_name = Path(str(self.entry_reference["path"])).stem
+            file_name = Path(str(self.entry_reference.get("path"))).stem
             return f"{file_name}:{hash_digest}"
         else:
             return f"{self.catalog_type}:{hash_digest}"
 
     def get_component(
-        self, id: str, name: str, description: str, properties: List[ComponentParameter], file_extension: str
+        self,
+        id: str,
+        name: str,
+        description: str,
+        properties: List[ComponentParameter],
+        file_extension: str,
     ) -> Component:
         """
         Construct a Component object given the arguments (as parsed from the definition file)
@@ -244,7 +255,11 @@ class ComponentCatalogConnector(LoggingConfigurable):
         current_version=__version__,
         details="Implement the get_entry_data function instead",
     )
-    def read_catalog_entry(self, catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]) -> Optional[str]:
+    def read_catalog_entry(
+        self,
+        catalog_entry_data: Dict[str, Any],
+        catalog_metadata: Dict[str, Any],
+    ) -> Optional[str]:
         """
         DEPRECATED. Will be removed in 4.0. get_entry_data() must be implemented instead.
 
@@ -272,7 +287,9 @@ class ComponentCatalogConnector(LoggingConfigurable):
         raise NotImplementedError("abstract method 'read_catalog_entry()' must be implemented")
 
     def get_entry_data(
-        self, catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]
+        self,
+        catalog_entry_data: Dict[str, Any],
+        catalog_metadata: Dict[str, Any],
     ) -> Optional[EntryData]:
         """
         Reads a component definition (and other information-of-interest) for a single catalog entry and
@@ -426,13 +443,15 @@ class ComponentCatalogConnector(LoggingConfigurable):
                     try:
                         # Attempt to get an EntryData object from get_entry_data first
                         entry_data: EntryData = self.get_entry_data(
-                            catalog_entry_data=catalog_entry_data, catalog_metadata=catalog_metadata
+                            catalog_entry_data=catalog_entry_data,
+                            catalog_metadata=catalog_metadata,
                         )
                     except NotImplementedError:
                         # Connector class does not implement get_catalog_definition and we must
                         # manually coerce this entry's returned values into a EntryData object
                         definition = self.read_catalog_entry(
-                            catalog_entry_data=catalog_entry_data, catalog_metadata=catalog_metadata
+                            catalog_entry_data=catalog_entry_data,
+                            catalog_metadata=catalog_metadata,
                         )
 
                         entry_data: EntryData = EntryData(definition=definition)
@@ -532,7 +551,9 @@ class FilesystemComponentCatalogConnector(ComponentCatalogConnector):
         return catalog_entry_data
 
     def get_entry_data(
-        self, catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]
+        self,
+        catalog_entry_data: Dict[str, Any],
+        catalog_metadata: Dict[str, Any],
     ) -> Optional[EntryData]:
         """
         Reads a component definition (and other information-of-interest) for a single catalog entry and
@@ -544,7 +565,10 @@ class FilesystemComponentCatalogConnector(ComponentCatalogConnector):
         :param catalog_metadata: Filesystem- and DirectoryComponentCatalogConnector classes do not need this
             field to read individual catalog entries
         """
-        path = os.path.join(catalog_entry_data.get("base_dir", ""), catalog_entry_data.get("path"))
+        path = os.path.join(
+            catalog_entry_data.get("base_dir", ""),
+            catalog_entry_data.get("path"),
+        )
         if not os.path.exists(path):
             self.log.warning(f"Invalid location for component: {path}")
         else:
@@ -617,7 +641,10 @@ class DirectoryComponentCatalogConnector(FilesystemComponentCatalogConnector):
             for file_pattern in patterns:
                 catalog_entry_data.extend(
                     [
-                        {"base_dir": base_dir, "path": self.get_relative_path_from_base(base_dir, str(absolute_path))}
+                        {
+                            "base_dir": base_dir,
+                            "path": self.get_relative_path_from_base(base_dir, str(absolute_path)),
+                        }
                         for absolute_path in Path(base_dir).glob(file_pattern)
                     ]
                 )
@@ -646,7 +673,9 @@ class UrlComponentCatalogConnector(ComponentCatalogConnector):
         return [{"url": url} for url in catalog_metadata.get("paths")]
 
     def get_entry_data(
-        self, catalog_entry_data: Dict[str, Any], catalog_metadata: Dict[str, Any]
+        self,
+        catalog_entry_data: Dict[str, Any],
+        catalog_metadata: Dict[str, Any],
     ) -> Optional[EntryData]:
         """
         Reads a component definition (and other information-of-interest) for a single catalog entry and

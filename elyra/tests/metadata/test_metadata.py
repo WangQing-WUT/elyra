@@ -268,7 +268,12 @@ def test_manager_add_remove_valid(tests_manager, schemaspace_location):
 
 def test_manager_remove_invalid(tests_manager, schemaspace_location):
     # Ensure invalid metadata file isn't validated and is removed.
-    create_instance(tests_manager.metadata_store, schemaspace_location, "remove_invalid", invalid_metadata_json)
+    create_instance(
+        tests_manager.metadata_store,
+        schemaspace_location,
+        "remove_invalid",
+        invalid_metadata_json,
+    )
     metadata_name = "remove_invalid"
     tests_manager.remove(metadata_name)
 
@@ -378,7 +383,12 @@ def test_manager_rollback_delete(tests_manager):
         tests_manager.get(metadata_name)
 
 
-def test_manager_hierarchy_fetch(tests_hierarchy_manager, factory_location, shared_location, schemaspace_location):
+def test_manager_hierarchy_fetch(
+    tests_hierarchy_manager,
+    factory_location,
+    shared_location,
+    schemaspace_location,
+):
 
     # fetch initial instances, only factory data should be present
     metadata_list = tests_hierarchy_manager.get_all()
@@ -515,7 +525,12 @@ def test_manager_hierarchy_create(tests_hierarchy_manager, schemaspace_location)
     assert byo_2.resource.startswith(str(schemaspace_location))
 
 
-def test_manager_hierarchy_update(tests_hierarchy_manager, factory_location, shared_location, schemaspace_location):
+def test_manager_hierarchy_update(
+    tests_hierarchy_manager,
+    factory_location,
+    shared_location,
+    schemaspace_location,
+):
 
     # Create a copy of existing factory instance and ensure its in the user area
     byo_2 = tests_hierarchy_manager.get("byo_2")
@@ -639,7 +654,12 @@ def test_manager_bad_update(tests_hierarchy_manager, schemaspace_location):
     _ensure_single_instance(tests_hierarchy_manager, schemaspace_location, "bad_update.json")
 
 
-def test_manager_hierarchy_remove(tests_hierarchy_manager, factory_location, shared_location, schemaspace_location):
+def test_manager_hierarchy_remove(
+    tests_hierarchy_manager,
+    factory_location,
+    shared_location,
+    schemaspace_location,
+):
 
     # Create additional instances in shared and user areas
     byo_2 = byo_metadata_json
@@ -669,7 +689,12 @@ def test_manager_hierarchy_remove(tests_hierarchy_manager, factory_location, sha
 
     # Now remove instance.  Should be allowed since it resides in user area
     tests_hierarchy_manager.remove("byo_2")
-    _ensure_single_instance(tests_hierarchy_manager, schemaspace_location, "byo_2.json", expected_count=0)
+    _ensure_single_instance(
+        tests_hierarchy_manager,
+        schemaspace_location,
+        "byo_2.json",
+        expected_count=0,
+    )
 
     # Attempt to remove instance from shared area and its protected
     with pytest.raises(PermissionError) as pe:
@@ -727,7 +752,10 @@ def test_store_schemaspace(store_manager, schemaspace_location):
     assert store_manager.schemaspace_exists() is False
 
     # create some metadata
-    store_manager.store_instance("ensure_schemaspace_exists", Metadata(**valid_metadata_json).prepare_write())
+    store_manager.store_instance(
+        "ensure_schemaspace_exists",
+        Metadata(**valid_metadata_json).prepare_write(),
+    )
     assert store_manager.schemaspace_exists()
 
 

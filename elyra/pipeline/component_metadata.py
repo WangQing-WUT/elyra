@@ -42,7 +42,7 @@ class ComponentCatalogMetadata(Metadata):
 
     @property
     def runtime_type(self) -> RuntimeProcessorType:
-        return RuntimeProcessorType.get_instance_by_name(self.metadata["runtime_type"])
+        return RuntimeProcessorType.get_instance_by_name(self.metadata.get("runtime_type"))
 
     def post_save(self, **kwargs: Any) -> None:
         try:  # Modify components associated with this catalog on creates and updates.

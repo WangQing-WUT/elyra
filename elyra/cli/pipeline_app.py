@@ -66,7 +66,9 @@ SEVERITY = {
 }
 
 
-def _get_runtime_config(runtime_config_name: Optional[str]) -> Optional[RuntimesMetadata]:
+def _get_runtime_config(
+    runtime_config_name: Optional[str],
+) -> Optional[RuntimesMetadata]:
     """Fetch runtime configuration for the specified name"""
     if not runtime_config_name or runtime_config_name == "local":
         # No runtime configuration was specified or it is local.
@@ -87,7 +89,9 @@ def _get_runtime_type(runtime_config_name: Optional[str]) -> Optional[str]:
     return None
 
 
-def _get_runtime_schema_name(runtime_config_name: Optional[str]) -> Optional[str]:
+def _get_runtime_schema_name(
+    runtime_config_name: Optional[str],
+) -> Optional[str]:
     """Get runtime schema name for the provided runtime configuration name"""
     if not runtime_config_name or runtime_config_name == "local":
         # No runtime configuration was specified or it is local.
@@ -134,7 +138,9 @@ def _validate_pipeline_runtime(primary_pipeline: Pipeline, runtime: str) -> bool
 
 
 def _preprocess_pipeline(
-    pipeline_path: str, runtime: Optional[str] = None, runtime_config: Optional[str] = None
+    pipeline_path: str,
+    runtime: Optional[str] = None,
+    runtime_config: Optional[str] = None,
 ) -> dict:
     pipeline_path = os.path.expanduser(pipeline_path)
     pipeline_abs_path = os.path.join(os.getcwd(), pipeline_path)
@@ -293,7 +299,11 @@ def pipeline():
 
 
 @click.command()
-@click.option("--runtime-config", required=False, help="Runtime config where the pipeline should be processed")
+@click.option(
+    "--runtime-config",
+    required=False,
+    help="Runtime config where the pipeline should be processed",
+)
 @click.argument("pipeline_path", type=Path, callback=validate_pipeline_path)
 def validate(pipeline_path, runtime_config="local"):
     """
@@ -328,7 +338,13 @@ def validate_timeout_option(ctx, param, value):
 
 @click.command()
 @click.argument("pipeline_path", type=Path, callback=validate_pipeline_path)
-@click.option("--json", "json_option", is_flag=True, required=False, help="Display pipeline summary in JSON format")
+@click.option(
+    "--json",
+    "json_option",
+    is_flag=True,
+    required=False,
+    help="Display pipeline summary in JSON format",
+)
 @click.option(
     "--runtime-config",
     "runtime_config_name",
@@ -352,7 +368,13 @@ def validate_timeout_option(ctx, param, value):
     help="Monitoring timeout in minutes.",
     callback=validate_timeout_option,
 )
-def submit(json_option, pipeline_path, runtime_config_name, monitor_option, timeout_option):
+def submit(
+    json_option,
+    pipeline_path,
+    runtime_config_name,
+    monitor_option,
+    timeout_option,
+):
     """
     Submit a pipeline to be executed on the server
     """
@@ -367,7 +389,9 @@ def submit(json_option, pipeline_path, runtime_config_name, monitor_option, time
         _build_component_cache()
 
     pipeline_definition = _preprocess_pipeline(
-        pipeline_path, runtime=runtime_schema, runtime_config=runtime_config_name
+        pipeline_path,
+        runtime=runtime_schema,
+        runtime_config=runtime_config_name,
     )
     try:
         _validate_pipeline_definition(pipeline_definition)
@@ -406,7 +430,12 @@ def submit(json_option, pipeline_path, runtime_config_name, monitor_option, time
                 f"Monitoring status of pipeline run '{response.run_id}' for up to " f"{timeout_option} {minute_str}..."
             )
             with Spinner(text=msg):
-                status = _monitor_kfp_submission(runtime_config, runtime_config_name, response.run_id, timeout_option)
+                status = _monitor_kfp_submission(
+                    runtime_config,
+                    runtime_config_name,
+                    response.run_id,
+                    timeout_option,
+                )
         except TimeoutError:
             click.echo(
                 "Monitoring was stopped because the timeout threshold "
@@ -465,7 +494,13 @@ def _monitor_kfp_submission(runtime_config: dict, runtime_config_name: str, run_
 
 
 @click.command()
-@click.option("--json", "json_option", is_flag=True, required=False, help="Display pipeline summary in JSON format")
+@click.option(
+    "--json",
+    "json_option",
+    is_flag=True,
+    required=False,
+    help="Display pipeline summary in JSON format",
+)
 @click.argument("pipeline_path", type=Path, callback=validate_pipeline_path)
 def run(json_option, pipeline_path):
     """
@@ -494,7 +529,13 @@ def run(json_option, pipeline_path):
 
 
 @click.command()
-@click.option("--json", "json_option", is_flag=True, required=False, help="Display pipeline summary in JSON format")
+@click.option(
+    "--json",
+    "json_option",
+    is_flag=True,
+    required=False,
+    help="Display pipeline summary in JSON format",
+)
 @click.argument("pipeline_path", type=Path, callback=validate_pipeline_path)
 def describe(json_option, pipeline_path):
     """
@@ -688,7 +729,11 @@ def describe(json_option, pipeline_path):
     type=Path,
     help="Exported file name (including optional path). Defaults to " " the current directory and the pipeline name.",
 )
-@click.option("--overwrite", is_flag=True, help="Overwrite output file if it already exists.")
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    help="Overwrite output file if it already exists.",
+)
 def export(pipeline_path, runtime_config, output, overwrite):
     """
     Export a pipeline to a runtime-specific format
@@ -770,7 +815,10 @@ def export(pipeline_path, runtime_config, output, overwrite):
                 warnings.simplefilter("ignore")
                 asyncio.get_event_loop().run_until_complete(
                     PipelineProcessorManager.instance().export(
-                        pipeline_object, selected_export_format, str(output_file), True
+                        pipeline_object,
+                        selected_export_format,
+                        str(output_file),
+                        True,
                     )
                 )
         except ValueError as ve:

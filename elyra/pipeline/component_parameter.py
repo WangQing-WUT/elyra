@@ -60,7 +60,13 @@ class ElyraProperty:
     _ui_details_map: Dict[str, Dict] = {}
 
     _subclass_property_map: Dict[str, type] = {}
-    _json_type_to_default: Dict[str, Any] = {"boolean": False, "number": 0, "array": "[]", "object": "{}", "string": ""}
+    _json_type_to_default: Dict[str, Any] = {
+        "boolean": False,
+        "number": 0,
+        "array": "[]",
+        "object": "{}",
+        "string": "",
+    }
 
     @classmethod
     def all_subclasses(cls):
@@ -97,7 +103,9 @@ class ElyraProperty:
         Retrieve property subclasses that apply to the given component type
         (e.g., custom or generic) and to the given runtime type.
         """
-        from elyra.pipeline.processor import PipelineProcessorManager  # placed here to avoid circular reference
+        from elyra.pipeline.processor import (
+            PipelineProcessorManager,
+        )  # placed here to avoid circular reference
 
         processor_props = set()
         for processor in PipelineProcessorManager.instance().get_all_processors():
@@ -119,8 +127,15 @@ class ElyraProperty:
     def get_schema(cls) -> Dict[str, Any]:
         """Build the JSON schema for an Elyra-owned component property"""
         class_description = dedent(cls.__doc__).replace("\n", " ")
-        schema = {"title": cls._display_name, "description": class_description, "type": cls._json_data_type}
-        if cls._json_data_type not in ["array", "object"]:  # property is a scalar value
+        schema = {
+            "title": cls._display_name,
+            "description": class_description,
+            "type": cls._json_data_type,
+        }
+        if cls._json_data_type not in [
+            "array",
+            "object",
+        ]:  # property is a scalar value
             return schema
 
         properties, uihints, required_list = {}, {}, []
@@ -128,19 +143,31 @@ class ElyraProperty:
             attr_type = ui_info.get("json_type", "string")
             attr_default = cls._json_type_to_default.get(attr_type, "")
             attr_title = cls._ui_details_map[attr].get("display_name", attr)
-            properties[attr] = {"type": attr_type, "title": attr_title, "default": attr_default}
+            properties[attr] = {
+                "type": attr_type,
+                "title": attr_title,
+                "default": attr_default,
+            }
             if cls._ui_details_map[attr].get("placeholder"):
                 uihints[attr] = {"ui:placeholder": cls._ui_details_map[attr].get("placeholder")}
-            if cls._ui_details_map[attr].get("pattern"):
-                properties[attr]["pattern"] = cls._ui_details_map[attr].get("pattern")
 
             if ui_info.get("required"):
                 required_list.append(attr)
         if cls._json_data_type == "array":
-            schema["items"] = {"type": "object", "properties": properties, "required": required_list}
+            schema["items"] = {
+                "type": "object",
+                "properties": properties,
+                "required": required_list,
+            }
             schema["uihints"] = {"items": uihints}
         elif cls._json_data_type == "object":
-            schema.update({"properties": properties, "required": required_list, "uihints": uihints})
+            schema.update(
+                {
+                    "properties": properties,
+                    "required": required_list,
+                    "uihints": uihints,
+                }
+            )
 
         return schema
 
@@ -165,7 +192,12 @@ class ElyraProperty:
         """
         pass
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        **kwargs,
+    ):
         """
         Add a property instance to the execution object for the given runtime processor.
         Calls the runtime processor's implementation of add_{property_type}, e.g.
@@ -205,7 +237,12 @@ class DisableNodeCaching(ElyraProperty):
         schema["enum"] = ["True", "False"]
         return schema
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        **kwargs,
+    ):
         """Add DisableNodeCaching info to the execution object for the given runtime processor"""
         runtime_processor.add_disable_node_caching(instance=self, execution_object=execution_object, **kwargs)
 
@@ -267,17 +304,21 @@ class EnvironmentVariable(ElyraPropertyListItem):
             "placeholder": "ENV_VAR",
             "json_type": "string",
             "required": True,
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
         },
-        "value": {"display_name": "Value", "placeholder": "value", "json_type": "string", "required": False},
+        "value": {
+            "display_name": "Value",
+            "placeholder": "value",
+            "json_type": "string",
+            "required": False,
+        },
     }
 
     def __init__(self, env_var, value, **kwargs):
         self.env_var = env_var
         self.value = value
-        self.type = value["widget"]
+        self.type = value.get("widget")
         if "value" in value:
-            self.value = value["value"]
+            self.value = value.get("value")
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> EnvironmentVariable | None:
@@ -342,22 +383,31 @@ class KubernetesSecret(ElyraPropertyListItem):
             "placeholder": "ENV_VAR",
             "json_type": "string",
             "required": True,
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
         },
-        "name": {"display_name": "Secret Name", "placeholder": "secret-name", "json_type": "string", "required": True},
-        "key": {"display_name": "Secret Key", "placeholder": "secret-key", "json_type": "string", "required": True},
+        "name": {
+            "display_name": "Secret Name",
+            "placeholder": "secret-name",
+            "json_type": "string",
+            "required": True,
+        },
+        "key": {
+            "display_name": "Secret Key",
+            "placeholder": "secret-key",
+            "json_type": "string",
+            "required": True,
+        },
     }
 
     def __init__(self, env_var, name, key, **kwargs):
         self.env_var = env_var
         self.name = ""
-        self.name_type = name["widget"]
+        self.name_type = name.get("widget")
         if "value" in name:
-            self.name = name["value"]
+            self.name = name.get("value")
         self.key = ""
-        self.key_type = key["widget"]
+        self.key_type = key.get("widget")
         if "value" in key:
-            self.key = key["value"]
+            self.key = key.get("value")
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesSecret | None:
@@ -415,7 +465,12 @@ class VolumeMount(ElyraPropertyListItem):
     _json_data_type = "array"
     _keys = ["path"]
     _ui_details_map = {
-        "path": {"display_name": "Mount Path", "placeholder": "/mount/path", "json_type": "string", "required": True},
+        "path": {
+            "display_name": "Mount Path",
+            "placeholder": "/mount/path",
+            "json_type": "string",
+            "required": True,
+        },
         "pvc_name": {
             "display_name": "Persistent Volume Claim Name",
             "placeholder": "pvc-name",
@@ -427,9 +482,9 @@ class VolumeMount(ElyraPropertyListItem):
     def __init__(self, path, pvc_name, **kwargs):
         self.path = path
         self.pvc_name = ""
-        self.type = pvc_name["widget"]
+        self.type = pvc_name.get("widget")
         if "value" in pvc_name:
-            self.pvc_name = pvc_name["value"]
+            self.pvc_name = pvc_name.get("value")
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> VolumeMount | None:
@@ -480,16 +535,26 @@ class KubernetesAnnotation(ElyraPropertyListItem):
     _json_data_type = "array"
     _keys = ["key"]
     _ui_details_map = {
-        "key": {"display_name": "Key", "placeholder": "annotation_key", "json_type": "string", "required": True},
-        "value": {"display_name": "Value", "placeholder": "annotation_value", "json_type": "string", "required": False},
+        "key": {
+            "display_name": "Key",
+            "placeholder": "annotation_key",
+            "json_type": "string",
+            "required": True,
+        },
+        "value": {
+            "display_name": "Value",
+            "placeholder": "annotation_value",
+            "json_type": "string",
+            "required": False,
+        },
     }
 
     def __init__(self, key, value, **kwargs):
         self.key = key
         self.value = ""
-        self.type = value["widget"]
+        self.type = value.get("widget")
         if "value" in value:
-            self.value = value["value"]
+            self.value = value.get("value")
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesAnnotation | None:
@@ -543,16 +608,26 @@ class KubernetesLabel(ElyraPropertyListItem):
     _json_data_type = "array"
     _keys = ["key"]
     _ui_details_map = {
-        "key": {"display_name": "Key", "placeholder": "label_key", "json_type": "string", "required": True},
-        "value": {"display_name": "Value", "placeholder": "label_value", "json_type": "string", "required": False},
+        "key": {
+            "display_name": "Key",
+            "placeholder": "label_key",
+            "json_type": "string",
+            "required": True,
+        },
+        "value": {
+            "display_name": "Value",
+            "placeholder": "label_value",
+            "json_type": "string",
+            "required": False,
+        },
     }
 
     def __init__(self, key, value, **kwargs):
         self.key = key
         self.value = ""
-        self.type = value["widget"]
+        self.type = value.get("widget")
         if "value" in value:
-            self.value = value["value"]
+            self.value = value.get("value")
 
     @classmethod
     def create_instance(cls, prop_id: str, value: Optional[Any]) -> KubernetesLabel | None:
@@ -604,10 +679,29 @@ class KubernetesToleration(ElyraPropertyListItem):
     _json_data_type = "array"
     _keys = ["key", "operator", "value", "effect"]
     _ui_details_map = {
-        "key": {"display_name": "Key", "placeholder": "key", "json_type": "string", "required": False},
-        "operator": {"display_name": "Operator", "json_type": "string", "required": True},
-        "value": {"display_name": "Value", "placeholder": "value", "json_type": "string", "required": False},
-        "effect": {"display_name": "Effect", "placeholder": "NoSchedule", "json_type": "string", "required": False},
+        "key": {
+            "display_name": "Key",
+            "placeholder": "key",
+            "json_type": "string",
+            "required": False,
+        },
+        "operator": {
+            "display_name": "Operator",
+            "json_type": "string",
+            "required": True,
+        },
+        "value": {
+            "display_name": "Value",
+            "placeholder": "value",
+            "json_type": "string",
+            "required": False,
+        },
+        "effect": {
+            "display_name": "Effect",
+            "placeholder": "NoSchedule",
+            "json_type": "string",
+            "required": False,
+        },
     }
 
     def __init__(self, key, operator, value, effect, **kwargs):
@@ -628,7 +722,12 @@ class KubernetesToleration(ElyraPropertyListItem):
         op_enum = ["Equal", "Exists"]
         schema["items"]["properties"]["operator"]["enum"] = op_enum
         schema["items"]["properties"]["operator"]["default"] = op_enum[0]
-        schema["items"]["properties"]["effect"]["enum"] = ["", "NoExecute", "NoSchedule", "PreferNoSchedule"]
+        schema["items"]["properties"]["effect"]["enum"] = [
+            "",
+            "NoExecute",
+            "NoSchedule",
+            "PreferNoSchedule",
+        ]
         return schema
 
     def get_all_validation_errors(self) -> List[str]:
@@ -665,7 +764,12 @@ class KubernetesToleration(ElyraPropertyListItem):
             )
         return validation_errors
 
-    def add_to_execution_object(self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, **kwargs):
+    def add_to_execution_object(
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        **kwargs,
+    ):
         """Add KubernetesToleration instance to the execution object for the given runtime processor"""
         runtime_processor.add_kubernetes_toleration(instance=self, execution_object=execution_object, **kwargs)
 
@@ -733,7 +837,10 @@ class ElyraPropertyList(list):
         return ElyraPropertyList(subtract_dict.values())
 
     def add_to_execution_object(
-        self, runtime_processor: RuntimePipelineProcessor, execution_object: Any, pipeline_input_parameters: Any
+        self,
+        runtime_processor: RuntimePipelineProcessor,
+        execution_object: Any,
+        pipeline_input_parameters: Any,
     ):
         """
         Add a property instance to the execution object for the given runtime processor
@@ -741,7 +848,14 @@ class ElyraPropertyList(list):
         """
         for item in self:
             if isinstance(
-                item, (KubernetesLabel, KubernetesAnnotation, VolumeMount, KubernetesSecret, EnvironmentVariable)
+                item,
+                (
+                    KubernetesLabel,
+                    KubernetesAnnotation,
+                    VolumeMount,
+                    KubernetesSecret,
+                    EnvironmentVariable,
+                ),
             ):
                 item.add_to_execution_object(
                     runtime_processor=runtime_processor,
@@ -749,7 +863,10 @@ class ElyraPropertyList(list):
                     pipeline_input_parameters=pipeline_input_parameters,
                 )
             else:
-                item.add_to_execution_object(runtime_processor=runtime_processor, execution_object=execution_object)
+                item.add_to_execution_object(
+                    runtime_processor=runtime_processor,
+                    execution_object=execution_object,
+                )
 
 
 class ElyraPropertyJSONEncoder(json.JSONEncoder):
@@ -896,7 +1013,10 @@ class ComponentParameter(object):
             if not input_type:
                 # This is an output
                 json_dict["type"] = "string"
-                json_dict["uihints"] = {"ui:widget": "hidden", "outputpath": True}
+                json_dict["uihints"] = {
+                    "ui:widget": "hidden",
+                    "outputpath": True,
+                }
             elif input_type == "inputpath":
                 json_dict.update(
                     {
@@ -905,7 +1025,10 @@ class ComponentParameter(object):
                             "widget": {"type": "string", "default": input_type},
                             "value": {"type": "string", "enum": []},
                         },
-                        "uihints": {"widget": {"ui:field": "hidden"}, "value": {input_type: True}},
+                        "uihints": {
+                            "widget": {"ui:field": "hidden"},
+                            "value": {input_type: True},
+                        },
                     }
                 )
             elif input_type == "file":
@@ -946,7 +1069,10 @@ class ComponentParameter(object):
                     obj["title"] = InputTypeDescriptionMap[widget_type].value
                     obj["properties"]["widget"]["default"] = widget_type
                     if widget_type == "outputpath":
-                        obj["uihints"]["value"] = {"ui:readonly": "true", widget_type: True}
+                        obj["uihints"]["value"] = {
+                            "ui:readonly": "true",
+                            widget_type: True,
+                        }
                         obj["properties"]["value"]["type"] = "string"
                     elif widget_type == "inputpath":
                         obj["uihints"]["value"] = {widget_type: True}

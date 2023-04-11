@@ -83,7 +83,10 @@ class ArchiveTestCase(unittest.TestCase):
     def test_archive_require_complete(self):
         test_archive_name = "multiple-" + self.test_timestamp + ".tar.gz"
         archive_path = create_temp_archive(
-            test_archive_name, self.test_dir, filenames=["*.json", "*.txt", "a.py"], require_complete=True
+            test_archive_name,
+            self.test_dir,
+            filenames=["*.json", "*.txt", "a.py"],
+            require_complete=True,
         )
         self.assertArchivedContent(archive_path, ["c.json", "d.txt", "a.py"])
 
@@ -92,7 +95,10 @@ class ArchiveTestCase(unittest.TestCase):
         # c.py does not exist and exception is expected
         with pytest.raises(FileNotFoundError) as ex:
             create_temp_archive(
-                test_archive_name, self.test_dir, filenames=["*.json", "*.txt", "a.py", "c.py"], require_complete=True
+                test_archive_name,
+                self.test_dir,
+                filenames=["*.json", "*.txt", "a.py", "c.py"],
+                require_complete=True,
             )
         assert "{'c.py'}" in str(ex)  # ensure c.py is the only item not matched
 
@@ -108,7 +114,10 @@ class ArchiveTestCase(unittest.TestCase):
 
         test_archive_name = "subdir-" + self.test_timestamp + ".tar.gz"
         archive_path = create_temp_archive(
-            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["*"], recursive=True
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["*"],
+            recursive=True,
         )
 
         self.assertArchivedFileCount(archive_path, 10)
@@ -119,7 +128,11 @@ class ArchiveTestCase(unittest.TestCase):
         self._create_test_files(subdir_name)
 
         test_archive_name = "subdir-" + self.test_timestamp + ".tar.gz"
-        archive_path = create_temp_archive(archive_name=test_archive_name, source_dir=self.test_dir, recursive=True)
+        archive_path = create_temp_archive(
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            recursive=True,
+        )
 
         self.assertArchivedFileCount(archive_path, 0)
 
@@ -130,7 +143,10 @@ class ArchiveTestCase(unittest.TestCase):
 
         test_archive_name = "subdir-" + self.test_timestamp + ".tar.gz"
         archive_path = create_temp_archive(
-            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["subdir/*.py"], recursive=True
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["subdir/*.py"],
+            recursive=True,
         )
 
         self.assertArchivedFileCount(archive_path, 2)
@@ -147,12 +163,17 @@ class ArchiveTestCase(unittest.TestCase):
 
         test_archive_name = "subdir-" + self.test_timestamp + ".tar.gz"
         archive_path = create_temp_archive(
-            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["*"], recursive=True
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["*"],
+            recursive=True,
         )
 
         self.assertArchivedFileCount(archive_path, 15)
 
-    def test_archive_with_second_level_subdirectories_and_nonexistent_filter(self):
+    def test_archive_with_second_level_subdirectories_and_nonexistent_filter(
+        self,
+    ):
         subdir_name = os.path.join(self.test_dir, "subdir")
         os.makedirs(subdir_name)
         self._create_test_files(subdir_name)
@@ -163,7 +184,10 @@ class ArchiveTestCase(unittest.TestCase):
 
         test_archive_name = "subdir-" + self.test_timestamp + ".tar.gz"
         archive_path = create_temp_archive(
-            archive_name=test_archive_name, source_dir=self.test_dir, filenames=["*.yml"], recursive=True
+            archive_name=test_archive_name,
+            source_dir=self.test_dir,
+            filenames=["*.yml"],
+            recursive=True,
         )
 
         self.assertArchivedFileCount(archive_path, 0)

@@ -46,7 +46,13 @@ def directory_prefixed(filename):
     return os.sep in filename and not filename.startswith(os.sep) and not filename.endswith(os.sep)
 
 
-def create_temp_archive(archive_name, source_dir, filenames=None, recursive=False, require_complete=False):
+def create_temp_archive(
+    archive_name,
+    source_dir,
+    filenames=None,
+    recursive=False,
+    require_complete=False,
+):
     """
     Create archive file with specified list of files
     :param archive_name: the name of the archive to be created
@@ -120,7 +126,10 @@ def create_temp_archive(archive_name, source_dir, filenames=None, recursive=Fals
 
     # Get the list of dependencies by discarding the first item of filenames, which is always the source file.
     dependencies_set = set([] if not filenames else filenames[1:])
-    wildcard_expression_list = [f"{WILDCARDS[0]}.py", f"{WILDCARDS[0]}.r"]  # Supported script file extensions.
+    wildcard_expression_list = [
+        f"{WILDCARDS[0]}.py",
+        f"{WILDCARDS[0]}.r",
+    ]  # Supported script file extensions.
     wildcard_expression = len(dependencies_set) == 1 and next(iter(dependencies_set)) in wildcard_expression_list
 
     if require_complete and not include_all:

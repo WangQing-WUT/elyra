@@ -50,7 +50,11 @@ class HttpErrorMixin(object):
         exc_info = kwargs.get("exc_info")
         message = ""
         reason = responses.get(status_code, "Unknown HTTP Error")
-        reply = {"reason": reason, "message": message, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        reply = {
+            "reason": reason,
+            "message": message,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
         if exc_info:
             exception = exc_info[1]
             # Get the custom message, if defined

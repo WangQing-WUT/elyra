@@ -40,7 +40,12 @@ from elyra.metadata.error import MetadataNotFoundError
 
 
 class MetadataStore(ABC):
-    def __init__(self, schemaspace, parent: Optional[LoggingConfigurable] = None, **kwargs):
+    def __init__(
+        self,
+        schemaspace,
+        parent: Optional[LoggingConfigurable] = None,
+        **kwargs,
+    ):
         self.schemaspace = schemaspace
         self.log = parent.log if parent else log.get_logger()
 
@@ -87,10 +92,18 @@ class FileMetadataCache(SingletonConfigurable):
     """
 
     max_size = Integer(
-        min=1, max=1024, default_value=128, config=True, help="The maximum number of entries allowed in the cache."
+        min=1,
+        max=1024,
+        default_value=128,
+        config=True,
+        help="The maximum number of entries allowed in the cache.",
     )
 
-    enabled = Bool(default_value=True, config=True, help="Caching is enabled (True) or disabled (False).")
+    enabled = Bool(
+        default_value=True,
+        config=True,
+        help="Caching is enabled (True) or disabled (False).",
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

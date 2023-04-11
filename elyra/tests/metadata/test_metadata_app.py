@@ -118,19 +118,34 @@ def test_install_no_schema_multiple(script_runner, mock_data_dir):
 
 
 def test_install_bad_schema_multiple(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "install", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-foo")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "install",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-foo",
+    )
     assert ret.success is False
     assert "ERROR: Parameter '--schema_name' requires one of the " "following values: ['metadata-test" in ret.stdout
 
 
 def test_install_no_name(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "install", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-test")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "install",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-test",
+    )
     assert ret.success is False
     assert "ERROR: '--display_name' is a required parameter." in ret.stdout
 
 
 def test_install_complex_usage(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "install", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-test")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "install",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-test",
+    )
     assert ret.success is False
     assert "Note: The following properties in this schema contain JSON keywords that are not supported" in ret.stdout
     assert "*** References unsupported keywords: {'oneOf'}" in ret.stdout
@@ -176,7 +191,10 @@ def test_install_invalid_name(script_runner, mock_data_dir):
 
 def test_install_simple(script_runner, mock_data_dir):
     expected_file = os.path.join(
-        mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, "test-metadata_42_valid-name.json"
+        mock_data_dir,
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "test-metadata_42_valid-name.json",
     )
     # Cleanup from any potential previous failures
     if os.path.exists(expected_file):
@@ -270,7 +288,10 @@ def test_create_from_json(script_runner, mock_data_dir, option_style):
 
 def test_install_and_replace(script_runner, mock_data_dir):
     expected_file = os.path.join(
-        mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, "test-metadata_42_valid-name.json"
+        mock_data_dir,
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "test-metadata_42_valid-name.json",
     )
     # Cleanup from any potential previous failures
     if os.path.exists(expected_file):
@@ -536,19 +557,34 @@ def test_create_no_schema_multiple(script_runner, mock_data_dir):
 
 
 def test_create_bad_schema_multiple(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "create", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-foo")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "create",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-foo",
+    )
     assert ret.success is False
     assert "ERROR: Parameter '--schema_name' requires one of the " "following values: ['metadata-test" in ret.stdout
 
 
 def test_create_no_name(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "create", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-test")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "create",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-test",
+    )
     assert ret.success is False
     assert "ERROR: '--display_name' is a required parameter." in ret.stdout
 
 
 def test_create_complex_usage(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "create", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-test")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "create",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-test",
+    )
     assert ret.success is False
     assert "Note: The following properties in this schema contain JSON keywords that are not supported" in ret.stdout
     assert "*** References unsupported keywords: {'oneOf'}" in ret.stdout
@@ -594,7 +630,10 @@ def test_create_invalid_name(script_runner, mock_data_dir):
 
 def test_create_simple(script_runner, mock_data_dir):
     expected_file = os.path.join(
-        mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, "test-metadata_42_valid-name.json"
+        mock_data_dir,
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "test-metadata_42_valid-name.json",
     )
     # Cleanup from any potential previous failures
     if os.path.exists(expected_file):
@@ -625,7 +664,10 @@ def test_create_simple(script_runner, mock_data_dir):
 
 def test_create_existing(script_runner, mock_data_dir):
     expected_file = os.path.join(
-        mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, "test-metadata_42_valid-name.json"
+        mock_data_dir,
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "test-metadata_42_valid-name.json",
     )
     # Cleanup from any potential previous failures
     if os.path.exists(expected_file):
@@ -755,13 +797,23 @@ def test_update_no_schema_multiple(script_runner, mock_data_dir):
 
 
 def test_update_bad_schema_multiple(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "update", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-foo")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "update",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-foo",
+    )
     assert ret.success is False
     assert "ERROR: Parameter '--schema_name' requires one of the " "following values: ['metadata-test" in ret.stdout
 
 
 def test_update_no_name(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "update", METADATA_TEST_SCHEMASPACE, "--schema_name=metadata-test")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "update",
+        METADATA_TEST_SCHEMASPACE,
+        "--schema_name=metadata-test",
+    )
     assert ret.success is False
     assert (
         "The following exception occurred saving metadata instance for schema 'metadata-test': "
@@ -789,7 +841,10 @@ def test_update_no_instance(script_runner, mock_data_dir):
 
 def test_update_simple(script_runner, mock_data_dir):
     expected_file = os.path.join(
-        mock_data_dir, "metadata", METADATA_TEST_SCHEMASPACE, "test-metadata_42_valid-name.json"
+        mock_data_dir,
+        "metadata",
+        METADATA_TEST_SCHEMASPACE,
+        "test-metadata_42_valid-name.json",
     )
     # Cleanup from any potential previous failures
     if os.path.exists(expected_file):
@@ -1082,7 +1137,13 @@ def test_list_json_instances(script_runner, mock_data_dir):
     results = json.loads(ret.stdout)
     assert len(results) == 4
 
-    ret = script_runner.run("elyra-metadata", "list", METADATA_TEST_SCHEMASPACE, "--json", "--valid-only")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "list",
+        METADATA_TEST_SCHEMASPACE,
+        "--json",
+        "--valid-only",
+    )
     assert ret.success
     results = json.loads(ret.stdout)
     assert len(results) == 2
@@ -1165,7 +1226,11 @@ def test_export_no_directory(script_runner):
 
 def test_export_bad_argument(script_runner):
     ret = script_runner.run(
-        "elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, "--directory=dummy-directory", "--bogus-argument"
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        "--directory=dummy-directory",
+        "--bogus-argument",
     )
     assert ret.success is False
     assert "The following arguments were unexpected: ['--bogus-argument']" in ret.stdout
@@ -1193,7 +1258,12 @@ def test_export_bad_schema(script_runner):
 
 
 def test_export_no_schema_no_instances(script_runner, mock_data_dir):
-    ret = script_runner.run("elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, "--directory=dummy-directory")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        "--directory=dummy-directory",
+    )
     assert ret.success
     assert f"No metadata instances found for schemaspace '{METADATA_TEST_SCHEMASPACE}'" in ret.stdout
     assert "Nothing exported to 'dummy-directory'" in ret.stdout
@@ -1209,10 +1279,22 @@ def test_export_inaccessible_directory(script_runner, mock_data_dir):
 
     directory_parameter = "/dummy-directory"
 
-    ret = script_runner.run("elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is False
     assert f"Error creating directory structure for '{directory_parameter}/{METADATA_TEST_SCHEMASPACE}': " in ret.stdout
-    assert any(ele in ret.stdout for ele in ["Read-only file system: ", "Permission denied: ", "Access Denied: "])
+    assert any(
+        ele in ret.stdout
+        for ele in [
+            "Read-only file system: ",
+            "Permission denied: ",
+            "Access Denied: ",
+        ]
+    )
     assert f"'{directory_parameter}'" in ret.stdout
 
 
@@ -1256,7 +1338,11 @@ def test_export_no_schema_with_instances(script_runner, mock_data_dir):
     temp_dir = TemporaryDirectory()
     directory_parameter = temp_dir.name
     ret = script_runner.run(
-        "elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, "--include-invalid", f"--directory={directory_parameter}"
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        "--include-invalid",
+        f"--directory={directory_parameter}",
     )
     assert ret.success
     export_directory = os.path.join(directory_parameter, METADATA_TEST_SCHEMASPACE)
@@ -1279,7 +1365,11 @@ def test_export_no_schema_with_instances(script_runner, mock_data_dir):
     temp_dir = TemporaryDirectory()
     directory_parameter = temp_dir.name
     ret = script_runner.run(
-        "elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}", "--include-invalid"
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+        "--include-invalid",
     )
     assert ret.success
     export_directory = os.path.join(directory_parameter, METADATA_TEST_SCHEMASPACE)
@@ -1300,7 +1390,12 @@ def test_export_no_schema_with_instances(script_runner, mock_data_dir):
     # test for valid only
     temp_dir = TemporaryDirectory()
     directory_parameter = temp_dir.name
-    ret = script_runner.run("elyra-metadata", "export", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "export",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success
     export_directory = os.path.join(directory_parameter, METADATA_TEST_SCHEMASPACE)
     assert f"Creating directory structure for '{export_directory}'" in ret.stdout
@@ -1546,7 +1641,11 @@ def test_import_no_directory(script_runner):
 
 def test_import_bad_argument(script_runner):
     ret = script_runner.run(
-        "elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, "--directory=dummy-directory", "--bogus-argument"
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        "--directory=dummy-directory",
+        "--bogus-argument",
     )
     assert ret.success is False
     assert "ERROR: The following arguments were unexpected: ['--bogus-argument']" in ret.stdout
@@ -1561,7 +1660,12 @@ def test_import_bad_schemaspace(script_runner):
 def test_import_inaccessible_directory(script_runner):
     directory_parameter = "/dummy-directory"
 
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is False
     assert (
         f"Unable to reach the '{directory_parameter}'"
@@ -1575,7 +1679,12 @@ def test_import_empty_directory(script_runner):
     directory_parameter = temp_dir.name
 
     # import metadata
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     assert f"No instances for import found in the '{directory_parameter}' directory" in ret.stdout
     temp_dir.cleanup()
@@ -1596,7 +1705,12 @@ def test_import_non_json_file(script_runner):
     assert open(dummy_filepath).read() == dummy_file_content
 
     # import metadata
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     assert f"No instances for import found in the '{directory_parameter}' directory" in ret.stdout
     temp_dir.cleanup()
@@ -1623,7 +1737,12 @@ def test_import_valid_metadata_files(script_runner, mock_data_dir):
     assert json.loads(open(metadata_file_path2).read()) == valid_metadata2_json
 
     # import metadata
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     assert "Imported 2 instances" in ret.stdout
     temp_dir.cleanup()
@@ -1668,7 +1787,12 @@ def test_import_invalid_metadata_file(script_runner, mock_data_dir):
     assert json.loads(open(metadata_file_path).read()) == invalid_metadata_json
 
     # import metadata
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     lines = ret.stdout.split("\n")
     assert len(lines) == 8
@@ -1724,7 +1848,12 @@ def test_import_with_subfolder(script_runner, mock_data_dir):
     assert json.loads(open(metadata_file_path2).read()) == valid_metadata2_json
 
     # import metadata
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     lines = ret.stdout.split("\n")
     assert len(lines) == 9
@@ -1795,7 +1924,12 @@ def test_import_overwrite_flag(script_runner, mock_data_dir):
     assert json.loads(open(metadata_file_path2).read()) == valid_metadata_json
 
     # import metadata without overwrite flag
-    ret = script_runner.run("elyra-metadata", "import", METADATA_TEST_SCHEMASPACE, f"--directory={directory_parameter}")
+    ret = script_runner.run(
+        "elyra-metadata",
+        "import",
+        METADATA_TEST_SCHEMASPACE,
+        f"--directory={directory_parameter}",
+    )
     assert ret.success is True
     lines = ret.stdout.split("\n")
     assert len(lines) == 8

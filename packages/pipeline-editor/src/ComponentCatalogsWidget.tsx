@@ -48,11 +48,14 @@ const handleError = (error: any): void => {
 const commands = {
   OPEN_COMPONENT_EDITOR: 'elyra-component-editor:open'
 };
+interface IComponentCatalogsDisplayProps extends IMetadataDisplayProps {
+  refreshMetadata: () => void;
+}
 /**
  * A React Component for displaying the component catalogs list.
  */
 class ComponentCatalogsDisplay extends MetadataDisplay<
-  IMetadataDisplayProps,
+  IComponentCatalogsDisplayProps,
   IMetadataDisplayState
 > {
   actionButtons(metadata: IMetadata): IMetadataActionButton[] {
@@ -144,7 +147,7 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
                 className="elyra-feedbackButton elyra-button elyra-expandableContainer-button elyra-expandableContainer-actionButton"
                 onClick={() => {
                   this.openComponentEditor({
-                    onSave: () => {},
+                    onSave: this.props.refreshMetadata,
                     schemaspace: 'component-catalogs',
                     schema: 'component-editor',
                     path: path
@@ -287,6 +290,7 @@ export class ComponentCatalogsWidget extends MetadataWidget {
         omitTags={this.omitTags()}
         titleContext={this.props.titleContext}
         commands={this.commands}
+        refreshMetadata={this.refreshMetadata}
       />
     );
   }

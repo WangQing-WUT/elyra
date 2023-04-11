@@ -66,7 +66,13 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
     extension_url = "/lab"
     load_other_extensions = True
 
-    classes = [FileMetadataCache, MetadataManager, PipelineProcessor, ComponentCatalogConnector, ComponentCache]
+    classes = [
+        FileMetadataCache,
+        MetadataManager,
+        PipelineProcessor,
+        ComponentCatalogConnector,
+        ComponentCache,
+    ]
 
     # Local path to static files directory.
     static_paths = [
@@ -125,9 +131,9 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
         self.log.info(f"Config {self.config}")
         # Instantiate singletons with appropriate parent to enable configurability, and convey
         # root_dir to PipelineProcessorManager.
-        PipelineProcessorRegistry.instance(root_dir=self.settings["server_root_dir"], parent=self)
-        PipelineProcessorManager.instance(root_dir=self.settings["server_root_dir"], parent=self)
-        PipelineValidationManager.instance(root_dir=self.settings["server_root_dir"], parent=self)
+        PipelineProcessorRegistry.instance(root_dir=self.settings.get("server_root_dir"), parent=self)
+        PipelineProcessorManager.instance(root_dir=self.settings.get("server_root_dir"), parent=self)
+        PipelineValidationManager.instance(root_dir=self.settings.get("server_root_dir"), parent=self)
         FileMetadataCache.instance(parent=self)
         ComponentCache.instance(parent=self).load()
         SchemaManager.instance(parent=self)

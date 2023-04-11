@@ -123,7 +123,10 @@ def test_get_dependency_source_dir(processor):
     pipelines_test_file = "this/is/a/rel/path/test.ipynb"
     processor.root_dir = "/this/is/an/abs/path/"
     correct_filepath = "/this/is/an/abs/path/this/is/a/rel/path"
-    component_parameters = {"filename": pipelines_test_file, "runtime_image": "tensorflow/tensorflow:latest"}
+    component_parameters = {
+        "filename": pipelines_test_file,
+        "runtime_image": "tensorflow/tensorflow:latest",
+    }
     test_operation = GenericOperation(
         id="123e4567-e89b-12d3-a456-426614174000",
         type="execution-node",
@@ -140,7 +143,10 @@ def test_get_dependency_source_dir(processor):
 def test_get_dependency_archive_name(processor):
     pipelines_test_file = "this/is/a/rel/path/test.ipynb"
     correct_filename = "test-this-is-a-test-id.tar.gz"
-    component_parameters = {"filename": pipelines_test_file, "runtime_image": "tensorflow/tensorflow:latest"}
+    component_parameters = {
+        "filename": pipelines_test_file,
+        "runtime_image": "tensorflow/tensorflow:latest",
+    }
     test_operation = GenericOperation(
         id="this-is-a-test-id",
         type="execution-node",
@@ -162,7 +168,10 @@ def test_collect_envs(processor):
     operation_envs = [
         {"env_var": "ELYRA_RUNTIME_ENV", "value": '"bogus_runtime"'},
         {"env_var": "ELYRA_ENABLE_PIPELINE_INFO", "value": '"bogus_pipeline"'},
-        {"env_var": "ELYRA_WRITABLE_CONTAINER_DIR", "value": ""},  # simulate operation reference in pipeline
+        {
+            "env_var": "ELYRA_WRITABLE_CONTAINER_DIR",
+            "value": "",
+        },  # simulate operation reference in pipeline
         {"env_var": "AWS_ACCESS_KEY_ID", "value": '"bogus_key"'},
         {"env_var": "AWS_SECRET_ACCESS_KEY", "value": '"bogus_secret"'},
         {"env_var": "USER_EMPTY_VALUE", "value": "  "},
@@ -176,11 +185,19 @@ def test_collect_envs(processor):
         type="execution-node",
         classifier="execute-notebook-node",
         name="test",
-        component_params={"filename": pipelines_test_file, "runtime_image": "tensorflow/tensorflow:latest"},
+        component_params={
+            "filename": pipelines_test_file,
+            "runtime_image": "tensorflow/tensorflow:latest",
+        },
         elyra_params={"env_vars": converted_envs},
     )
 
-    envs = processor._collect_envs(test_operation, cos_secret=None, cos_username="Alice", cos_password="secret")
+    envs = processor._collect_envs(
+        test_operation,
+        cos_secret=None,
+        cos_username="Alice",
+        cos_password="secret",
+    )
 
     assert envs["ELYRA_RUNTIME_ENV"] == "kfp"
     assert envs["AWS_ACCESS_KEY_ID"] == "Alice"
@@ -192,7 +209,12 @@ def test_collect_envs(processor):
     assert "USER_NO_VALUE" not in envs
 
     # Repeat with non-None secret - ensure user and password envs are not present, but others are
-    envs = processor._collect_envs(test_operation, cos_secret="secret", cos_username="Alice", cos_password="secret")
+    envs = processor._collect_envs(
+        test_operation,
+        cos_secret="secret",
+        cos_username="Alice",
+        cos_password="secret",
+    )
 
     assert envs["ELYRA_RUNTIME_ENV"] == "kfp"
     assert "AWS_ACCESS_KEY_ID" not in envs
@@ -211,10 +233,18 @@ def test_process_list_value_function(processor):
     assert processor._process_list_value("[]") == []
     assert processor._process_list_value("None") == []
     assert processor._process_list_value("['elem1']") == ["elem1"]
-    assert processor._process_list_value("['elem1', 'elem2', 'elem3']") == ["elem1", "elem2", "elem3"]
+    assert processor._process_list_value("['elem1', 'elem2', 'elem3']") == [
+        "elem1",
+        "elem2",
+        "elem3",
+    ]
     assert processor._process_list_value("  ['elem1',   'elem2' , 'elem3']  ") == ["elem1", "elem2", "elem3"]
     assert processor._process_list_value("[1, 2]") == [1, 2]
-    assert processor._process_list_value("[True, False, True]") == [True, False, True]
+    assert processor._process_list_value("[True, False, True]") == [
+        True,
+        False,
+        True,
+    ]
     assert processor._process_list_value("[{'obj': 'val', 'obj2': 'val2'}, {}]") == [{"obj": "val", "obj2": "val2"}, {}]
 
     # Test values that will not be successfully converted to list
@@ -234,16 +264,31 @@ def test_process_dictionary_value_function(processor):
     assert processor._process_dictionary_value("{'key': 'value'}") == {"key": "value"}
 
     dict_as_str = "{'key1': 'value', 'key2': 'value'}"
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": "value", "key2": "value"}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": "value",
+        "key2": "value",
+    }
 
     dict_as_str = "  {  'key1': 'value'  , 'key2'  : 'value'}  "
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": "value", "key2": "value"}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": "value",
+        "key2": "value",
+    }
 
     dict_as_str = "{'key1': [1, 2, 3], 'key2': ['elem1', 'elem2']}"
-    assert processor._process_dictionary_value(dict_as_str) == {"key1": [1, 2, 3], "key2": ["elem1", "elem2"]}
+    assert processor._process_dictionary_value(dict_as_str) == {
+        "key1": [1, 2, 3],
+        "key2": ["elem1", "elem2"],
+    }
 
     dict_as_str = "{'key1': 2, 'key2': 'value', 'key3': True, 'key4': None, 'key5': [1, 2, 3]}"
-    expected_value = {"key1": 2, "key2": "value", "key3": True, "key4": None, "key5": [1, 2, 3]}
+    expected_value = {
+        "key1": 2,
+        "key2": "value",
+        "key3": True,
+        "key4": None,
+        "key5": [1, 2, 3],
+    }
     assert processor._process_dictionary_value(dict_as_str) == expected_value
 
     dict_as_str = "{'key1': {'key2': 2, 'key3': 3, 'key4': 4}, 'key5': {}}"
@@ -345,14 +390,23 @@ def test_processing_url_runtime_specific_component(monkeypatch, processor, compo
     )
 
     # Build a mock runtime config for use in _cc_pipeline
-    mocked_runtime = Metadata(name="test-metadata", display_name="test", schema_name="kfp", metadata=sample_metadata)
+    mocked_runtime = Metadata(
+        name="test-metadata",
+        display_name="test",
+        schema_name="kfp",
+        metadata=sample_metadata,
+    )
 
     mocked_func = mock.Mock(return_value="default", side_effect=[mocked_runtime, sample_metadata])
     monkeypatch.setattr(processor, "_get_metadata_configuration", mocked_func)
 
     # Construct single-operation pipeline
     pipeline = Pipeline(
-        id="pipeline-id", name="kfp_test", runtime="kfp", runtime_config="test", source="filter_text.pipeline"
+        id="pipeline-id",
+        name="kfp_test",
+        runtime="kfp",
+        runtime_config="test",
+        source="filter_text.pipeline",
     )
     pipeline.operations[operation.id] = operation
 
@@ -384,7 +438,13 @@ def test_processing_filename_runtime_specific_component(
 
     # Assign test resource location
     absolute_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "resources", "components", "download_data.yaml")
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "resources",
+            "components",
+            "download_data.yaml",
+        )
     )
 
     # Read contents of given path -- read_component_definition() returns a
@@ -433,7 +493,10 @@ def test_processing_filename_runtime_specific_component(
     # Construct hypothetical operation for component
     operation_name = "Download data test"
     operation_params = {
-        "url": {"widget": "file", "value": "resources/sample_pipelines/pipeline_valid.json"},
+        "url": {
+            "widget": "file",
+            "value": "resources/sample_pipelines/pipeline_valid.json",
+        },
         "curl_options": {"widget": "string", "value": "--location"},
     }
     operation = Operation(
@@ -446,14 +509,23 @@ def test_processing_filename_runtime_specific_component(
     )
 
     # Build a mock runtime config for use in _cc_pipeline
-    mocked_runtime = Metadata(name="test-metadata", display_name="test", schema_name="kfp", metadata=sample_metadata)
+    mocked_runtime = Metadata(
+        name="test-metadata",
+        display_name="test",
+        schema_name="kfp",
+        metadata=sample_metadata,
+    )
 
     mocked_func = mock.Mock(return_value="default", side_effect=[mocked_runtime, sample_metadata])
     monkeypatch.setattr(processor, "_get_metadata_configuration", mocked_func)
 
     # Construct single-operation pipeline
     pipeline = Pipeline(
-        id="pipeline-id", name="kfp_test", runtime="kfp", runtime_config="test", source="download_data.pipeline"
+        id="pipeline-id",
+        name="kfp_test",
+        runtime="kfp",
+        runtime_config="test",
+        source="download_data.pipeline",
     )
     pipeline.operations[operation.id] = operation
 
@@ -527,14 +599,23 @@ def test_cc_pipeline_component_no_input(monkeypatch, processor, component_cache,
     )
 
     # Build a mock runtime config for use in _cc_pipeline
-    mocked_runtime = Metadata(name="test-metadata", display_name="test", schema_name="kfp", metadata=sample_metadata)
+    mocked_runtime = Metadata(
+        name="test-metadata",
+        display_name="test",
+        schema_name="kfp",
+        metadata=sample_metadata,
+    )
 
     mocked_func = mock.Mock(return_value="default", side_effect=[mocked_runtime, sample_metadata])
     monkeypatch.setattr(processor, "_get_metadata_configuration", mocked_func)
 
     # Construct single-operation pipeline
     pipeline = Pipeline(
-        id="pipeline-id", name="kfp_test", runtime="kfp", runtime_config="test", source="no_input.pipeline"
+        id="pipeline-id",
+        name="kfp_test",
+        runtime="kfp",
+        runtime_config="test",
+        source="no_input.pipeline",
     )
     pipeline.operations[operation.id] = operation
 
