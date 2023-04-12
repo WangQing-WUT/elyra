@@ -1,0 +1,180 @@
+@startuml
+
+actor User as user
+participant "JupyterLab UI" as ui
+participant "JupyterLab front-end" as front
+participant "JupyterLab Server" as server
+
+autonumber 1.1
+ui++
+group 打开Component catalogs选项卡
+user -> ui : 打开Component catalogs选项卡
+ui -> front++ : 获取Component catalogs页面信息
+front ->> server++ : 请求Component catalogs metadata
+server -> server : 查询Component catalogs metadata
+return Component catalogs metadata
+front -> front : 渲染Component catalogs页面
+return Component catalogs页面
+end
+|||
+|||
+|||
+autonumber inc A
+group 添加Filesystem/URL Component catalog
+user -> ui : 添加Filesystem/URL Component catalog
+ui -> front++ : 获取添加Component catalog页面信息
+front ->> server++ : 请求local-file-catalog/url-catalog schema
+server -> server : 查询local-file-catalog/url-catalog schema
+return local-file-catalog/url-catalog schema
+front -> front : 渲染添加Component catalog页面
+return 添加Component catalog页面
+user -> ui : 编辑Filesystem/URL Component catalog信息并保存
+ui -> front++ : Filesystem/URL Component catalog信息
+front ->> server++ : 请求保存Filesystem/URL Component catalog信息
+server -> server : 检查Filesystem/URL Component catalog信息
+alt success
+	server -> server : 保存Filesystem/URL Component catalog信息
+	server -->> front : success
+	front ->> server++ : 请求更新Component catalogs metadata
+	server -> server : 查询Component catalogs metadata
+	return Component catalogs metadata
+	front -> front : 渲染Component catalogs页面
+	front --> ui : Component catalogs页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 添加Component
+user -> ui : 添加Component
+ui -> front++ : 获取添加Component页面信息
+front ->> server++ : 请求new-component schema
+server -> server : 查询new-component schema
+return new-component schema
+front -> front : 渲染添加Component页面
+return 添加Component页面
+user -> ui : 编辑Component信息并保存
+ui -> front++ : Component信息
+front ->> server++ : 请求保存Component信息
+server -> server : 检查Component信息
+alt success
+	server -> server : 保存Component信息
+	server -->> front : success
+	front ->> server++ : 请求更新Component catalogs metadata
+	server -> server : 查询Component catalogs metadata
+	return Component catalogs metadata
+	front -> front : 渲染Component catalogs页面
+	front --> ui : Component catalogs页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 删除Component catalog metadata
+user -> ui : 删除Component catalog metadata
+ui -> front++ : catalog metadata
+front ->> server++ : 请求删除catalog metadata
+server -> server : 删除catalog metadata
+return success
+front ->> server++ : 请求更新Component catalogs metadata
+server -> server : 查询Component catalogs metadata
+return Component catalogs metadata
+front -> front : 渲染Component catalogs页面
+return Component catalogs页面
+end
+|||
+|||
+|||
+autonumber inc A
+group 编辑现有Component catalog
+user -> ui : 编辑现有Component catalog
+ui -> front++ : 获取编辑Component catalog页面信息
+front ->> server++ : 请求catalog metadata和local-file-catalog/url-catalog schema
+server -> server : 查询catalog metadata和local-file-catalog/url-catalog schema
+return catalog metadata和local-file-catalog/url-catalog schema
+front -> front : 渲染编辑Component catalog页面
+return 编辑Component catalog页面
+user -> ui : 编辑Component catalog信息并保存
+ui -> front++ : Component catalog信息
+front ->> server++ : 请求保存Component catalog信息
+server -> server : 检查Component catalog信息
+alt success
+	server -> server : 保存Component catalog信息
+	server -->> front : success
+	front ->> server++ : 请求更新Component catalogs metadata
+	server -> server : 查询Component catalogs metadata
+	return Component catalogs metadata
+	front -> front : 渲染Component catalogs页面
+	front --> ui : Component catalogs页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 通过编辑器编辑Component
+user -> ui : 通过编辑器编辑Component
+ui ->> front++ : 获取编辑器页面
+front -->> ui : 编辑器页面
+user -> ui : 编辑Component
+user -> ui : 保存Component
+front ->> server++ : 请求保存Component yaml文件
+server -> server!! : 保存Component yaml文件
+front--
+user -> ui : Reload Components
+ui -> front++ : Reload Components
+front -->> server++ : 更新Components Cache
+server -> server : 更新Components Cache
+alt success
+	server -->> front : success
+	front ->> server++ : 请求更新Component catalogs metadata
+	server -> server : 查询Component catalogs metadata
+	return Component catalogs metadata
+	front -> front : 渲染Component catalogs页面
+	front --> ui : Component catalogs页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 通过页面编辑Component
+user -> ui : 通过页面编辑Component
+ui ->> front++ : 获取编辑Component页面
+front -->> server++ : 请求Component信息和component-editor schema
+server -> server : 查询Component信息和component-editor schema
+return Component信息和component-editor schema
+front -> front : 渲染编辑Component页面
+return 编辑Component页面
+user -> ui : 编辑Component信息并保存
+ui -> front++ : Component信息
+front ->> server++ : 请求保存Component信息
+server -> server : 检查Component信息
+alt success
+	server -> server : 保存Component信息
+	server -->> front : success
+	front ->> server++ : 请求更新Component catalogs metadata
+	server -> server : 查询Component catalogs metadata
+	return Component catalogs metadata
+	front -> front : 渲染Component catalogs页面
+	front --> ui : Component catalogs页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+@enduml

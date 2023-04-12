@@ -1,0 +1,93 @@
+@startuml
+
+actor User as user
+participant "JupyterLab UI" as ui
+participant "JupyterLab front-end" as front
+participant "JupyterLab Server" as server
+
+autonumber 1.1
+ui++
+group 打开Runtimes选项卡
+user -> ui : 打开Runtimes选项卡
+ui -> front++ : 获取Runtimes页面信息
+front ->> server++ : 请求Runtimes metadata
+server -> server : 查询Runtimes metadata
+return Runtimes metadata
+front -> front : 渲染Runtimes页面
+return Runtimes页面
+end
+|||
+|||
+|||
+autonumber inc A
+group 添加Kubeflow Pipelines/Workflow运行时配置
+user -> ui : 添加Kubeflow Pipelines/Workflow运行时配置
+ui -> front++ : 获取添加运行时配置页面信息
+front ->> server++ : 请求kfp/wfp schema
+server -> server : 查询kfp/wfp schema
+return kfp/wfp schema
+front -> front : 渲染运行时配置页面
+return 添加运行时配置页面
+user -> ui : 编辑Kubeflow Pipelines/Workflow运行时配置并保存
+ui -> front++ : 运行时配置信息
+front ->> server++ : 请求保存运行时配置信息
+server -> server : 检查运行时配置信息
+alt success
+	server -> server : 保存运行时配置信息
+	server -->> front : success
+	front ->> server++ : 请求更新Runtimes metadata
+	server -> server : 查询Runtimes metadata
+	return Runtimes metadata
+	front -> front : 渲染Runtimes页面
+	front --> ui : Runtimes页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 删除运行时配置
+user -> ui : 删除运行时配置
+ui -> front++ : runtime metadata
+front ->> server++ : 请求删除runtime metadata
+server -> server : 删除runtime metadata
+return success
+front ->> server++ : 请求更新Runtimes metadata
+server -> server : 查询Runtimes metadata
+return Runtimes metadata
+front -> front : 渲染Runtimes页面
+return Runtimes页面
+end
+|||
+|||
+|||
+autonumber inc A
+group 编辑现有运行时配置
+user -> ui : 编辑现有运行时配置
+ui -> front++ : 获取编辑运行时配置页面信息
+front ->> server++ : 请求runtime metadata和kfp/wfp schema
+server -> server : 查询runtime metadata和kfp/wfp schema
+return runtime metadata和kfp/wfp schema
+front -> front : 渲染运行时配置页面
+return 编辑运行时配置页面
+user -> ui : 编辑运行时配置并保存
+ui -> front++ : 运行时配置信息
+front ->> server++ : 请求保存运行时配置信息
+server -> server : 检查运行时配置信息
+alt success
+	server -> server : 保存运行时配置信息
+	server -->> front : success
+	front ->> server++ : 请求更新Runtimes metadata
+	server -> server : 查询Runtimes metadata
+	return Runtimes metadata
+	front -> front : 渲染Runtimes页面
+	front --> ui : Runtimes页面
+else fail
+  return 错误信息
+	return 错误信息
+end
+end
+@enduml

@@ -1,0 +1,117 @@
+@startuml
+
+actor User as user
+participant "JupyterLab UI" as ui
+participant "JupyterLab front-end" as front
+participant "JupyterLab Server" as server
+
+autonumber 1.1
+ui++
+group 新建workflow
+user -> ui : 新建workflow
+ui -> front++ : 新建workflow
+front ->> server++ : 请求新建.workflow文件
+server -> server : 新建.workflow文件
+return success
+front -> front : 打开空白Workflow Editor页面
+front -> ui : 空白Workflow Editor页面
+front -> front : 添加默认文件内容到新建的.workflow文件
+front ->> server++ : 请求保存.workflow文件
+server -> server : 保存.workflow文件
+return success
+front--
+end
+|||
+|||
+|||
+autonumber inc A
+group 编辑workflow
+user -> ui : 打开.workflow文件
+ui -> front++ : 获取Workflow Editor页面
+front ->> server++ : 请求kfp运行时、组件、workflow属性json、组件属性json等信息
+server -> server : 查询kfp运行时、组件、workflow属性json、组件属性json等信息
+return kfp运行时、组件、workflow属性json、组件属性json等信息
+front -> front : 渲染Workflow Editor页面
+return Workflow Editor页面
+user -> ui : 拖拽组件组合workflow
+ui -> front++ : 添加组件
+front -> front : 修改.workflow文件内容
+return 更新后的画布
+user -> ui : 编辑workflow属性
+ui -> front++ : 打开workflow属性面板
+front -> front : 根据workflow属性json渲染workflow属性面板
+return workflow属性面板
+user -> ui : 编辑组件属性
+ui -> front++ : 打开组件属性面板
+front -> front : 根据组件属性json渲染组件属性面板
+return 组件属性面板	
+end
+|||
+|||
+|||
+autonumber inc A
+group 导出workflow
+user -> ui : 导出workflow
+ui -> front++ : 导出workflow
+front -> front : 检查画布内容是否存在错误
+alt 没有错误
+	front -> front : 检查画布内容是否保存
+	alt 未保存
+		front -> ui : 保存画布内容对话框
+		user -> ui : 确认保存
+		ui -> front : 保存.workflow文件
+		front ->> server++ : 请求保存.workflow文件
+		server -> server : 保存.workflow文件
+		return success
+	end
+	front -> ui : 导出对话框
+	user -> ui : 确认导出信息
+	ui -> front : 确认导出
+	front ->> server++ : 请求导出workflow
+	server -> server : 导出workflow的zip文件
+	alt 导出成功
+		server -->> front : workflow导出成功信息
+		front --> ui : 导出成功对话框
+	else 导出失败
+		return 导出错误信息
+		front --> ui : 导出错误信息
+	end
+else 存在错误
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 上传workflow
+user -> ui : 上传workflow
+ui -> front++ : 上传workflow
+front -> front : 检查画布内容是否存在错误
+alt 没有错误
+	front -> front : 检查画布内容是否保存
+	alt 未保存
+		front -> ui : 保存画布内容对话框
+		user -> ui : 确认保存
+		ui -> front : 保存.workflow文件
+		front ->> server++ : 请求保存.workflow文件
+		server -> server : 保存.workflow文件
+		return success
+	end
+	front -> ui : 上传workflow对话框
+	user -> ui : 确认workflow信息
+	ui -> front : 确认上传
+	front ->> server++ : 请求上传workflow
+	server -> server : 导出workflow的zip文件
+	server -> server : 上传workflow的zip文件
+	alt 上传成功
+		server -->> front : workflow上传成功信息
+		front --> ui : 上传成功对话框
+	else 上传失败
+		return 错误信息
+		front --> ui : 错误信息
+	end
+else 存在错误
+	return 错误信息
+end
+end

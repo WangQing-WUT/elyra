@@ -1,0 +1,23 @@
+@startuml
+left to right direction
+actor User
+
+User --> (Component Catalogs)
+
+(Component Catalogs) <.. (Reload components) : <<include>>
+(Component Catalogs) <.. (New component catalog) : <<include>>
+(Component Catalogs) <.. (Catalog list) : <<include>>
+
+(New component catalog) <.. (Filesystem Component Catalog) : <<include>>
+(New component catalog) <.. (URL Component Catalog) : <<include>>
+(New component catalog) <.. (New Component) : <<include>>
+
+(Catalog list) <.. (Components list) : <<include>>
+(Catalog list) <.. (Reload components from catalog) : <<include>>
+(Catalog list) <.. (Edit) : <<include>>
+(Catalog list) <.. (Duplicate) : <<include>>
+(Catalog list) <.. (Delete item) : <<include>>
+
+(Components list) <.. (Edit from editor) : <<include>>
+(Components list) <.. (Edit from page) : <<include>>
+@enduml

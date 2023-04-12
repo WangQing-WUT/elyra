@@ -1,0 +1,17 @@
+@startuml
+left to right direction
+actor User
+
+User --> (Runtimes)
+
+(Runtimes) <.. (Refresh) : <<include>>
+(Runtimes) <.. (New runtime configuration) : <<include>>
+(Runtimes) <.. (Configuration list) : <<include>>
+
+(New runtime configuration) <.. (Kubeflow Pipelines) : <<include>>
+(New runtime configuration) <.. (Workflow) : <<include>>
+
+(Configuration list) <.. (Edit) : <<include>>
+(Configuration list) <.. (Duplicate) : <<include>>
+(Configuration list) <.. (Delete item) : <<include>>
+@enduml

@@ -21,7 +21,8 @@ import {
   pipelineIcon,
   RequestErrors,
   runtimesIcon,
-  componentCatalogIcon
+  componentCatalogIcon,
+  workflowIcon
 } from '@elyra/ui-components';
 
 import {
@@ -160,7 +161,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         name: WORKFLOW,
         displayName: 'Workflow',
         extensions: ['.workflow'],
-        icon: pipelineIcon
+        icon: workflowIcon
       },
       ['JSON']
     );

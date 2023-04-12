@@ -1,0 +1,118 @@
+@startuml
+
+actor User as user
+participant "JupyterLab UI" as ui
+participant "JupyterLab front-end" as front
+participant "JupyterLab Server" as server
+
+autonumber 1.1
+ui++
+group 新建pipeline
+user -> ui : 新建pipeline
+ui -> front++ : 新建pipeline
+front ->> server++ : 请求新建.pipeline文件
+server -> server : 新建.pipeline文件
+return success
+front -> front : 打开空白Pipeline Editor页面
+front -> ui : 空白Pipeline Editor页面
+front -> front : 添加默认文件内容到新建的.pipeline文件
+front ->> server++ : 请求保存.pipeline文件
+server -> server : 保存.pipeline文件
+return success
+front--
+end
+|||
+|||
+|||
+autonumber inc A
+group 编辑pipeline
+user -> ui : 打开.pipeline文件
+ui -> front++ : 获取Pipeline Editor页面
+front ->> server++ : 请求kfp运行时、组件、pipeline属性json、组件属性json等信息
+server -> server : 查询kfp运行时、组件、pipeline属性json、组件属性json等信息
+return kfp运行时、组件、pipeline属性json、组件属性json等信息
+front -> front : 渲染Pipeline Editor页面
+return Pipeline Editor页面
+user -> ui : 拖拽组件组合pipeline
+ui -> front++ : 添加组件
+front -> front : 修改.pipeline文件内容
+return 更新后的画布
+user -> ui : 编辑pipeline属性
+ui -> front++ : 打开pipeline属性面板
+front -> front : 根据pipeline属性json渲染pipeline属性面板
+return pipeline属性面板
+user -> ui : 编辑组件属性
+ui -> front++ : 打开组件属性面板
+front -> front : 根据组件属性json渲染组件属性面板
+return 组件属性面板	
+end
+|||
+|||
+|||
+autonumber inc A
+group 导出pipeline
+user -> ui : 导出pipeline
+ui -> front++ : 导出pipeline
+front -> front : 检查画布内容是否存在错误
+alt 没有错误
+	front -> front : 检查画布内容是否保存
+	alt 未保存
+		front -> ui : 保存画布内容对话框
+		user -> ui : 确认保存
+		ui -> front : 保存.pipeline文件
+		front ->> server++ : 请求保存.pipeline文件
+		server -> server : 保存.pipeline文件
+		return success
+	end
+	front -> ui : 导出对话框
+	user -> ui : 确认导出信息
+	ui -> front : 确认导出
+	front ->> server++ : 请求导出pipeline
+	server -> server : 导出pipeline的yaml文件
+	alt 导出成功
+		server -->> front : pipeline导出成功信息
+		front --> ui : 导出成功对话框
+	else 导出失败
+		return 导出错误信息
+		front --> ui : 导出错误信息
+	end
+else 存在错误
+	return 错误信息
+end
+end
+|||
+|||
+|||
+autonumber inc A
+group 运行pipeline
+user -> ui : 运行pipeline
+ui -> front++ : 运行pipeline
+front -> front : 检查画布内容是否存在错误
+alt 没有错误
+	front -> front : 检查画布内容是否保存
+	alt 未保存
+		front -> ui : 保存画布内容对话框
+		user -> ui : 确认保存
+		ui -> front : 保存.pipeline文件
+		front ->> server++ : 请求保存.pipeline文件
+		server -> server : 保存.pipeline文件
+		return success
+	end
+	front -> ui : 运行pipeline对话框
+	user -> ui : 确认pipeline信息
+	ui -> front : 确认运行
+	front ->> server++ : 请求运行pipeline
+	server -> server : 导出pipeline的yaml文件
+	server -> server : 上传pipeline的yaml文件
+	server -> server : 运行pipeline的yaml文件
+	alt 运行成功
+		server -->> front : pipeline运行成功信息
+		front --> ui : 运行成功对话框
+	else 运行失败
+		return 错误信息
+		front --> ui : 错误信息
+	end
+else 存在错误
+	return 错误信息
+end
+end

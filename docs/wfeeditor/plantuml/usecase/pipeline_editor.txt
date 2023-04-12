@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+actor User
+
+User --> (Pipeline Editor)
+User --> (New Pipeline)
+
+(Pipeline Editor) <.. (Toolbar) : <<include>>
+(Pipeline Editor) <.. (Palette) : <<include>>
+(Pipeline Editor) <.. (Canvas) : <<include>>
+(Pipeline Editor) <.. (Panel) : <<include>>
+
+(Toolbar) <.. (Open Pipeline) : <<include>>
+(Toolbar) <.. (Run Pipeline) : <<include>>
+(Toolbar) <.. (Save Pipeline) : <<include>>
+(Toolbar) <.. (Export Pipeline) : <<include>>
+(Toolbar) <.. (Clear Pipeline) : <<include>>
+(Toolbar) <.. (Open Runtimes) : <<include>>
+(Toolbar) <.. (Open Runtime Images) : <<include>>
+(Toolbar) <.. (Open Component Catalogs) : <<include>>
+(Toolbar) <.. (undo) : <<include>>
+(Toolbar) <.. (Redo) : <<include>>
+(Toolbar) <.. (Cut) : <<include>>
+(Toolbar) <.. (Copy) : <<include>>
+(Toolbar) <.. (Paste) : <<include>>
+(Toolbar) <.. (Add Comment) : <<include>>
+(Toolbar) <.. (Delete) : <<include>>
+(Toolbar) <.. (Arrange Horizontally) : <<include>>
+(Toolbar) <.. (Arrange Vertically) : <<include>>
+
+(Palette) <.. (Geniric) : <<include>>
+(Palette) <.. (Logic) : <<include>>
+(Palette) <.. (kfp Catalogs) : <<include>>
+
+(Canvas) <.. (Node) : <<include>>
+(Canvas) <.. (Line) : <<include>>
+
+(Panel) <.. (PIPELINE PROPERTIES) : <<include>>
+(Panel) <.. (NODE PROPERTIES) : <<include>>
+
+@enduml

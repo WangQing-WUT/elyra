@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+actor User
+
+User --> (Workflow Editor)
+User --> (New Workflow)
+
+(Workflow Editor) <.. (Toolbar) : <<include>>
+(Workflow Editor) <.. (Palette) : <<include>>
+(Workflow Editor) <.. (Canvas) : <<include>>
+(Workflow Editor) <.. (Panel) : <<include>>
+
+(Toolbar) <.. (Open Pipeline) : <<include>>
+(Toolbar) <.. (Run Workflow) : <<include>>
+(Toolbar) <.. (Save Workflow) : <<include>>
+(Toolbar) <.. (Export Workflow) : <<include>>
+(Toolbar) <.. (Clear Workflow) : <<include>>
+(Toolbar) <.. (Open Runtimes) : <<include>>
+(Toolbar) <.. (Open Runtime Images) : <<include>>
+(Toolbar) <.. (Open Component Catalogs) : <<include>>
+(Toolbar) <.. (undo) : <<include>>
+(Toolbar) <.. (Redo) : <<include>>
+(Toolbar) <.. (Cut) : <<include>>
+(Toolbar) <.. (Copy) : <<include>>
+(Toolbar) <.. (Paste) : <<include>>
+(Toolbar) <.. (Add Comment) : <<include>>
+(Toolbar) <.. (Delete) : <<include>>
+(Toolbar) <.. (Arrange Horizontally) : <<include>>
+(Toolbar) <.. (Arrange Vertically) : <<include>>
+
+(Palette) <.. (Actions) : <<include>>
+(Palette) <.. (Events) : <<include>>
+(Palette) <.. (Global) : <<include>>
+
+(Canvas) <.. (Node) : <<include>>
+(Canvas) <.. (Line) : <<include>>
+
+(Panel) <.. (WORKFLOW PROPERTIES) : <<include>>
+(Panel) <.. (NODE PROPERTIES) : <<include>>
+
+@enduml
