@@ -103,7 +103,7 @@
                 "title": "Value Type",
                 "description": "The type of input parameter.",
                 "type": "string",
-                "enum": ["String", "Integer", "Float", "Boolean"],
+                "enum": ["String", "Integer", "Float", "Boolean", "JsonArray"],
                 "default": "String"
               },
               "default": {
@@ -144,7 +144,7 @@
                 "title": "Value Type",
                 "description": "The value type of output parameter.",
                 "type": "string",
-                "enum": ["String", "Integer", "Float", "Boolean"],
+                "enum": ["String", "Integer", "Float", "Boolean", "JsonArray"],
                 "default": "String"
               },
               "description": {
