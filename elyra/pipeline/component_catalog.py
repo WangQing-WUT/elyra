@@ -546,8 +546,10 @@ class ComponentCache(SingletonConfigurable):
         filename = filename or self.manifest_filename
         manifest = manifest or {}
         self.log.debug(f"Updating manifest '{manifest}' to file '{filename}'")
-        with open(filename, "w") as f:
+        fd = os.open(filename, os.O_WRONLY | os.O_CREAT)
+        with os.fdopen(fd, "w") as f:
             json.dump(manifest, f, indent=2)
+            f.close()
 
     def wait_for_all_cache_tasks(self):
         """

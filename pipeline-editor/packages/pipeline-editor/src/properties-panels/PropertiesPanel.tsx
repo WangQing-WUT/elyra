@@ -128,10 +128,24 @@ export function PropertiesPanel({
         const params = schema.properties?.component_parameters?.properties;
         for (const field in params) {
           if (params[field].oneOf) {
+            let field_data = newFormData.component_parameters[field];
+            console.log(Object.keys(field_data.value).length);
+            console.log(Object.keys(field_data.value));
+            if (
+              field_data.widget === "inputpath" &&
+              Object.keys(field_data.value).length != 2
+            ) {
+              let value = field_data.value?.value;
+              let option = field_data.value?.option;
+              let data = {
+                option: option,
+                value: value
+              };
+              field_data.value = data;
+            }
             for (const option of params[field].oneOf) {
               if (option.widget?.const !== undefined) {
-                newFormData.component_parameters[field].widget =
-                  option.widget.const;
+                field_data.widget = option.widget.const;
               }
             }
           }

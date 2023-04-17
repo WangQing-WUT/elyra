@@ -611,7 +611,7 @@ class PipelineDefinition(object):
                                 if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$", name):
                                     validation_issues.append(
                                         f"The 'Parameter Name' field of {i + 1}-th pipeline input parameter "
-                                        + "does not match the regular expression ^[a-zA-Z][a-zA-Z0-9_{{0,62}}]$."
+                                        + "does not match the regular expression ^[a-zA-Z][a-zA-Z0-9-_{{0,62}}]$."
                                     )
                                 elif name in input_parameter_names:
                                     validation_issues.append(

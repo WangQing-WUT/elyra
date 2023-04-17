@@ -214,7 +214,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         except MetadataNotFoundError as err:
             raise web.HTTPError(404, str(err)) from err
         except Exception as err:
-            raise web.HTTPError(500, repr(err)) from err
+            raise web.HTTPError(500, err) from err
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
@@ -228,7 +228,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
 
         try:
             with open(component_absolute_path, "r", encoding="utf-8") as r:
-                component_yaml = yaml.load(r.read(), Loader=yaml.FullLoader)
+                component_yaml = yaml.safe_load(r.read())
                 metadata = component_metadata.get("metadata")
                 input_parameters_placeholder = {}
                 if "name" in component_yaml:
@@ -255,7 +255,7 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
                         if "args" in container:
                             args_str = ""
                             for item in container.get("args"):
-                                args_str += "- " + str(item) + "\n"
+                                args_str += "- {}\n".format(item)
                             metadata["implementation"]["args"] = args_str
                 if "inputs" in component_yaml:
                     metadata["input_parameters"] = []

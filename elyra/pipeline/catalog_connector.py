@@ -144,7 +144,7 @@ class CatalogEntry(object):
             data = yaml.safe_load(self.entry_data.definition)
             if data.get("name"):
                 component_name = data.get("name")
-            hash_str = hash_str + Path(str(self.entry_reference[key])).stem + "[" + component_name + "]" + ":"
+            hash_str = "{}{}[{}]:".format(hash_str, Path(self.entry_reference[key]).stem, component_name)
         hash_str = hash_str[:-1]
         # Use only the first 12 characters of the resulting hash
         hash_digest = f"{hashlib.sha256(hash_str.encode()).hexdigest()[:12]}"

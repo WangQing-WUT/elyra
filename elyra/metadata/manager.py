@@ -242,7 +242,7 @@ class MetadataManager(LoggingConfigurable):
 
         component_yaml["inputs"] = input_parameters
         component_yaml["outputs"] = output_parameters
-        command = yaml.load(implementation.get("command"), Loader=yaml.FullLoader)
+        command = yaml.safe_load(implementation.get("command"))
         pss_command = []
         for item in command:
             if type(item) is dict:
@@ -264,7 +264,7 @@ class MetadataManager(LoggingConfigurable):
         component_yaml["implementation"]["container"]["command"] = pss_command
         args = []
         if "args" in implementation:
-            args = yaml.load(implementation.get("args"), Loader=yaml.FullLoader)
+            args = yaml.safe_load(implementation.get("args"))
             if args:
                 temp_args = []
                 for item in args:
@@ -287,8 +287,12 @@ class MetadataManager(LoggingConfigurable):
     def save_component(self, component_metadata, path):
         component_yaml = self._metedata_to_component(component_metadata)
         yaml_loader = YAML()
-        with open(path, "w") as file:
-            yaml_loader.dump(component_yaml, file)
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT)
+            with os.fdopen(fd, "w") as file:
+                yaml_loader.dump(component_yaml, file)
+        finally:
+            file.close()
 
     def _save(
         self,
@@ -342,9 +346,10 @@ class MetadataManager(LoggingConfigurable):
             component_yaml = self._metedata_to_component(new_metadata)
             yaml_loader = YAML()
             file_path = os.path.join(save_path, file_name + ".yaml")
-            with open(file_path, "w") as file:
-                yaml_loader.dump(component_yaml, file)
             try:
+                fd = os.open(file_path, os.O_WRONLY | os.O_CREAT)
+                with os.fdopen(fd, "w") as file:
+                    yaml_loader.dump(component_yaml, file)
                 update_metadata = self.get(new_metadata.get("categories")[0])
                 update_metadata_dict = update_metadata.to_dict()
                 name = update_metadata_dict.get("name")
@@ -373,6 +378,8 @@ class MetadataManager(LoggingConfigurable):
                 metadata.pre_save(for_update=for_update)
                 self._apply_defaults(metadata)
                 self.validate(name, metadata)
+            finally:
+                file.close()
 
         metadata_dict = self.metadata_store.store_instance(name, metadata.prepare_write(), for_update=for_update)
         metadata_post_op = Metadata.from_dict(self.schemaspace, metadata_dict)

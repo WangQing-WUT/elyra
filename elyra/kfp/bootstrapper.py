@@ -214,7 +214,8 @@ class FileOpBase(ABC):
 
                 target = output_path / filename
                 # try to save the file in the destination location
-                with open(target, "w") as f:
+                fd = os.open(target, os.O_WRONLY | os.O_CREAT)
+                with os.fdopen(fd, "w") as f:
                     json.dump(metadata, f)
             except FileNotFoundError:
                 # The script | notebook didn't produce the file
@@ -229,7 +230,8 @@ class FileOpBase(ABC):
                 # Something is wrong with the user-generated metadata file.
                 # Log a warning and treat this as a non-fatal error.
                 logger.warning(f"Error processing {str(src)} produced by {self.filepath}: {ex} {str(ex)}")
-
+            finally:
+                f.close()
         #
         # Augment kfp_ui_metadata_filename with Elyra-specific information:
         #  - link to object storage where input and output artifacts are
@@ -270,8 +272,10 @@ class FileOpBase(ABC):
         logger.debug(f"Saving UI metadata file as {ui_metadata_output} ...")
 
         # Save [updated] KFP UI metadata file
-        with open(ui_metadata_output, "w") as f:
+        fd = os.open(ui_metadata_output, os.O_WRONLY | os.O_CREAT)
+        with os.fdopen(fd, "w") as f:
             json.dump(metadata, f)
+            f.close()
 
         duration = time.time() - t0
         OpUtil.log_operation_info("metrics and metadata processed", duration)
@@ -397,7 +401,8 @@ class NotebookFileOp(FileOpBase):
         nb = nbformat.read(notebook_file, as_version=4)
         html_exporter = nbconvert.HTMLExporter()
         data, resources = html_exporter.from_notebook_node(nb)
-        with open(html_file, "w") as f:
+        fd = os.open(html_file, os.O_WRONLY | os.O_CREAT)
+        with os.fdopen(fd, "w") as f:
             f.write(data)
             f.close()
 
@@ -466,7 +471,8 @@ class PythonFileOp(FileOpBase):
                 f"executing python script using " f"'python3 {python_script}' to '{python_script_output}'"
             )
             t0 = time.time()
-            with open(python_script_output, "w") as log_file:
+            fd = os.open(python_script_output, os.O_WRONLY | os.O_CREAT)
+            with os.fdopen(fd, "w") as log_file:
                 subprocess.run(
                     ["python3", python_script],
                     stdout=log_file,
@@ -486,6 +492,8 @@ class PythonFileOp(FileOpBase):
 
             self.put_file_to_object_storage(python_script_output, python_script_output)
             raise ex
+        finally:
+            log_file.close()
 
 
 class RFileOp(FileOpBase):
@@ -500,7 +508,8 @@ class RFileOp(FileOpBase):
         try:
             OpUtil.log_operation_info(f"executing R script using " f"'Rscript {r_script}' to '{r_script_output}'")
             t0 = time.time()
-            with open(r_script_output, "w") as log_file:
+            fd = os.open(r_script_output, os.O_WRONLY | os.O_CREAT)
+            with os.fdopen(fd, "w") as log_file:
                 subprocess.run(
                     ["Rscript", r_script],
                     stdout=log_file,
@@ -520,6 +529,8 @@ class RFileOp(FileOpBase):
 
             self.put_file_to_object_storage(r_script_output, r_script_output)
             raise ex
+        finally:
+            log_file.close()
 
 
 class OpUtil(object):

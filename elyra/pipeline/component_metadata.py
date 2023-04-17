@@ -51,7 +51,7 @@ class ComponentCatalogMetadata(Metadata):
             # An attempted component cache update will fail silently with most errors
             # logged from the ComponentCache class methods. However, a log message
             # should eventually be added here as well
-            pass
+            self.log.warning("Component catalog post_save failed.")
 
     def post_delete(self, **kwargs: Any) -> None:
         try:  # Remove components associated with this catalog on deletes.
@@ -60,7 +60,7 @@ class ComponentCatalogMetadata(Metadata):
             # An attempted component cache update will fail silently with most errors
             # logged from the ComponentCache class methods. However, a log message
             # should eventually be added here as well
-            pass
+            self.log.warning("Component catalog post_delete failed.")
 
 
 class UrlCatalogMetadata(ComponentCatalogMetadata):

@@ -332,7 +332,7 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
                                 if "name" in input_parameter:
                                     result.append(input_parameter.get("name"))
                 elif pipeline_absolute_path.endswith(".yaml"):
-                    pipeline = yaml.load(r.read(), Loader=yaml.FullLoader)
+                    pipeline = yaml.safe_load(r.read())
                     input_parameters = pipeline.get("spec").get("arguments").get("parameters")
                     for input_parameter in input_parameters:
                         if "name" in input_parameter:

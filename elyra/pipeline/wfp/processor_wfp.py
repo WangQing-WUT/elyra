@@ -37,9 +37,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "spec": {"resource": str_yaml},
         }
         save_path = path.replace(".yaml", "-pipeline.yaml")
-        with open(save_path, "w") as file:
-            yaml_loader.dump(pipeline_template, file)
-        file_list.append(save_path)
+        try:
+            fd = os.open(save_path, os.O_WRONLY | os.O_CREAT)
+            with os.fdopen(fd, "w") as file:
+                yaml_loader.dump(pipeline_template, file)
+            file_list.append(save_path)
+        finally:
+            file.close()
 
     async def export_pipeline(self, path, runtime_config, root_dir, parent, file_list):
         response = ValidationResponse()
@@ -68,7 +72,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             resource = pipeline_yaml.read()
             self.create_pipeline_template(path, resource, file_list)
         if not response.has_fatal:
-            export_pipeline_yaml = yaml.load(resource, Loader=yaml.FullLoader)
+            export_pipeline_yaml = yaml.safe_load(resource)
             if "pipelines.kubeflow.org/pipeline_spec" in export_pipeline_yaml.get("metadata").get("annotations"):
                 pipeline_spec_dict = json.loads(
                     export_pipeline_yaml.get("metadata").get("annotations").get("pipelines.kubeflow.org/pipeline_spec")
@@ -701,7 +705,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 temp_argument["src"] = temp_argument.get("src").replace(": ", ".")
             else:
                 temp_argument["src"] = dict_item.get("from").get("value")
-            temp_argument["dest"] = "{{" + str(dict_item.get("dest")) + "}}"
+            temp_argument["dest"] = "{{%s}}" % dict_item.get("dest")
             arguments_list.append(temp_argument)
         return arguments_list
 
@@ -757,13 +761,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "spec": spec_field,
                 }
                 save_path = export_path.replace(".yaml", "-workflow.yaml")
-                with open(save_path, "w") as file:
-                    file.write(yaml.dump(workflow_yaml, allow_unicode=True, sort_keys=False))
-                file_list.append(save_path)
-                zip_file_name = save_path.replace(".yaml", ".zip")
-                self.file2zip(zip_file_name, file_list)
-                return zip_file_name, response
-
+                try:
+                    fd = os.open(save_path, os.O_WRONLY | os.O_CREAT)
+                    with os.fdopen(fd, "w") as file:
+                        file.write(yaml.dump(workflow_yaml, allow_unicode=True, sort_keys=False))
+                    file_list.append(save_path)
+                    zip_file_name = save_path.replace(".yaml", ".zip")
+                    self.file2zip(zip_file_name, file_list)
+                finally:
+                    file.close()
         return zip_file_name, response
 
     async def upload(self, file_path: str, runtime_config: str, name: str, description: str):

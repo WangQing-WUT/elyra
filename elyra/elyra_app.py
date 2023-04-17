@@ -145,11 +145,11 @@ class ElyraApp(ExtensionAppJinjaMixin, ExtensionApp):
             metadata_names.append(metadata.to_dict()["display_name"])
         for category in os.listdir(DEFAULT_WORKFLOW_COMPONENT_PATH):
             if category not in metadata_names:
-                abs_path = DEFAULT_WORKFLOW_COMPONENT_PATH + "/" + category
+                abs_path = "{}/{}".format(DEFAULT_WORKFLOW_COMPONENT_PATH, category)
                 if os.path.isdir(abs_path):
                     components_list = os.listdir(abs_path)
                     for i in range(len(components_list)):
-                        components_list[i] = abs_path + "/" + components_list[i]
+                        components_list[i] = "{}/{}".format(abs_path, components_list[i])
                     component_json = {
                         "display_name": category,
                         "metadata": {
