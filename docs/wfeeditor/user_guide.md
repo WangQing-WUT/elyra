@@ -132,7 +132,7 @@ jupyter serverextension list
 
 #### 本地启动
 
-- 拷贝运行时配置到 jupyter 目录下
+- 拷贝运行时配置到 jupyter 目录下，项目提供的配置文件 elyra/runtime_config/*.json 仅供参考，请根据实际环境修改配置文件内容
 
 ```shell
 cp elyra/runtime_config/* ~/.local/share/jupyter/metadata/runtime
@@ -197,7 +197,7 @@ chmod 777 ~/metadata ~/wfeeditor-work
 
 - 运行时配置导入
 
-启动前配置运行时信息，请执行以下语句：
+启动前配置运行时信息，项目提供的配置文件 elyra/runtime_config/*.json 仅供参考，请根据实际环境修改配置文件内容
 
 ```shell
 mkdir ~/metadata/runtimes
@@ -209,6 +209,90 @@ chmod 777 ~/metadata/runtimes ~/metadata/runtimes/*.json
 
 ```shell
 docker run -it -v ~/metadata:/home/jovyan/.local/share/jupyter/metadata -v ~/wfeeditor-work:/home/jovyan/work -p 8888:8888 wfeeditor:latest
+```
+
+
+
+### 3. K8s部署
+
+部署前请先配置 K8s 集群环境。
+
+K8s 部署文件位置 elyra/etc/kubernetes/wfeeditor/wfeeditor.yaml，文件内容如下：
+
+```yaml
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: wfeeditor
+    spec:
+      type: NodePort
+      selector:
+        app: wfeeditor
+      ports:
+        - name: http
+          port: 8888
+          protocol: TCP
+          targetPort: 8888
+          nodePort: 30088
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wfeeditor
+    spec:
+      selector:
+        matchLabels:
+          app: wfeeditor
+      template:
+        metadata:
+          labels:
+            app: wfeeditor
+        spec:
+          containers:
+            - image: 1442459023/wfeeditor:latest
+              name: wfeeditor
+              imagePullPolicy: IfNotPresent
+              ports:
+                - name: http
+                  containerPort: 8888
+                  protocol: TCP
+              volumeMounts:
+                - mountPath: /home/jovyan/.local/share/jupyter/metadata
+                  name: metadata
+                - mountPath: /home/jovyan/work
+                  name: work
+          volumes:
+          - name: metadata
+            hostPath:
+              path: /root/metadata
+              type: Directory
+          - name: work
+            hostPath:
+              path: /root/wfeeditor-work
+              type: Directory
+```
+
+用户根据实际情况修改文件内容：
+
+1. 本地端口 `nodePort: 30088`可以自行修改
+2. 宿主机挂载路径根据实际情况修改，volumes metadata 是元数据存储目录，volumes work是工作目录，例如 /root/metadata 下建立 runtimes 目录存放运行时配置，宿主机挂载路径及路径下的文件赋予 Pod 内能访问的权限，项目提供的配置文件 elyra/runtime_config/*.json 仅供参考，请根据实际环境修改配置文件内容
+
+```shell
+mkdir /root/metadata
+mkdir /root/wfeeditor-work
+chmod 777 ~/metadata ~/wfeeditor-work
+mkdir /root/metadata/runtimes
+cp elyra/runtime_config/*.json /root/metadata/runtimes
+chmod 777 /root/metadata/runtimes /root/metadata/runtimes/*.json
+```
+
+修改好部署文件并配置好本地挂载目录后执行：
+
+```shell
+kubectl apply -f wfeeditor.yaml
 ```
 
 
@@ -408,7 +492,7 @@ wfeeditor 在 JupyterLab的左侧边栏中添加了多个选项卡，这些选�
 - 提供 Workflow 部署信息
 
 - 提供云存储连接信息，用于 pipeline 的导出，请参阅[云存储设置](https://elyra.readthedocs.io/en/latest/user_guide/runtime-conf.html#cloud-storage-settings)填写相关信息
-- 保存运行时配置，新条目将示在列表中。展开条目可以查看配置信息中的 Workflow API Endpoint 和 Cloud Object Storage Endpoint
+- 保存运行时配置，新条目将示在列表中，展开条目可以查看配置信息中的 Workflow API Endpoint 和 Cloud Object Storage Endpoint
 
 ![](./images/3-2-4.png) 
 
@@ -1172,7 +1256,7 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
   - Type
 
-    参数类型，必填字段，下拉框选择["String", "S3 Path", "Integer", "Float", "Bool"]，默认为 String
+    参数类型，必填字段，下拉框选择["String", “List”, "S3 Path", "Integer", "Float", "Bool"]，默认为 String
 
   - Default Value
 
@@ -1502,23 +1586,23 @@ Actions 节点可以从所连接的 Events 节点获取 Events 输出参数，�
 
 导出 Workflow 时，wfeeditor 执行三项任务，一是把画布上出现的 pipeline 文件导出并封装（如果是 pipeline 的 yaml 文件，则直接进行封装），二是生成 workflow 的 yaml 文件，三是把前两者打包成 zip 包。
 
-1. 单击工具栏上的 Export Workflow
+1. 单击工具栏上的 Export Workflow；
 
-2. 弹出以下对话框，选择运行时配置文件，默认导出格式为 yaml，单击 OK
+2. 弹出以下对话框，选择运行时配置文件，默认导出格式为 yaml，单击 OK；
 
 ![](./images/3-5-15.png) 
 
-3. 若导出成功，在 workflow 文件同目录下生成其文件名加后缀 -workflow 的 yaml 格式导出文件，pipeline 文件同目录下生成pipeline 导出的 yaml 文件以及该文件封装后加后缀 -pipeline 的 yaml 文件，在 workflow 文件同目录下生成加后缀 -workflow 和加后缀 -pipeline 打包成的 zip 文件；若导出失败，请根据提示信息对当前 workflow 或引用的 pipeline 文件进行相应修改
+3. 若导出成功，在 workflow 文件同目录下生成其文件名加后缀 -workflow 的 yaml 格式导出文件，pipeline 文件同目录下生成pipeline 导出的 yaml 文件以及该文件封装后加后缀 -pipeline 的 yaml 文件，在 workflow 文件同目录下生成加后缀 -workflow 和加后缀 -pipeline 打包成的 zip 文件；若导出失败，请根据提示信息对当前 workflow 或引用的 pipeline 文件进行相应修改。
 
 
 
 #### 5.7 上传 Workflow
 
-1. 单击工具栏上的 Export Workflow
+1. 单击工具栏上的 Export Workflow；
 
-2. 弹出和导出 Workflow 相同的对话框，选择运行时配置文件，默认导出格式为 yaml，单击 OK，先进行 Workflow 导出，再进行 Workflow 上传
+2. 弹出和导出 Workflow 相同的对话框，选择运行时配置文件，默认导出格式为 yaml，单击 OK，先进行 Workflow 导出，再进行 Workflow 上传；
 
-3. 若上传成功，请转至 wfeportal 界面查看模板情况；若导出失败，请根据提示信息对当前 workflow 、引用的 pipeline 文件或 workflow 后端返回的错误信息进行相应修改
+3. 若上传成功，请转至 wfeportal 界面查看模板情况；若导出失败，请根据提示信息对当前 workflow 、引用的 pipeline 文件或 workflow 后端返回的错误信息进行相应修改。
 
 
 

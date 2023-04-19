@@ -287,12 +287,9 @@ class MetadataManager(LoggingConfigurable):
     def save_component(self, component_metadata, path):
         component_yaml = self._metedata_to_component(component_metadata)
         yaml_loader = YAML()
-        try:
-            fd = os.open(path, os.O_WRONLY | os.O_CREAT)
-            with os.fdopen(fd, "w") as file:
-                yaml_loader.dump(component_yaml, file)
-        finally:
-            file.close()
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        with os.fdopen(fd, "w") as file:
+            yaml_loader.dump(component_yaml, file)
 
     def _save(
         self,
@@ -347,7 +344,7 @@ class MetadataManager(LoggingConfigurable):
             yaml_loader = YAML()
             file_path = os.path.join(save_path, file_name + ".yaml")
             try:
-                fd = os.open(file_path, os.O_WRONLY | os.O_CREAT)
+                fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
                 with os.fdopen(fd, "w") as file:
                     yaml_loader.dump(component_yaml, file)
                 update_metadata = self.get(new_metadata.get("categories")[0])
@@ -378,8 +375,6 @@ class MetadataManager(LoggingConfigurable):
                 metadata.pre_save(for_update=for_update)
                 self._apply_defaults(metadata)
                 self.validate(name, metadata)
-            finally:
-                file.close()
 
         metadata_dict = self.metadata_store.store_instance(name, metadata.prepare_write(), for_update=for_update)
         metadata_post_op = Metadata.from_dict(self.schemaspace, metadata_dict)
