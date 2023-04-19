@@ -1127,11 +1127,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_name = node.get("app_data").get("label").strip()
         self._validate_node_name(node, name, response)
         self._validate_node_links(node, node_type, node_id, node_name, response)
+        path = node.get("app_data").get("component_parameters").get("template_name")
+        self._validate_filepath(node_type, node_id, node_name, "Template Name", path, response)
         if "trigger_parameters" not in node.get("app_data").get("component_parameters"):
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
         else:
             trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
-            self._validate_trigger_parametes(
+            self._validate_trigger_parameters(
                 trigger_parameters,
                 node_type,
                 node_id,
@@ -1188,7 +1190,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
         else:
             trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
-            self._validate_trigger_parametes(
+            self._validate_trigger_parameters(
                 trigger_parameters,
                 node_type,
                 node_id,
@@ -1224,7 +1226,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
         else:
             trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
-            self._validate_trigger_parametes(
+            self._validate_trigger_parameters(
                 trigger_parameters,
                 node_type,
                 node_id,
@@ -1240,8 +1242,10 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_name = node.get("app_data").get("label").strip()
         if "init_parameters" not in node.get("app_data").get("component_parameters"):
             node["app_data"]["component_parameters"]["init_parameters"] = []
+        path = node.get("app_data").get("component_parameters").get("init_pipeline")
+        self._validate_filepath(node_type, node_id, node_name, "Init Pipeline File", path, response)
         init_parameters = node.get("app_data").get("component_parameters").get("init_parameters")
-        self._validate_trigger_parametes(
+        self._validate_trigger_parameters(
             init_parameters,
             node_type,
             node_id,
@@ -1257,8 +1261,10 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_name = node.get("app_data").get("label").strip()
         if "exit_parameters" not in node.get("app_data").get("component_parameters"):
             node["app_data"]["component_parameters"]["exit_parameters"] = []
+        path = node.get("app_data").get("component_parameters").get("exit_pipeline")
+        self._validate_filepath(node_type, node_id, node_name, "Exit Pipeline File", path, response)
         exit_parameters = node.get("app_data").get("component_parameters").get("exit_parameters")
-        self._validate_trigger_parametes(
+        self._validate_trigger_parameters(
             exit_parameters,
             node_type,
             node_id,
@@ -1267,6 +1273,28 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             workflow_input_parameters,
             response,
         )
+
+    def _validate_filepath(
+        self,
+        node_type,
+        node_id,
+        node_name,
+        property_name,
+        path,
+        response,
+    ):
+        if not os.path.exists(path) or not os.path.isfile(path):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidFilePath",
+                message="Property has an invalid path to a file/dir or the file/dir does not exist.",
+                data={
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": property_name,
+                },
+            )
 
     def _validate_node_name(self, node, name, response):
         label = node.get("app_data").get("label").strip()
@@ -1394,7 +1422,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 },
             )
 
-    def _validate_trigger_parametes(
+    def _validate_trigger_parameters(
         self,
         parameters,
         node_type,

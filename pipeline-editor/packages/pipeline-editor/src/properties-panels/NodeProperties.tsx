@@ -168,13 +168,18 @@ function NodeProperties({
     if (template_name) {
       template_name = basePath ? `${basePath}${template_name}` : template_name;
       const res = pipelineTriggerParameters(template_name);
-      res.then((result: any) => {
-        para = [];
-        for (let item of result) {
-          para = [...para, item];
-        }
-        setPipelinePara(!pipelinePara);
-      });
+      res
+        .then((result: any) => {
+          para = [];
+          for (let item of result) {
+            para = [...para, item];
+          }
+          setPipelinePara(!pipelinePara);
+        })
+        .catch(error => {
+          console.log(error);
+          para = [];
+        });
     } else {
       para = [];
     }

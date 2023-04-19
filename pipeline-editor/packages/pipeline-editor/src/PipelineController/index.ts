@@ -206,8 +206,6 @@ class PipelineController extends CanvasController {
         };
       }
     }
-    console.log("data");
-    console.log(data);
 
     this.editActionHandler(data);
   }

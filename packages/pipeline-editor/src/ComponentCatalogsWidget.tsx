@@ -86,7 +86,10 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
     //     <li key={category}>{category}</li>
     //   ));
     // }
-
+    let disabled = false;
+    if (metadata.schema_name == 'url-catalog') {
+      disabled = true;
+    }
     let component_output = <li key="No category">No category</li>;
     if (metadata.metadata.paths) {
       component_output = metadata.metadata.paths.map((path: string) => (
@@ -99,6 +102,7 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
               <button
                 title="Edit from editor"
                 className="elyra-feedbackButton elyra-button elyra-expandableContainer-button elyra-expandableContainer-actionButton"
+                disabled={disabled}
                 onClick={() => {
                   this.props.commands.execute('docmanager:open', {
                     path: path
@@ -145,6 +149,7 @@ class ComponentCatalogsDisplay extends MetadataDisplay<
               <button
                 title="Edit from page"
                 className="elyra-feedbackButton elyra-button elyra-expandableContainer-button elyra-expandableContainer-actionButton"
+                disabled={disabled}
                 onClick={() => {
                   this.openComponentEditor({
                     onSave: this.props.refreshMetadata,

@@ -129,8 +129,6 @@ export function PropertiesPanel({
         for (const field in params) {
           if (params[field].oneOf) {
             let field_data = newFormData.component_parameters[field];
-            console.log(Object.keys(field_data.value).length);
-            console.log(Object.keys(field_data.value));
             if (
               field_data.widget === "inputpath" &&
               Object.keys(field_data.value).length != 2
