@@ -37,7 +37,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "spec": {"resource": str_yaml},
         }
         save_path = path.replace(".yaml", "-pipeline.yaml")
-        fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
         with os.fdopen(fd, "w") as file:
             yaml_loader.dump(pipeline_template, file)
         file_list.append(save_path)
@@ -758,7 +758,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "spec": spec_field,
                 }
                 save_path = export_path.replace(".yaml", "-workflow.yaml")
-                fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+                fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
                 with os.fdopen(fd, "w") as file:
                     file.write(yaml.dump(workflow_yaml, allow_unicode=True, sort_keys=False))
                 file_list.append(save_path)

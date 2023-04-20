@@ -1104,9 +1104,9 @@ class InputTypeDescriptionMap(Enum):
 class WorkflowTrigger(Enum):
     """A mapping of workflow trigger types"""
 
-    http = "HTTP Trigger"
-    k8s_object = "K8s Object Trigger"
-    pipeline = "Pipeline Trigger"
+    HTTP = "HTTP Trigger"
+    K8SOBJ = "K8s Object Trigger"
+    PIPELINE = "Pipeline Trigger"
 
     def is_exist(trigger_type: str) -> bool:
         for v in WorkflowTrigger:
@@ -1118,11 +1118,11 @@ class WorkflowTrigger(Enum):
 class WorkflowEvent(Enum):
     """A mapping of workflow event types"""
 
-    calendar = "Calendar Event"
-    dataset = "Dataset Event"
-    s3 = "S3 Event"
-    model = "Model Event"
-    monitor = "Model Monitor Event"
+    CALENDAR = "Calendar Event"
+    DATASET = "Dataset Event"
+    SE = "S3 Event"
+    MODEL = "Model Event"
+    MONITOR = "Model Monitor Event"
 
     def is_exist(event_type: str) -> bool:
         for v in WorkflowEvent:
@@ -1134,7 +1134,7 @@ class WorkflowEvent(Enum):
 class PipelineBranch(Enum):
     """Pipeline Branch component"""
 
-    branch = "Pipeline Branch"
+    BRANCH = "Pipeline Branch"
 
     def is_exist(name: str) -> bool:
         for v in PipelineBranch:
@@ -1146,8 +1146,8 @@ class PipelineBranch(Enum):
 class PipelineLoop(Enum):
     """ParallelFor component"""
 
-    loop_start = "ParallelFor Start"
-    loop_end = "ParallelFor End"
+    LOOP_START = "ParallelFor Start"
+    LOOP_END = "ParallelFor End"
 
     def is_exist(name: str) -> bool:
         for v in PipelineLoop:
@@ -1159,8 +1159,8 @@ class PipelineLoop(Enum):
 class WorkflowInitExit(Enum):
     """Workflow Init and Exit component"""
 
-    init = "Init"
-    exit = "Exit"
+    INIT = "Init"
+    EXIT = "Exit"
 
     def is_exist(name: str) -> bool:
         for v in WorkflowInitExit:
