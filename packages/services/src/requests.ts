@@ -179,8 +179,6 @@ export class RequestHandler {
 
     const { type = 'json', ...requestInit } = options;
 
-    console.log(`Sending a ${requestInit.method} request to ${requestUrl}`);
-
     if (longRequestDialog) {
       longRequestDialog.launch();
     }
@@ -216,7 +214,6 @@ export class RequestHandler {
         },
         // something unexpected went wrong with the request
         (reason: any) => {
-          console.error(reason);
           return reject(reason);
         }
       );

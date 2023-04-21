@@ -772,8 +772,10 @@ class SchemaspaceExport(SchemaspaceBase):
             try:
                 print(f"Creating directory structure for '{dest_directory}'")
                 os.makedirs(dest_directory)
-            except OSError as e:
-                print(f"Error creating directory structure for '{dest_directory}': {e.strerror}: '{e.filename}'")
+            except OSError as os_err:
+                print(
+                    f"Error creating directory structure for '{dest_directory}': {os_err.strerror}: '{os_err.filename}'"
+                )
                 self.exit(1)
         else:
             if clean:
@@ -841,8 +843,8 @@ class SchemaspaceImport(SchemaspaceBase):
 
         try:
             json_files = [f for f in os.listdir(src_directory) if f.endswith(".json")]
-        except OSError as e:
-            print(f"Unable to reach the '{src_directory}' directory: {e.strerror}: '{e.filename}'")
+        except OSError as os_err:
+            print(f"Unable to reach the '{src_directory}' directory: {os_err.strerror}: '{os_err.filename}'")
             self.exit(1)
 
         if len(json_files) == 0:
@@ -855,10 +857,10 @@ class SchemaspaceImport(SchemaspaceBase):
         for file in json_files:
             filepath = os.path.join(src_directory, file)
             try:
-                with open(filepath) as f:
-                    metadata_file = json.loads(f.read())
-            except OSError as e:
-                non_imported_files.append([file, e.strerror])
+                with open(filepath) as src_file:
+                    metadata_file = json.loads(src_file.read())
+            except OSError as os_err:
+                non_imported_files.append([file, os_err.strerror])
                 continue
 
             name = os.path.splitext(file)[0]
@@ -866,11 +868,11 @@ class SchemaspaceImport(SchemaspaceBase):
                 schema_name = metadata_file["schema_name"]
                 display_name = metadata_file["display_name"]
                 metadata = metadata_file["metadata"]
-            except KeyError as e:
+            except KeyError as key_err:
                 non_imported_files.append(
                     [
                         file,
-                        f"Could not find '{e.args[0]}' key in the import file '{filepath}'",
+                        f"Could not find '{key_err.args[0]}' key in the import file '{filepath}'",
                     ]
                 )
                 continue
@@ -902,11 +904,11 @@ class SchemaspaceImport(SchemaspaceBase):
                         metadata=metadata,
                     )
                     self.metadata_manager.create(name, instance)
-            except Exception as e:
-                if isinstance(e, MetadataExistsError):
-                    non_imported_files.append([file, f"{str(e)} Use '--overwrite' to update."])
+            except Exception as ex:
+                if isinstance(ex, MetadataExistsError):
+                    non_imported_files.append([file, f"{str(ex)} Use '--overwrite' to update."])
                 else:
-                    non_imported_files.append([file, str(e)])
+                    non_imported_files.append([file, str(ex)])
 
         instance_count_not_imported = len(non_imported_files)
         instance_count_imported = len(json_files) - instance_count_not_imported

@@ -37,8 +37,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "spec": {"resource": str_yaml},
         }
         save_path = path.replace(".yaml", "-pipeline.yaml")
-        fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-        with os.fdopen(fd, "w") as file:
+        file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT, 0o666)
+        with os.fdopen(file_fd, "w") as file:
             yaml_loader.dump(pipeline_template, file)
         file_list.append(save_path)
 
@@ -722,10 +722,10 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     @staticmethod
     def file2zip(zip_file_name: str, file_names: list):
-        with zipfile.ZipFile(zip_file_name, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-            for fn in file_names:
-                _, name = os.path.split(fn)
-                zf.write(fn, arcname=name)
+        with zipfile.ZipFile(zip_file_name, mode="w", compression=zipfile.ZIP_DEFLATED) as z_file:
+            for file_name in file_names:
+                _, name = os.path.split(file_name)
+                z_file.write(file_name, arcname=name)
 
     async def export_custom(self, root, parent, node_json: dict, export_path: str, overwrite: bool):
         response = ValidationResponse(runtime="WORKFLOW")
@@ -758,8 +758,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "spec": spec_field,
                 }
                 save_path = export_path.replace(".yaml", "-workflow.yaml")
-                fd = os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-                with os.fdopen(fd, "w") as file:
+                file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT, 0o666)
+                with os.fdopen(file_fd, "w") as file:
                     file.write(yaml.dump(workflow_yaml, allow_unicode=True, sort_keys=False))
                 file_list.append(save_path)
                 zip_file_name = save_path.replace(".yaml", ".zip")

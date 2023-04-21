@@ -467,11 +467,11 @@ class PipelineDefinition(object):
             if not os.path.exists(pipeline_path):
                 raise ValueError(f"Pipeline file not found: '{pipeline_path}'\n")
 
-            with open(pipeline_path) as f:
+            with open(pipeline_path) as file:
                 try:
-                    self._pipeline_definition = json.load(f)
-                except ValueError as ve:
-                    raise ValueError(f"Pipeline file is invalid: \n {ve}")
+                    self._pipeline_definition = json.load(file)
+                except ValueError as v_err:
+                    raise ValueError(f"Pipeline file is invalid: \n {v_err}")
         else:
             # supporting passing the pipeline definition directly
             self._pipeline_definition = pipeline_definition
@@ -591,35 +591,7 @@ class PipelineDefinition(object):
                 elif len(primary_pipeline.get("app_data").get("properties")) == 0:
                     validation_issues.append("Pipeline has zero length 'properties' field.")
                 elif "pipeline_defaults" in primary_pipeline.get("app_data").get("properties"):
-                    if "input_parameters" in primary_pipeline.get("app_data").get("properties").get(
-                        "pipeline_defaults"
-                    ):
-                        input_parameter_names = []
-                        for i, input_parameter in enumerate(
-                            primary_pipeline.get("app_data")
-                            .get("properties")
-                            .get("pipeline_defaults")
-                            .get("input_parameters")
-                        ):
-                            if "name" not in input_parameter:
-                                validation_issues.append(
-                                    f"The 'Parameter Name' field of the {i + 1}-th "
-                                    + "pipeline input parameter cannot be empty."
-                                )
-                            else:
-                                name = input_parameter.get("name")
-                                if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$", name):
-                                    validation_issues.append(
-                                        f"The 'Parameter Name' field of {i + 1}-th pipeline input parameter "
-                                        + "does not match the regular expression ^[a-zA-Z][a-zA-Z0-9-_{{0,62}}]$."
-                                    )
-                                elif name in input_parameter_names:
-                                    validation_issues.append(
-                                        f"The 'Parameter Name' field of {i + 1}-th "
-                                        + "pipeline input parameter cannot be duplicate."
-                                    )
-                                else:
-                                    input_parameter_names.append(input_parameter.get("name"))
+                    self._validate_input_parameters(primary_pipeline, validation_issues)
 
             if "nodes" not in primary_pipeline or len(primary_pipeline.get("nodes")) == 0:
                 validation_issues.append("At least one node must exist in the primary pipeline.")
@@ -629,6 +601,31 @@ class PipelineDefinition(object):
                         validation_issues.append("Node is missing 'component_parameters' field")
 
         return validation_issues
+
+    def _validate_input_parameters(self, primary_pipeline, validation_issues):
+        if "input_parameters" in primary_pipeline.get("app_data").get("properties").get("pipeline_defaults"):
+            input_parameter_names = []
+            for i, input_parameter in enumerate(
+                primary_pipeline.get("app_data").get("properties").get("pipeline_defaults").get("input_parameters")
+            ):
+                if "name" not in input_parameter:
+                    validation_issues.append(
+                        f"The 'Parameter Name' field of the {i + 1}-th " + "pipeline input parameter cannot be empty."
+                    )
+                else:
+                    name = input_parameter.get("name")
+                    if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]{0,62}$", name):
+                        validation_issues.append(
+                            f"The 'Parameter Name' field of {i + 1}-th pipeline input parameter "
+                            + "does not match the regular expression ^[a-zA-Z][a-zA-Z0-9-_{{0,62}}]$."
+                        )
+                    elif name in input_parameter_names:
+                        validation_issues.append(
+                            f"The 'Parameter Name' field of {i + 1}-th "
+                            + "pipeline input parameter cannot be duplicate."
+                        )
+                    else:
+                        input_parameter_names.append(input_parameter.get("name"))
 
     def propagate_pipeline_default_properties(self):
         """

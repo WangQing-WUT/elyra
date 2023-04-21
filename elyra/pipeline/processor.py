@@ -427,18 +427,18 @@ class RuntimePipelineProcessor(PipelineProcessor):
 
         # upload operation dependencies to object store
         try:
-            t0 = time.time()
+            t_start = time.time()
             dependency_archive_path = self._generate_dependency_archive(operation)
             self.log_pipeline_info(
                 pipeline_name,
                 f"generated dependency archive '{dependency_archive_path}'",
                 operation_name=operation.name,
-                duration=(time.time() - t0),
+                duration=(time.time() - t_start),
             )
 
             cos_client = CosClient(config=runtime_configuration)
 
-            t0 = time.time()
+            t_start = time.time()
             uploaded_object_name = cos_client.upload_file(
                 local_file_path=dependency_archive_path,
                 object_name=operation_artifact_archive,
@@ -448,7 +448,7 @@ class RuntimePipelineProcessor(PipelineProcessor):
                 pipeline_name,
                 f"uploaded dependency archive to '{uploaded_object_name}' in bucket '{cos_client.bucket}'",
                 operation_name=operation.name,
-                duration=(time.time() - t0),
+                duration=(time.time() - t_start),
             )
 
         except FileNotFoundError as ex:

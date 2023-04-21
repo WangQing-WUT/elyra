@@ -323,10 +323,10 @@ class CacheUpdateWorker(Thread):
                 ] = ComponentCache.instance().read_component_catalog(self.catalog)
                 catalog_state["state"] = "current"
                 catalog_state["errors"] = []  # reset any errors that may have been present
-            except Exception as e:
+            except Exception as ex:
                 # Update state with an 'error' action and the relevant message
                 catalog_state["state"] = "error"
-                catalog_state["errors"].append(str(e))
+                catalog_state["errors"].append(str(ex))
 
     def prepare_cache_for_catalog(self, runtime_type: Optional[str] = None):
         """
@@ -532,8 +532,8 @@ class ComponentCache(SingletonConfigurable):
         if not os.path.isfile(filename):
             self.log.debug(f"Manifest file '{filename}' doesn't exist and will be created.")
             return {}
-        with open(filename, "r") as f:
-            manifest: Dict[str, str] = json.load(f)
+        with open(filename, "r") as file:
+            manifest: Dict[str, str] = json.load(file)
         self.log.debug(f"Reading manifest '{manifest}' from file '{filename}'")
         return manifest
 
@@ -546,9 +546,9 @@ class ComponentCache(SingletonConfigurable):
         filename = filename or self.manifest_filename
         manifest = manifest or {}
         self.log.debug(f"Updating manifest '{manifest}' to file '{filename}'")
-        fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-        with os.fdopen(fd, "w") as f:
-            json.dump(manifest, f, indent=2)
+        file_fd = os.open(filename, os.O_RDWR | os.O_CREAT, 0o666)
+        with os.fdopen(file_fd, "w") as file:
+            json.dump(manifest, file, indent=2)
 
     def wait_for_all_cache_tasks(self):
         """
@@ -610,8 +610,8 @@ class ComponentCache(SingletonConfigurable):
                 return None
 
             catalog_reader = catalog_reader.load()(file_types, parent=self.parent)
-        except Exception as e:
-            self.log.error(f"Could not load appropriate ComponentCatalogConnector class: {e}. Skipping...")
+        except Exception as ex:
+            self.log.error(f"Could not load appropriate ComponentCatalogConnector class: {ex}. Skipping...")
             return None
 
         return catalog_reader
@@ -644,10 +644,10 @@ class ComponentCache(SingletonConfigurable):
             # Parse the entry to get a fully qualified Component object
             try:
                 parsed_components = parser.parse(catalog_entry) or []
-            except Exception as e:
+            except Exception as ex:
                 self.log.warning(
                     f"Could not parse definition for component with identifying information: "
-                    f"'{catalog_entry.entry_reference}' -> {str(e)}"
+                    f"'{catalog_entry.entry_reference}' -> {str(ex)}"
                 )
             else:
                 for component in parsed_components:

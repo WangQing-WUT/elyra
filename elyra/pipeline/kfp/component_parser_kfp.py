@@ -138,10 +138,10 @@ class KfpComponentParser(ComponentParser):
         """
         try:
             results = yaml.safe_load(catalog_entry.entry_data.definition)
-        except Exception as e:
+        except Exception as ex:
             self.log.warning(
                 f"Could not load YAML definition for component with identifying information: "
-                f"'{catalog_entry.entry_reference}' -> {str(e)}"
+                f"'{catalog_entry.entry_reference}' -> {str(ex)}"
             )
             return None
 
@@ -164,10 +164,10 @@ class KfpComponentParser(ComponentParser):
                         "configured to use Argo as workflow engine and emissary "
                         "executor as workflow executor."
                     )
-        except ValidationError as ve:
+        except ValidationError as v_err:
             self.log.warning(
                 f"Invalid format of YAML definition for component with identifying information: "
-                f"'{catalog_entry.entry_reference}' -> {str(ve)}"
+                f"'{catalog_entry.entry_reference}' -> {str(v_err)}"
             )
             return None
 

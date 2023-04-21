@@ -257,8 +257,8 @@ class ComponentParser(LoggingConfigurable):  # ABC
             module_name, class_name = cls._parser_class_map[platform.name].split(":")
             module = import_module(module_name)
             return getattr(module, class_name)()
-        except Exception as e:
-            raise RuntimeError(f"Could not get appropriate ComponentParser class: {e}")
+        except Exception as ex:
+            raise RuntimeError(f"Could not get appropriate ComponentParser class: {ex}")
 
     @property
     def file_types(self) -> List[str]:

@@ -321,9 +321,9 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
         result = []
         pipeline_absolute_path = os.path.join(os.getcwd(), pipeline_path)
         try:
-            with open(pipeline_absolute_path, "r", encoding="utf-8") as r:
+            with open(pipeline_absolute_path, "r", encoding="utf-8") as file:
                 if pipeline_absolute_path.endswith(".pipeline"):
-                    pipeline = json.load(r)
+                    pipeline = json.load(file)
                     properties = pipeline.get("pipelines")[0].get("app_data").get("properties")
                     if "pipeline_defaults" in properties:
                         pipeline_defaults = properties.get("pipeline_defaults")
@@ -332,7 +332,7 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
                                 if "name" in input_parameter:
                                     result.append(input_parameter.get("name"))
                 elif pipeline_absolute_path.endswith(".yaml"):
-                    pipeline = yaml.safe_load(r.read())
+                    pipeline = yaml.safe_load(file.read())
                     input_parameters = pipeline.get("spec").get("arguments").get("parameters")
                     for input_parameter in input_parameters:
                         if "name" in input_parameter:

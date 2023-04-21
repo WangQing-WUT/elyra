@@ -57,8 +57,8 @@ class FileReader(LoggingConfigurable):
         Implements a generator for lines of code in the specified filepath. Subclasses
         may override if explicit line-by-line parsing is not feasible, e.g. with Notebooks.
         """
-        with open(self._filepath) as f:
-            for line in f:
+        with open(self._filepath) as file:
+            for line in file:
                 yield [line.strip()]
 
 
@@ -66,8 +66,8 @@ class NotebookReader(FileReader):
     def __init__(self, filepath: str, **kwargs):
         super().__init__(filepath, **kwargs)
 
-        with open(self._filepath) as f:
-            self._notebook = nbformat.read(f, as_version=4)
+        with open(self._filepath) as file:
+            self._notebook = nbformat.read(file, as_version=4)
             self._language = None
 
             try:

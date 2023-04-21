@@ -414,11 +414,11 @@ class ComponentCatalogConnector(LoggingConfigurable):
             for entry in self.get_catalog_entries(catalog_metadata):
                 catalog_entry_q.put_nowait(entry)
 
-        except NotImplementedError as e:
-            err_msg = f"{self.__class__.__name__} does not meet the requirements of a catalog connector class: {e}"
+        except NotImplementedError as err:
+            err_msg = f"{self.__class__.__name__} does not meet the requirements of a catalog connector class: {err}"
             self.log.error(err_msg)
-        except Exception as e:
-            err_msg = f"Could not get catalog entry information for catalog '{catalog_instance.display_name}': {e}"
+        except Exception as ex:
+            err_msg = f"Could not get catalog entry information for catalog '{catalog_instance.display_name}': {ex}"
             # Dump stack trace with error message
             self.log.exception(err_msg)
 
@@ -476,14 +476,16 @@ class ComponentCatalogConnector(LoggingConfigurable):
 
                     catalog_entries.append(catalog_entry)
 
-                except NotImplementedError as e:
-                    msg = f"{self.__class__.__name__} does not meet the requirements of a catalog connector class: {e}."
+                except NotImplementedError as err:
+                    msg = (
+                        f"{self.__class__.__name__} does not meet the requirements of a catalog connector class: {err}."
+                    )
                     self.log.error(msg)
-                except Exception as e:
+                except Exception as ex:
                     # Dump stack trace with error message and continue
                     self.log.exception(
                         f"Could not read definition for catalog entry with identifying information: "
-                        f"{str(catalog_entry_data)}: {e}"
+                        f"{str(catalog_entry_data)}: {ex}"
                     )
 
                 # Mark this thread's read as complete
@@ -572,8 +574,8 @@ class FilesystemComponentCatalogConnector(ComponentCatalogConnector):
         if not os.path.exists(path):
             self.log.warning(f"Invalid location for component: {path}")
         else:
-            with open(path, "r") as f:
-                return EntryData(definition=f.read())
+            with open(path, "r") as file:
+                return EntryData(definition=file.read())
 
         return None
 
@@ -687,10 +689,10 @@ class UrlComponentCatalogConnector(ComponentCatalogConnector):
             individual catalog entries
         """
         url = catalog_entry_data.get("url")
-        pr = urlparse(url)
+        url_pr = urlparse(url)
         auth = None
 
-        if pr.scheme != "file":
+        if url_pr.scheme != "file":
             # determine whether authentication needs to be performed
             auth_id = catalog_metadata.get("auth_id")
             auth_password = catalog_metadata.get("auth_password")
@@ -706,7 +708,7 @@ class UrlComponentCatalogConnector(ComponentCatalogConnector):
 
         try:
             requests_session = session()
-            if pr.scheme == "file":
+            if url_pr.scheme == "file":
                 requests_session.mount("file://", FileTransportAdapter())
             res = requests_session.get(
                 url,
@@ -715,10 +717,10 @@ class UrlComponentCatalogConnector(ComponentCatalogConnector):
                 auth=auth,
                 verify=get_verify_parm(),
             )
-        except Exception as e:
+        except Exception as ex:
             self.log.error(
                 f"Error. The URL catalog connector '{catalog_metadata.get('display_name')}' "
-                f"encountered an issue downloading '{url}': {e} "
+                f"encountered an issue downloading '{url}': {ex} "
             )
         else:
             if res.status_code != HTTPStatus.OK:

@@ -54,10 +54,10 @@ class ContentHandler(HttpErrorMixin, APIHandler):
             raise web.HTTPError(404, str(fnfe)) from fnfe
         except IsADirectoryError as iade:
             raise web.HTTPError(400, str(iade)) from iade
-        except Exception as e:
+        except Exception as ex:
             # Parser could not parse the given file, but this does not necessarily indicate an error with the file.
             # Log the issue and return an empty model so that other user processes are not disrupted.
-            self.log.debug(f"Could not parse '{path}': {str(e)}")
+            self.log.debug(f"Could not parse '{path}': {str(ex)}")
             empty_properties = {"env_vars": {}, "inputs": [], "outputs": []}
             self.finish(json.dumps(empty_properties))
 

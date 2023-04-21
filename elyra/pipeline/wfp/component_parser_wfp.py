@@ -61,10 +61,10 @@ class WfpComponentParser(ComponentParser):
         """
         try:
             results = yaml.safe_load(catalog_entry.entry_data.definition)
-        except Exception as e:
+        except Exception as ex:
             self.log.warning(
                 f"Could not load YAML definition for component with identifying information: "
-                f"'{catalog_entry.entry_reference}' -> {str(e)}"
+                f"'{catalog_entry.entry_reference}' -> {str(ex)}"
             )
             return None
 

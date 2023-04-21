@@ -104,17 +104,17 @@ class Metadata(object):
                     f"The metadata_class_name ('{metadata_class_name}') for "
                     f"schema '{schema_name}' must be a subclass of '{cls.__name__}'!"
                 )
-        except TypeError as te:
+        except TypeError as t_err:
             raise ValueError(
                 f"The metadata_class_name ('{metadata_class_name}') for "
                 f"schema '{schema_name}' must be a subclass of '{cls.__name__}'!"
-            ) from te
+            ) from t_err
         return instance
 
     def to_dict(self, trim: bool = False) -> dict:
         # Exclude resource, and reason only if trim is True since we don't want to persist that information.
         #  Method prepare_write will be used to remove name prior to writes.
-        d = dict(
+        result = dict(
             name=self.name,
             display_name=self.display_name,
             metadata=self.metadata,
@@ -122,11 +122,11 @@ class Metadata(object):
         )
         if not trim:
             if self.resource:
-                d["resource"] = self.resource
+                result["resource"] = self.resource
             if self.reason:
-                d["reason"] = self.reason
+                result["reason"] = self.reason
 
-        return d
+        return result
 
     def to_json(self, trim: bool = False) -> str:
         return json.dumps(self.to_dict(trim=trim), indent=2)

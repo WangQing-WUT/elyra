@@ -402,11 +402,11 @@ class ExecuteFileOp(ContainerOp):
         valid_chars = valid_chars + "-_."
 
         newstr = ""
-        for c in range(len(value)):
-            if value[c] not in valid_chars:
-                newstr = newstr + valid_middle_char
+        for _, char in enumerate(value):
+            if char not in valid_chars:
+                newstr += valid_middle_char
             else:
-                newstr = newstr + value[c]
+                newstr += char
         value = newstr
 
         return value

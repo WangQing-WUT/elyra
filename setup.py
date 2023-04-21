@@ -18,7 +18,7 @@ import os
 from jupyter_packaging import get_data_files
 from setuptools import setup, find_packages
 
-long_desc = """
+LONG_DESC = """
             Elyra is a set of AI centric extensions to JupyterLab. It aims to help data scientists,
             machine learning engineers and AI developer’s through the model development life cycle complexities.
             """
@@ -70,14 +70,13 @@ data_files_spec = [
 ]
 
 runtime_extras = {
-    # "kfp-tekton": [
-    #     "kfp-tekton~=1.3.0",
-    # ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
+    "kfp-tekton": [
+        "kfp-tekton~=1.3.0",
+    ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
     # Kubeflow Pipelines example components
     # (https://github.com/elyra-ai/examples/tree/main/component-catalog-connectors/kfp-example-components-connector)
-    # "kfp-examples": ["elyra-examples-kfp-catalog"],
     # Use gitlab as Airflow DAG repository
-    # "gitlab": ["python-gitlab"],
+    "gitlab": ["python-gitlab"],
 }
 runtime_extras["all"] = list(set(sum(runtime_extras.values(), [])))
 
@@ -86,7 +85,7 @@ setup_args = dict(
     version=version_ns["__version__"],
     url="https://github.com/elyra-ai/elyra",
     description="Elyra provides AI Centric extensions to JupyterLab",
-    long_description=long_desc,
+    long_description=LONG_DESC,
     author="Elyra Maintainers",
     license="Apache License Version 2.0",
     data_files=get_data_files(data_files_spec),
@@ -101,10 +100,8 @@ setup_args = dict(
         "jsonschema>=3.2.0,<4.0",  # Cap from kfp
         "jupyter_core>=4.6.0",
         "jupyter_client>=6.1.7",
-        # "jupyter-events~=0.4.0",
         "jupyter-packaging>=0.10",
         "jupyter_server>=1.7.0",
-        # "jupyter_server~=1.23.4",
         "jupyterlab-server>=2.0" "jupyterlab>=3.4.6",  # comment out to use local jupyterlab
         "jupyterlab-lsp>=3.8.0",  # comment out to use local jupyterlab
         "jupyterlab-git~=0.32",  # Avoid breaking 1.x changes
@@ -135,7 +132,6 @@ setup_args = dict(
         "black<=21.12b0",  # Cap due to psf/black#2846
     ],
     extras_require={
-        # "test": ["elyra-examples-kfp-catalog", "pytest", "pytest-tornasync"],
         **runtime_extras,
     },
     include_package_data=True,

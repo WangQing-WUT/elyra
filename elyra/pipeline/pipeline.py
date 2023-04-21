@@ -510,17 +510,17 @@ class KeyValueList(list):
         pairs are converted to dictionary entries, stripped of whitespace, and returned.
         """
         kv_dict = {}
-        for kv in self:
-            if not kv:
+        for key_value in self:
+            if not key_value:
                 continue
 
-            if self._key_value_separator not in kv:
+            if self._key_value_separator not in key_value:
                 raise ValueError(
-                    f"Property {kv} does not contain the expected "
+                    f"Property {key_value} does not contain the expected "
                     f"separator character: '{self._key_value_separator}'."
                 )
 
-            key, value = kv.split(self._key_value_separator, 1)
+            key, value = key_value.split(self._key_value_separator, 1)
 
             key = key.strip()
             if not key:

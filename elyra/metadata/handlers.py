@@ -227,8 +227,8 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
         component_absolute_path = os.path.join(os.getcwd(), path)
 
         try:
-            with open(component_absolute_path, "r", encoding="utf-8") as r:
-                component_yaml = yaml.safe_load(r.read())
+            with open(component_absolute_path, "r", encoding="utf-8") as file:
+                component_yaml = yaml.safe_load(file.read())
                 metadata = component_metadata.get("metadata")
                 input_parameters_placeholder = {}
                 if "name" in component_yaml:
@@ -236,60 +236,11 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
                 if "description" in component_yaml:
                     metadata["component_description"] = component_yaml.get("description")
                 if "implementation" in component_yaml:
-                    if "container" in component_yaml.get("implementation"):
-                        container = component_yaml.get("implementation").get("container")
-                        metadata["implementation"] = {}
-                        if "image" in container:
-                            metadata["implementation"]["image_name"] = container.get("image")
-                        if "command" in container:
-                            command_str = ""
-                            for item in container.get("command"):
-                                if "\n" in item:
-                                    command_str += "- |\n  " + item.replace("\n", "\n  ").rstrip() + "\n"
-                                else:
-                                    command_str += "- " + str(item) + "\n"
-                                if type(item) is dict:
-                                    for i in item:
-                                        input_parameters_placeholder[item[i]] = i
-                            metadata["implementation"]["command"] = command_str
-                        if "args" in container:
-                            args_str = ""
-                            for item in container.get("args"):
-                                args_str += "- {}\n".format(item)
-                            metadata["implementation"]["args"] = args_str
+                    self._proccess_implementation(metadata, component_yaml, input_parameters_placeholder)
                 if "inputs" in component_yaml:
-                    metadata["input_parameters"] = []
-                    for input_parameter in component_yaml.get("inputs"):
-                        temp_input_parameter = {}
-                        if "name" in input_parameter:
-                            temp_input_parameter["name"] = input_parameter.get("name")
-                            if input_parameter["name"] in input_parameters_placeholder:
-                                temp_input_parameter["placeholder_type"] = input_parameters_placeholder[
-                                    input_parameter.get("name")
-                                ]
-                            else:
-                                temp_input_parameter["placeholder_type"] = "inputValue"
-                        if "type" in input_parameter:
-                            temp_input_parameter["value_type"] = input_parameter.get("type")
-                        if "default" in input_parameter:
-                            temp_input_parameter["default"] = input_parameter.get("default")
-                        if "description" in input_parameter:
-                            temp_input_parameter["description"] = input_parameter.get("description")
-                        metadata["input_parameters"].append(temp_input_parameter)
+                    self._proccess_input(metadata, component_yaml, input_parameters_placeholder)
                 if "outputs" in component_yaml:
-                    metadata["output_parameters"] = []
-                    for output_parameter in component_yaml.get("outputs"):
-                        temp_output_parameter = {}
-                        if "name" in output_parameter:
-                            temp_output_parameter["name"] = output_parameter.get("name")
-                        if "type" in output_parameter:
-                            temp_output_parameter["value_type"] = output_parameter.get("type")
-                        else:
-                            temp_output_parameter["value_type"] = "String"
-                        if "description" in output_parameter:
-                            temp_output_parameter["description"] = output_parameter.get("description")
-                        temp_output_parameter["placeholder_type"] = "outputPath"
-                        metadata.get("output_parameters").append(temp_output_parameter)
+                    self._proccess_output(metadata, component_yaml)
         except (ValidationError, ValueError, SchemaNotFoundError) as err:
             raise web.HTTPError(404, str(err)) from err
         except Exception as err:
@@ -297,6 +248,62 @@ class ComponentEditorHandler(HttpErrorMixin, APIHandler):
 
         self.set_header("Content-Type", "application/json")
         self.finish(component_metadata)
+
+    def _proccess_input(self, metadata, component_yaml, input_parameters_placeholder):
+        metadata["input_parameters"] = []
+        for input_parameter in component_yaml.get("inputs"):
+            temp_input_parameter = {}
+            if "name" in input_parameter:
+                temp_input_parameter["name"] = input_parameter.get("name")
+                if input_parameter["name"] in input_parameters_placeholder:
+                    temp_input_parameter["placeholder_type"] = input_parameters_placeholder[input_parameter.get("name")]
+                else:
+                    temp_input_parameter["placeholder_type"] = "inputValue"
+            if "type" in input_parameter:
+                temp_input_parameter["value_type"] = input_parameter.get("type")
+            if "default" in input_parameter:
+                temp_input_parameter["default"] = input_parameter.get("default")
+            if "description" in input_parameter:
+                temp_input_parameter["description"] = input_parameter.get("description")
+            metadata["input_parameters"].append(temp_input_parameter)
+
+    def _proccess_output(self, metadata, component_yaml):
+        metadata["output_parameters"] = []
+        for output_parameter in component_yaml.get("outputs"):
+            temp_output_parameter = {}
+            if "name" in output_parameter:
+                temp_output_parameter["name"] = output_parameter.get("name")
+            if "type" in output_parameter:
+                temp_output_parameter["value_type"] = output_parameter.get("type")
+            else:
+                temp_output_parameter["value_type"] = "String"
+            if "description" in output_parameter:
+                temp_output_parameter["description"] = output_parameter.get("description")
+            temp_output_parameter["placeholder_type"] = "outputPath"
+            metadata.get("output_parameters").append(temp_output_parameter)
+
+    def _proccess_implementation(self, metadata, component_yaml, input_parameters_placeholder):
+        if "container" in component_yaml.get("implementation"):
+            container = component_yaml.get("implementation").get("container")
+            metadata["implementation"] = {}
+            if "image" in container:
+                metadata["implementation"]["image_name"] = container.get("image")
+            if "command" in container:
+                command_str = ""
+                for item in container.get("command"):
+                    if "\n" in item:
+                        command_str += "- |\n  " + item.replace("\n", "\n  ").rstrip() + "\n"
+                    else:
+                        command_str += "- " + str(item) + "\n"
+                    if type(item) is dict:
+                        for i in item:
+                            input_parameters_placeholder[item[i]] = i
+                metadata["implementation"]["command"] = command_str
+            if "args" in container:
+                args_str = ""
+                for item in container.get("args"):
+                    args_str += "- {}\n".format(item)
+                metadata["implementation"]["args"] = args_str
 
 
 class SchemaHandler(HttpErrorMixin, APIHandler):

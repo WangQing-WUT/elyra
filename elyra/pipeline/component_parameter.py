@@ -84,18 +84,18 @@ class ElyraProperty:
         if not cls._subclass_property_map:
             cls.build_property_map()
 
-        sc = cls._subclass_property_map.get(prop_id)
-        if not sc:
+        subclass = cls._subclass_property_map.get(prop_id)
+        if not subclass:
             return None
 
-        if issubclass(sc, ElyraPropertyListItem):
+        if issubclass(subclass, ElyraPropertyListItem):
             if not isinstance(value, list):
                 return None
             # Create instance for each list element and convert to ElyraPropertyList
-            instances = ElyraPropertyList([sc.create_instance(prop_id, item) for item in value])
+            instances = ElyraPropertyList([subclass.create_instance(prop_id, item) for item in value])
             return instances.deduplicate()
 
-        return sc.create_instance(prop_id, value)
+        return subclass.create_instance(prop_id, value)
 
     @classmethod
     def get_classes_for_component_type(cls, component_type: str, runtime_type: Optional[str] = "") -> Set[type]:
@@ -116,10 +116,10 @@ class ElyraProperty:
             processor_props.update(props)
 
         all_subclasses = set()
-        for sc in cls.all_subclasses():
-            sc_id = getattr(sc, "property_id", "")
-            if sc_id in processor_props and getattr(sc, component_type, False):
-                all_subclasses.add(sc)
+        for subclass in cls.all_subclasses():
+            sc_id = getattr(subclass, "property_id", "")
+            if sc_id in processor_props and getattr(subclass, component_type, False):
+                all_subclasses.add(subclass)
 
         return all_subclasses
 
@@ -1109,8 +1109,8 @@ class WorkflowTrigger(Enum):
     PIPELINE = "Pipeline Trigger"
 
     def is_exist(trigger_type: str) -> bool:
-        for v in WorkflowTrigger:
-            if trigger_type == v.value:
+        for item in WorkflowTrigger:
+            if trigger_type == item.value:
                 return True
         return False
 
@@ -1125,8 +1125,8 @@ class WorkflowEvent(Enum):
     MONITOR = "Model Monitor Event"
 
     def is_exist(event_type: str) -> bool:
-        for v in WorkflowEvent:
-            if event_type == v.value:
+        for item in WorkflowEvent:
+            if event_type == item.value:
                 return True
         return False
 
@@ -1137,8 +1137,8 @@ class PipelineBranch(Enum):
     BRANCH = "Pipeline Branch"
 
     def is_exist(name: str) -> bool:
-        for v in PipelineBranch:
-            if name == v.value:
+        for item in PipelineBranch:
+            if name == item.value:
                 return True
         return False
 
@@ -1150,8 +1150,8 @@ class PipelineLoop(Enum):
     LOOP_END = "ParallelFor End"
 
     def is_exist(name: str) -> bool:
-        for v in PipelineLoop:
-            if name == v.value:
+        for item in PipelineLoop:
+            if name == item.value:
                 return True
         return False
 
@@ -1163,7 +1163,7 @@ class WorkflowInitExit(Enum):
     EXIT = "Exit"
 
     def is_exist(name: str) -> bool:
-        for v in WorkflowInitExit:
-            if name == v.value:
+        for item in WorkflowInitExit:
+            if name == item.value:
                 return True
         return False

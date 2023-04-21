@@ -160,12 +160,12 @@ class MetadataManager(LoggingConfigurable):
 
         try:
             self.schema_mgr.validate_instance(self.schemaspace, schema_name, metadata_dict)
-        except ValidationError as ve:
+        except ValidationError as v_err:
             # Because validation errors are so verbose, only provide the first line.
-            first_line = str(ve).partition("\n")[0]
+            first_line = str(v_err).partition("\n")[0]
             msg = f"Validation failed for instance '{name}' using the {schema_name} schema with error: {first_line}."
             self.log.error(msg)
-            raise ValidationError(msg) from ve
+            raise ValidationError(msg) from v_err
 
     @staticmethod
     def get_normalized_name(name: str) -> str:
@@ -262,33 +262,35 @@ class MetadataManager(LoggingConfigurable):
                 else:
                     pss_command.append(item)
         component_yaml["implementation"]["container"]["command"] = pss_command
-        args = []
         if "args" in implementation:
-            args = yaml.safe_load(implementation.get("args"))
-            if args:
-                temp_args = []
-                for item in args:
-                    if type(item) is dict:
-                        temp_item = {}
-                        for para in item:
-                            if item[para] is None:
-                                if para in parameters_placeholder:
-                                    temp_item[parameters_placeholder[para]] = para
-                                else:
-                                    raise Exception("Command parameter {" + para + "} is not defined.")
-                            else:
-                                temp_item = item
-                        temp_args.append(temp_item)
-                    elif type(item) is str:
-                        temp_args.append(item)
-                component_yaml["implementation"]["container"]["args"] = temp_args
+            self._add_component_args(implementation, parameters_placeholder, component_yaml)
         return component_yaml
+
+    def _add_component_args(self, implementation, parameters_placeholder, component_yaml):
+        args = yaml.safe_load(implementation.get("args"))
+        if args:
+            temp_args = []
+            for item in args:
+                if type(item) is dict:
+                    temp_item = {}
+                    for para in item:
+                        if item[para] is None:
+                            if para in parameters_placeholder:
+                                temp_item[parameters_placeholder[para]] = para
+                            else:
+                                raise Exception("Command parameter {" + para + "} is not defined.")
+                        else:
+                            temp_item = item
+                    temp_args.append(temp_item)
+                elif type(item) is str:
+                    temp_args.append(item)
+            component_yaml["implementation"]["container"]["args"] = temp_args
 
     def save_component(self, component_metadata, path):
         component_yaml = self._metedata_to_component(component_metadata)
         yaml_loader = YAML()
-        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-        with os.fdopen(fd, "w") as file:
+        file_fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o666)
+        with os.fdopen(file_fd, "w") as file:
             yaml_loader.dump(component_yaml, file)
 
     def _save(
@@ -344,8 +346,8 @@ class MetadataManager(LoggingConfigurable):
             yaml_loader = YAML()
             file_path = os.path.join(save_path, file_name + ".yaml")
             try:
-                fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-                with os.fdopen(fd, "w") as file:
+                file_fd = os.open(file_path, os.O_RDWR | os.O_CREAT, 0o666)
+                with os.fdopen(file_fd, "w") as file:
                     yaml_loader.dump(component_yaml, file)
                 update_metadata = self.get(new_metadata.get("categories")[0])
                 update_metadata_dict = update_metadata.to_dict()

@@ -422,14 +422,14 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
                 provider=self._type,
             )
 
-        with requests.Session() as s:
+        with requests.Session() as session:
 
             request_history = []
 
             ################
             # Determine if Endpoint is Secured
             ################
-            resp = s.get(kf_endpoint, allow_redirects=True)
+            resp = session.get(kf_endpoint, allow_redirects=True)
             request_history.append((kf_endpoint, resp))
             if resp.status_code != HTTPStatus.OK:
                 raise AuthenticationError(
@@ -464,8 +464,8 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
                 )
             else:
                 # verify that KF is secured by static passwords
-                m = re.search(r"/auth/([^/]*)/?", redirect_url_obj.path)
-                if m and m.group(1) != "local":
+                match = re.search(r"/auth/([^/]*)/?", redirect_url_obj.path)
+                if match and match.group(1) != "local":
                     raise AuthenticationError(
                         f"The Kubeflow server at {kf_endpoint} redirected to an unexpected HTTP path "
                         f"('{redirect_url_obj.path}'). Verify that Kubeflow is secured using '{self._type.name}'"
@@ -482,7 +482,7 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
             else:
                 # else, we need to be redirected to the actual login page
                 # this GET should redirect us to the `/auth/local/login` path
-                resp = s.get(redirect_url_obj.geturl(), allow_redirects=True)
+                resp = session.get(redirect_url_obj.geturl(), allow_redirects=True)
                 request_history.append((redirect_url_obj.geturl(), resp))
                 if resp.status_code != HTTPStatus.OK:
                     raise AuthenticationError(
@@ -497,7 +497,7 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
             ################
             # Attempt Dex Login
             ################
-            resp = s.post(
+            resp = session.post(
                 dex_login_url,
                 data={"login": username, "password": password},
                 allow_redirects=True,
@@ -513,7 +513,7 @@ class DEXStaticPasswordAuthenticator(AbstractAuthenticator):
                 )
 
             # store the session cookies in a "key1=value1; key2=value2" string
-            return "; ".join([f"{c.name}={c.value}" for c in s.cookies])
+            return "; ".join([f"{c.name}={c.value}" for c in session.cookies])
 
 
 class DEXLDAPAuthenticator(AbstractAuthenticator):
@@ -556,14 +556,14 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
                 provider=self._type,
             )
 
-        with requests.Session() as s:
+        with requests.Session() as session:
 
             request_history = []
 
             ################
             # Determine if Endpoint is Secured
             ################
-            resp = s.get(kf_endpoint, allow_redirects=True)
+            resp = session.get(kf_endpoint, allow_redirects=True)
             request_history.append((kf_endpoint, resp))
             if resp.status_code != HTTPStatus.OK:
                 raise AuthenticationError(
@@ -598,8 +598,8 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
                 )
             else:
                 # verify that KF is secured by LDAP
-                m = re.search(r"/auth/([^/]*)/?", redirect_url_obj.path)
-                if m and m.group(1) != "ldap":
+                match = re.search(r"/auth/([^/]*)/?", redirect_url_obj.path)
+                if match and match.group(1) != "ldap":
                     raise AuthenticationError(
                         f"The Kubeflow server at {kf_endpoint} redirected to an unexpected HTTP path "
                         f"('{redirect_url_obj.path}'). Verify that Kubeflow is configured for '{self._type.name}'"
@@ -616,7 +616,7 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
             else:
                 # else, we need to be redirected to the actual login page
                 # this GET should redirect us to the `/auth/ldap/login` path
-                resp = s.get(redirect_url_obj.geturl(), allow_redirects=True)
+                resp = session.get(redirect_url_obj.geturl(), allow_redirects=True)
                 request_history.append((redirect_url_obj.geturl(), resp))
                 if resp.status_code != HTTPStatus.OK:
                     raise AuthenticationError(
@@ -630,7 +630,7 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
             ################
             # Attempt Dex Login
             ################
-            resp = s.post(
+            resp = session.post(
                 dex_login_url,
                 data={"login": username, "password": password},
                 allow_redirects=True,
@@ -646,7 +646,7 @@ class DEXLDAPAuthenticator(AbstractAuthenticator):
                 )
 
             # store the session cookies in a "key1=value1; key2=value2" string
-            return "; ".join([f"{c.name}={c.value}" for c in s.cookies])
+            return "; ".join([f"{c.name}={c.value}" for c in session.cookies])
 
 
 class K8sServiceAccountTokenAuthenticator(AbstractAuthenticator):

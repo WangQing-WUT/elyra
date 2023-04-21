@@ -90,13 +90,13 @@ class RuntimeTypeResources(object):
         return self.type.value
 
     def to_dict(self) -> Dict[str, Any]:
-        d = dict(
+        result = dict(
             id=self.id,
             display_name=self.display_name,
             icon=self.icon_endpoint,
             export_file_types=self.export_file_types,
         )
-        return d
+        return result
 
     def get_export_extensions(self) -> List[str]:
         """

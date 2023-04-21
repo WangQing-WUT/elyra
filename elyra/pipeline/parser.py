@@ -41,8 +41,8 @@ class PipelineParser(LoggingConfigurable):
         try:
             pipeline_definition = PipelineDefinition(pipeline_definition=pipeline_json)
             primary_pipeline = pipeline_definition.primary_pipeline
-        except Exception as e:
-            raise ValueError(f"Invalid Pipeline: {e}")
+        except Exception as ex:
+            raise ValueError(f"Invalid Pipeline: {ex}")
 
         # runtime info is only present on primary pipeline...
         runtime = primary_pipeline.runtime

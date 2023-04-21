@@ -120,7 +120,7 @@ class FileOpBase(ABC):
         call the superclass method.
         """
         OpUtil.log_operation_info("processing dependencies")
-        t0 = time.time()
+        t_start = time.time()
         archive_file = self.input_params.get("cos-dependencies-archive")
 
         self.get_file_from_object_storage(archive_file)
@@ -132,7 +132,7 @@ class FileOpBase(ABC):
                 self.get_file_from_object_storage(file.strip())
 
         subprocess.call(["tar", "-zxvf", archive_file])
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info("dependencies processed", duration)
 
     def process_outputs(self) -> None:
@@ -144,13 +144,13 @@ class FileOpBase(ABC):
         call the superclass method.
         """
         OpUtil.log_operation_info("processing outputs")
-        t0 = time.time()
+        t_start = time.time()
         outputs = self.input_params.get("outputs")
         if outputs:
             output_list = outputs.split(INOUT_SEPARATOR)
             for file in output_list:
                 self.process_output_file(file.strip())
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info("outputs processed", duration)
 
     def process_metrics_and_metadata(self) -> None:
@@ -163,7 +163,7 @@ class FileOpBase(ABC):
         """
 
         OpUtil.log_operation_info("processing metrics and metadata")
-        t0 = time.time()
+        t_start = time.time()
 
         # Location where the KFP specific output files will be stored
         # in the environment where the bootsrapper is running.
@@ -173,13 +173,13 @@ class FileOpBase(ABC):
         # verify that output_path exists, is a directory
         # and writable by creating a temporary file in that location
         try:
-            with TemporaryFile(mode="w", dir=output_path) as t:
-                t.write("can write")
+            with TemporaryFile(mode="w", dir=output_path) as file:
+                file.write("can write")
         except Exception:
             # output_path doesn't meet the requirements
             # treat this as a non-fatal error and log a warning
             logger.warning(f'Cannot create files in "{output_path}".')
-            OpUtil.log_operation_info("Aborted metrics and metadata processing", time.time() - t0)
+            OpUtil.log_operation_info("Aborted metrics and metadata processing", time.time() - t_start)
             return
 
         # Name of the proprietary KFP UI metadata file.
@@ -206,26 +206,26 @@ class FileOpBase(ABC):
                 logger.debug(f"Processing {src} ...")
                 # try to load the file, if one was created by the
                 # notebook or script
-                with open(src, "r") as f:
-                    metadata = json.load(f)
+                with open(src, "r") as src_file:
+                    metadata = json.load(src_file)
 
                 # the file exists and contains valid JSON
                 logger.debug(f"File content: {json.dumps(metadata)}")
 
                 target = output_path / filename
                 # try to save the file in the destination location
-                fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-                with os.fdopen(fd, "w") as f:
-                    json.dump(metadata, f)
+                file_fd = os.open(target, os.O_RDWR | os.O_CREAT, 0o666)
+                with os.fdopen(file_fd, "w") as file:
+                    json.dump(metadata, file)
             except FileNotFoundError:
                 # The script | notebook didn't produce the file
                 # we are looking for. This is not an error condition
                 # that needs to be handled.
                 logger.debug(f"{self.filepath} produced no file named {src}")
-            except ValueError as ve:
+            except ValueError as v_err:
                 # The file content could not be parsed. Log a warning
                 # and treat this as a non-fatal error.
-                logger.warning(f"Ignoring incompatible {str(src)} produced by {self.filepath}: {ve} {str(ve)}")
+                logger.warning(f"Ignoring incompatible {str(src)} produced by {self.filepath}: {v_err} {str(v_err)}")
             except Exception as ex:
                 # Something is wrong with the user-generated metadata file.
                 # Log a warning and treat this as a non-fatal error.
@@ -237,8 +237,8 @@ class FileOpBase(ABC):
         ui_metadata_output = output_path / kfp_ui_metadata_filename
         try:
             # re-load the file
-            with open(ui_metadata_output, "r") as f:
-                metadata = json.load(f)
+            with open(ui_metadata_output, "r") as file:
+                metadata = json.load(file)
         except Exception:
             # ignore all errors
             metadata = {}
@@ -270,10 +270,10 @@ class FileOpBase(ABC):
         logger.debug(f"Saving UI metadata file as {ui_metadata_output} ...")
 
         # Save [updated] KFP UI metadata file
-        fd = os.open(ui_metadata_output, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-        with os.fdopen(fd, "w") as f:
-            json.dump(metadata, f)
-        duration = time.time() - t0
+        file_fd = os.open(ui_metadata_output, os.O_RDWR | os.O_CREAT, 0o666)
+        with os.fdopen(file_fd, "w") as file:
+            json.dump(metadata, file)
+        duration = time.time() - t_start
         OpUtil.log_operation_info("metrics and metadata processed", duration)
 
     def get_object_storage_filename(self, filename: str) -> str:
@@ -291,13 +291,13 @@ class FileOpBase(ABC):
         """
 
         object_to_get = self.get_object_storage_filename(file_to_get)
-        t0 = time.time()
+        t_start = time.time()
         self.cos_client.fget_object(
             bucket_name=self.cos_bucket,
             object_name=object_to_get,
             file_path=file_to_get,
         )
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info(
             f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}",
             duration,
@@ -315,13 +315,13 @@ class FileOpBase(ABC):
             object_to_upload = file_to_upload
 
         object_to_upload = self.get_object_storage_filename(object_to_upload)
-        t0 = time.time()
+        t_start = time.time()
         self.cos_client.fput_object(
             bucket_name=self.cos_bucket,
             object_name=object_to_upload,
             file_path=file_to_upload,
         )
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info(
             f"uploaded {file_to_upload} to bucket: {self.cos_bucket} object: {object_to_upload}",
             duration,
@@ -358,14 +358,14 @@ class NotebookFileOp(FileOpBase):
 
         try:
             OpUtil.log_operation_info(f"executing notebook using 'papermill {notebook} {notebook_output}'")
-            t0 = time.time()
+            t_start = time.time()
             # Include kernel selection in execution time
             kernel_name = NotebookFileOp.find_best_kernel(notebook)
 
             import papermill
 
             papermill.execute_notebook(notebook, notebook_output, kernel_name=kernel_name)
-            duration = time.time() - t0
+            duration = time.time() - t_start
             OpUtil.log_operation_info("notebook execution completed", duration)
 
             NotebookFileOp.convert_notebook_to_html(notebook_output, notebook_html)
@@ -393,15 +393,15 @@ class NotebookFileOp(FileOpBase):
         import nbformat
 
         OpUtil.log_operation_info(f"converting from {notebook_file} to {html_file}")
-        t0 = time.time()
-        nb = nbformat.read(notebook_file, as_version=4)
+        t_start = time.time()
+        nb_file = nbformat.read(notebook_file, as_version=4)
         html_exporter = nbconvert.HTMLExporter()
-        data, resources = html_exporter.from_notebook_node(nb)
-        fd = os.open(html_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-        with os.fdopen(fd, "w") as f:
-            f.write(data)
+        data, resources = html_exporter.from_notebook_node(nb_file)
+        file_fd = os.open(html_file, os.O_RDWR | os.O_CREAT, 0o666)
+        with os.fdopen(file_fd, "w") as file:
+            file.write(data)
 
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info(f"{notebook_file} converted to {html_file}", duration)
         return html_file
 
@@ -419,9 +419,9 @@ class NotebookFileOp(FileOpBase):
         from jupyter_client.kernelspec import KernelSpecManager
         import nbformat
 
-        nb = nbformat.read(notebook_file, 4)
+        nb_file = nbformat.read(notebook_file, 4)
 
-        nb_kspec = nb.metadata.kernelspec
+        nb_kspec = nb_file.metadata.kernelspec
         nb_kernel_name = nb_kspec.get("name")
         nb_kernel_lang = nb_kspec.get("language")
 
@@ -434,8 +434,8 @@ class NotebookFileOp(FileOpBase):
         # no match found for kernel, try matching language...
         for name, file in kernel_specs.items():
             # load file (JSON) and pick out language, if match, use first found
-            with open(os.path.join(file, "kernel.json")) as f:
-                kspec = json.load(f)
+            with open(os.path.join(file, "kernel.json")) as kernel_file:
+                kspec = json.load(kernel_file)
                 if kspec.get("language").lower() == nb_kernel_lang.lower():
                     matched_kernel = os.path.basename(file)
                     logger.info(
@@ -465,9 +465,9 @@ class PythonFileOp(FileOpBase):
             OpUtil.log_operation_info(
                 f"executing python script using " f"'python3 {python_script}' to '{python_script_output}'"
             )
-            t0 = time.time()
-            fd = os.open(python_script_output, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
-            with os.fdopen(fd, "w") as log_file:
+            t_start = time.time()
+            file_fd = os.open(python_script_output, os.O_RDWR | os.O_CREAT, 0o666)
+            with os.fdopen(file_fd, "w") as log_file:
                 subprocess.run(
                     ["python3", python_script],
                     stdout=log_file,
@@ -475,7 +475,7 @@ class PythonFileOp(FileOpBase):
                     check=True,
                 )
 
-            duration = time.time() - t0
+            duration = time.time() - t_start
             OpUtil.log_operation_info("python script execution completed", duration)
 
             self.put_file_to_object_storage(python_script_output, python_script_output)
@@ -500,8 +500,8 @@ class RFileOp(FileOpBase):
 
         try:
             OpUtil.log_operation_info(f"executing R script using " f"'Rscript {r_script}' to '{r_script_output}'")
-            t0 = time.time()
-            fd = os.open(r_script_output, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 666)
+            t_start = time.time()
+            fd = os.open(r_script_output, os.O_RDWR | os.O_CREAT, 0o666)
             with os.fdopen(fd, "w") as log_file:
                 subprocess.run(
                     ["Rscript", r_script],
@@ -510,7 +510,7 @@ class RFileOp(FileOpBase):
                     check=True,
                 )
 
-            duration = time.time() - t0
+            duration = time.time() - t_start
             OpUtil.log_operation_info("R script execution completed", duration)
 
             self.put_file_to_object_storage(r_script_output, r_script_output)
@@ -530,7 +530,7 @@ class OpUtil(object):
     @classmethod
     def package_install(cls, user_volume_path) -> None:
         OpUtil.log_operation_info("Installing packages")
-        t0 = time.time()
+        t_start = time.time()
         requirements_file = cls.determine_elyra_requirements()
         elyra_packages = cls.package_list_to_dict(requirements_file)
         current_packages = cls.package_list_to_dict("requirements-current.txt")
@@ -584,7 +584,7 @@ class OpUtil(object):
             os.environ["PIP_CONFIG_FILE"] = f"{user_volume_path}/pip.conf"
 
         subprocess.run([sys.executable, "-m", "pip", "freeze"])
-        duration = time.time() - t0
+        duration = time.time() - t_start
         OpUtil.log_operation_info("Packages installed", duration)
 
     @classmethod
@@ -603,8 +603,8 @@ class OpUtil(object):
     @classmethod
     def package_list_to_dict(cls, filename: str) -> dict:
         package_dict = {}
-        with open(filename) as fh:
-            for line in fh:
+        with open(filename) as file:
+            for line in file:
                 if line[0] != "#":
                     if " @ " in line:
                         package_name, package_version = line.strip("\n").split(sep=" @ ")
@@ -737,7 +737,7 @@ def main():
     # Setup packages and gather arguments
     input_params = OpUtil.parse_arguments(sys.argv[1:])
     OpUtil.log_operation_info("starting operation")
-    t0 = time.time()
+    t_start = time.time()
     OpUtil.package_install(user_volume_path=input_params.get("user-volume-path"))
 
     # Create the appropriate instance, process dependencies and execute the operation
@@ -750,7 +750,7 @@ def main():
     # Process notebook | script metrics and KFP UI metadata
     file_op.process_metrics_and_metadata()
 
-    duration = time.time() - t0
+    duration = time.time() - t_start
     OpUtil.log_operation_info("operation completed", duration)
 
 

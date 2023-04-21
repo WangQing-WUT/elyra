@@ -26,5 +26,3 @@ class WfpMetadata(RuntimesMetadata):
 
     def on_load(self, **kwargs: Any) -> None:
         super().on_load(**kwargs)
-
-        return None

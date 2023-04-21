@@ -205,8 +205,8 @@ class FileMetadataStore(MetadataStore):
     def schemaspace_exists(self) -> bool:
         """Does the schemaspace exist in any of the dir paths?"""
         schemaspace_dir_exists = False
-        for d in self.metadata_paths:
-            if os.path.isdir(d):
+        for dir_path in self.metadata_paths:
+            if os.path.isdir(dir_path):
                 schemaspace_dir_exists = True
                 break
         return schemaspace_dir_exists
@@ -225,8 +225,8 @@ class FileMetadataStore(MetadataStore):
         all_metadata_dirs = reversed(self.metadata_paths)
         for metadata_dir in all_metadata_dirs:
             if os.path.isdir(metadata_dir):
-                for f in os.listdir(metadata_dir):
-                    path = os.path.join(metadata_dir, f)
+                for file in os.listdir(metadata_dir):
+                    path = os.path.join(metadata_dir, file)
                     if path.endswith(".json"):
                         if name:  # if looking for a specific instance, and this is not it, continue
                             if os.path.splitext(os.path.basename(path))[0] != name:
@@ -287,8 +287,8 @@ class FileMetadataStore(MetadataStore):
 
         # Write out the instance
         try:
-            with jupyter_core.paths.secure_write(resource) as f:
-                json.dump(metadata, f, indent=2)  # Only persist necessary items
+            with jupyter_core.paths.secure_write(resource) as file:
+                json.dump(metadata, file, indent=2)  # Only persist necessary items
         except Exception as ex:
             self._rollback(resource, renamed_resource)
             raise ex from ex
@@ -392,9 +392,9 @@ class FileMetadataStore(MetadataStore):
         name = os.path.splitext(os.path.basename(resource))[0]
 
         self.log.debug(f"Loading metadata instance from: '{resource}'")
-        with io.open(resource, "r", encoding="utf-8") as f:
+        with io.open(resource, "r", encoding="utf-8") as file:
             try:
-                metadata_json = json.load(f)
+                metadata_json = json.load(file)
             except ValueError as jde:  # JSONDecodeError is raised, but it derives from ValueError
                 # If the JSON file cannot load, there's nothing we can do other than log and raise since
                 # we aren't able to even instantiate an instance of Metadata.  Because errors are ignored
@@ -444,10 +444,10 @@ class FileMetadataStore(MetadataStore):
         paths.extend(system_path)
 
         # then sys.prefix, where installed files will reside (factory data)
-        env_path = jupyter_core.paths.ENV_JUPYTER_PATH
-        for p in env_path:
-            if p not in system_path:
-                paths.append(p)
+        env_paths = jupyter_core.paths.ENV_JUPYTER_PATH
+        for env_path in env_paths:
+            if env_path not in system_path:
+                paths.append(env_path)
 
         # add subdir, if requested.
         # Note, the 'metadata' parent dir is automatically added.

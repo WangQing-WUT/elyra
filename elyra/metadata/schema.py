@@ -82,8 +82,8 @@ class SchemaManager(SingletonConfigurable):
 
         self._meta_schema: dict
         schema_file = os.path.join(os.path.dirname(__file__), "schemas", "meta-schema.json")
-        with io.open(schema_file, "r", encoding="utf-8") as f:
-            self._meta_schema = json.load(f)
+        with io.open(schema_file, "r", encoding="utf-8") as file:
+            self._meta_schema = json.load(file)
         self._load_schemaspace_schemas()
 
     def get_schemaspace_names(self, include_deprecated: bool = False) -> List[str]:
@@ -269,15 +269,15 @@ class SchemaManager(SingletonConfigurable):
                 schema=self._meta_schema,
                 format_checker=draft7_format_checker,
             )
-        except ValidationError as ve:
+        except ValidationError as v_err:
             # Because validation errors are so verbose, only provide the first line.
-            first_line = str(ve).partition("\n")[0]
+            first_line = str(v_err).partition("\n")[0]
             msg = (
                 f"Validation failed for schema '{schema_name}' of "
                 f"schemaspace '{schemaspace_name}' with error: {first_line}."
             )
             self.log.error(msg)
-            raise ValidationError(msg) from ve
+            raise ValidationError(msg) from v_err
 
     @staticmethod
     def _get_schemaspaces():

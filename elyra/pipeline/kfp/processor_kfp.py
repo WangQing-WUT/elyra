@@ -138,11 +138,11 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 auth_parm_2=api_password,
             )
             self.log.debug(f"Authenticator returned {auth_info}")
-        except AuthenticationError as ae:
-            if ae.get_request_history() is not None:
+        except AuthenticationError as auth_err:
+            if auth_err.get_request_history() is not None:
                 self.log.info("An authentication error was raised. Diagnostic information follows.")
-                self.log.info(ae.request_history_to_string())
-            raise RuntimeError(f"Kubeflow authentication failed: {ae}")
+                self.log.info(auth_err.request_history_to_string())
+            raise RuntimeError(f"Kubeflow authentication failed: {auth_err}")
 
         #############
         # Create Kubeflow Client
@@ -244,7 +244,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             # Compile the Pipeline
             #############
             try:
-                t0 = time.time()
+                t_start = time.time()
 
                 # generate a name for the experiment (lowercase because experiments are case intensive)
                 experiment_name = pipeline_name.lower()
@@ -303,13 +303,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     f"Failed to compile pipeline '{pipeline_name}' with engine '{engine}' to: '{pipeline_path}'"
                 ) from ex
 
-            self.log_pipeline_info(pipeline_name, "pipeline compiled", duration=time.time() - t0)
+            self.log_pipeline_info(pipeline_name, "pipeline compiled", duration=time.time() - t_start)
 
             #############
             # Upload Pipeline Version
             #############
             try:
-                t0 = time.time()
+                t_start = time.time()
 
                 # CASE 1: pipeline needs to be created
                 if pipeline_id is None:
@@ -356,13 +356,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     f"{tip_string}"
                 ) from ex
 
-            self.log_pipeline_info(pipeline_name, "pipeline uploaded", duration=time.time() - t0)
+            self.log_pipeline_info(pipeline_name, "pipeline uploaded", duration=time.time() - t_start)
 
             #############
             # Create Experiment
             #############
             try:
-                t0 = time.time()
+                t_start = time.time()
 
                 # create a new experiment (if already exists, this a no-op)
                 experiment = client.create_experiment(name=experiment_name, namespace=user_namespace)
@@ -373,13 +373,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     f"Check Kubeflow Pipelines runtime configuration: '{pipeline.runtime_config}'"
                 ) from ex
 
-            self.log_pipeline_info(pipeline_name, "created experiment", duration=time.time() - t0)
+            self.log_pipeline_info(pipeline_name, "created experiment", duration=time.time() - t_start)
 
             #############
             # Create Pipeline Run
             #############
             try:
-                t0 = time.time()
+                t_start = time.time()
 
                 # generate name for the pipeline run
                 job_name = pipeline_instance_id
@@ -409,7 +409,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             self.log_pipeline_info(
                 pipeline_name,
                 f"pipeline submitted: {public_api_endpoint}/#/runs/details/{run.id}",
-                duration=time.time() - t0,
+                duration=time.time() - t_start,
             )
 
         if pipeline.contains_generic_operations():
@@ -607,8 +607,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 )
             elif pipeline_operations[node_id].classifier.startswith("loop_end"):
                 if node_id not in is_sorted:
-                    for id in link_dict[node_id]:
-                        pipeline_operations[id].parent_operation_ids.append(loop_stack[-1][0])
+                    for sub_id in link_dict[node_id]:
+                        pipeline_operations[sub_id].parent_operation_ids.append(loop_stack[-1][0])
                     if len(loop_stack) == 1:
                         loop_stack = []
                         self._filter_component_node(
@@ -940,8 +940,8 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     if data_entry_type == "file" and property_value:
                         # Read a value from a file
                         absolute_path = get_absolute_path(self.root_dir, property_value)
-                        with open(absolute_path, "r") as f:
-                            property_value = f.read() if os.path.getsize(absolute_path) else None
+                        with open(absolute_path, "r") as file:
+                            property_value = file.read() if os.path.getsize(absolute_path) else None
 
                     # If the value is not found, assign it the default value assigned in parser
                     if property_value is None:
@@ -960,9 +960,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             # Build component task factory
             try:
                 factory_function = components.load_component_from_text(component.definition)
-            except Exception as e:
+            except Exception as ex:
                 # TODO Fix error messaging and break exceptions down into categories
-                self.log.error(f"Error loading component spec for {operation.name}: {str(e)}")
+                self.log.error(f"Error loading component spec for {operation.name}: {str(ex)}")
                 raise RuntimeError(f"Error loading component spec for {operation.name}.")
 
             # Add factory function, which returns a ContainerOp task instance, to pipeline operation dict
@@ -1009,9 +1009,9 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     for key, value in resources.get("node_selector").items():
                         container_op.add_node_selector_constraint(key, value)
 
-            except Exception as e:
+            except Exception as ex:
                 # TODO Fix error messaging and break exceptions down into categories
-                self.log.error(f"Error constructing component {operation.name}: {str(e)}")
+                self.log.error(f"Error constructing component {operation.name}: {str(ex)}")
                 raise RuntimeError(f"Error constructing component {operation.name}.")
 
         # Attach node comment
@@ -1173,7 +1173,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             return target_ops[output_node_id].outputs[output_node_parameter_key]
 
     @staticmethod
-    def get_operator_fn(op):
+    def get_operator_fn(symbol):
         return {
             "==": operator.eq,
             "!=": operator.ne,
@@ -1181,7 +1181,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
             ">=": operator.ge,
             "<": operator.lt,
             "<=": operator.le,
-        }[op]
+        }[symbol]
 
     def _process_branch(
         self,
