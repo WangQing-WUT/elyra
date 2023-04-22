@@ -60,7 +60,6 @@ const schemaFetcher = async <T>(key: string): Promise<T> => {
   return await MetadataService.getSchema(key);
 };
 
-// TODO: type this
 export const useRuntimesSchema = (): IReturn<any> => {
   const { data, error } = useSWR<any>('runtimes', schemaFetcher);
 
@@ -145,7 +144,6 @@ export const sortPalette = (palette: {
   }
 };
 
-// TODO: This should be enabled through `extensions`
 const NodeIcons: Map<string, string> = new Map([
   ['execute-notebook-node', 'static/elyra/notebook.svg'],
   ['execute-python-node', 'static/elyra/python.svg'],
@@ -171,8 +169,7 @@ const customIcons: Map<string, string> = new Map([
   ['ParallelFor Start', 'loop_start.svg'],
   ['ParallelFor End', 'loop_end.svg']
 ]);
-// TODO: We should decouple components and properties to support lazy loading.
-// TODO: type this
+
 export const componentFetcher = async (type: string): Promise<any> => {
   const palettePromise = RequestHandler.makeGetRequest<
     IRuntimeComponentsResponse
@@ -215,13 +212,11 @@ export const componentFetcher = async (type: string): Promise<any> => {
 
   // inject properties
   for (const category of palette.categories) {
-    // Use the runtime_type from the first node of the category to determine category
-    // icon.
-    // TODO: Ideally, this would be included in the category.
-    const category_runtime_type =
+    // Use the runtime_type from the first node of the category to determine category icon.
+    const categoryRuntimeType =
       category.node_types?.[0]?.runtime_type ?? 'LOCAL';
 
-    const type = types.find((t: any) => t.id === category_runtime_type);
+    const type = types.find((t: any) => t.id === categoryRuntimeType);
     const baseUrl = ServerConnection.makeSettings().baseUrl;
     const defaultIcon = URLExt.parse(URLExt.join(baseUrl, type?.icon || ''))
       .pathname;

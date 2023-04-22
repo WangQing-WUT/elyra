@@ -715,12 +715,13 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                 if "value" in item.get("type"):
                     temp_value = item.get("type").get("value")
                     if item.get("type").get("widget") == "Float":
-                        temp_value = float(temp_value)
+                        input_parameters[item.get("name")] = float(temp_value)
                     elif item.get("type").get("widget") == "Integer":
-                        temp_value = int(temp_value)
+                        input_parameters[item.get("name")] = int(temp_value)
                     elif item.get("type").get("widget") == "List":
-                        temp_value = self._process_list_value(temp_value)
-                    input_parameters[item.get("name")] = temp_value
+                        input_parameters[item.get("name")] = self._process_list_value(temp_value)
+                    else:
+                        input_parameters[item.get("name")] = temp_value
                 else:
                     if item.get("type").get("widget") == "String":
                         input_parameters[item.get("name")] = ""

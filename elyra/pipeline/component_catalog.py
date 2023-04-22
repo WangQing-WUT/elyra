@@ -546,7 +546,7 @@ class ComponentCache(SingletonConfigurable):
         filename = filename or self.manifest_filename
         manifest = manifest or {}
         self.log.debug(f"Updating manifest '{manifest}' to file '{filename}'")
-        file_fd = os.open(filename, os.O_RDWR | os.O_CREAT, 0o666)
+        file_fd = os.open(filename, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
         with os.fdopen(file_fd, "w") as file:
             json.dump(manifest, file, indent=2)
 

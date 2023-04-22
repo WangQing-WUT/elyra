@@ -214,6 +214,51 @@ class MetadataManager(LoggingConfigurable):
                 parameters_placeholder[output_parameter.get("name")] = output_parameter.get("placeholder_type")
         return input_parameters, output_parameters, parameters_placeholder
 
+    def _save_component(self, name, for_update, metadata_dict):
+        new_metadata = metadata_dict.get("metadata")
+        save_path = new_metadata.get("save_path")
+        file_name = new_metadata.get("file_name")
+        component_yaml = self._metedata_to_component(new_metadata)
+        yaml_loader = YAML()
+        file_path = os.path.join(save_path, file_name + ".yaml")
+        metadata = {}
+        temp_name = name
+        temp_for_update = for_update
+        try:
+            file_fd = os.open(file_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
+            with os.fdopen(file_fd, "w") as file:
+                yaml_loader.dump(component_yaml, file)
+            update_metadata = self.get(new_metadata.get("categories")[0])
+            update_metadata_dict = update_metadata.to_dict()
+            temp_name = update_metadata_dict.get("name")
+            update_metadata_dict["metadata"]["paths"].append(
+                os.path.relpath(
+                    file_path,
+                    update_metadata_dict.get("metadata").get("base_path"),
+                )
+            )
+            temp_for_update = True
+            metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
+        except MetadataNotFoundError:
+            new_metadata_dict = {
+                "display_name": metadata_dict.get("display_name"),
+                "metadata": {
+                    "categories": [new_metadata.get("categories")[0]],
+                    "paths": [os.path.relpath(file_path, new_metadata.get("root_dir"))],
+                    "base_path": new_metadata.get("root_dir"),
+                    "runtime_type": "KUBEFLOW_PIPELINES",
+                },
+                "schema_name": "local-file-catalog",
+            }
+            if "description" in new_metadata:
+                new_metadata_dict["metadata"]["description"] = new_metadata.get("description")
+            metadata = Metadata.from_dict(self.schemaspace, new_metadata_dict)
+            metadata.pre_save(for_update=temp_for_update)
+            self._apply_defaults(metadata)
+            self.validate(name, metadata)
+        finally:
+            return temp_name, temp_for_update, metadata
+
     def _metedata_to_component(self, new_metadata: Dict):
         implementation = new_metadata.get("implementation")
         component_yaml = {
@@ -235,26 +280,16 @@ class MetadataManager(LoggingConfigurable):
             del component_yaml["description"]
 
         (
-            input_parameters,
-            output_parameters,
+            component_yaml["inputs"],
+            component_yaml["outputs"],
             parameters_placeholder,
         ) = self._parse_component_parameters(new_metadata)
 
-        component_yaml["inputs"] = input_parameters
-        component_yaml["outputs"] = output_parameters
         command = yaml.safe_load(implementation.get("command"))
         pss_command = []
         for item in command:
             if type(item) is dict:
-                temp_item = {}
-                for para in item:
-                    if item[para] is None:
-                        if para in parameters_placeholder:
-                            temp_item[parameters_placeholder[para]] = para
-                        else:
-                            raise Exception("Command parameter {" + para + "} is not defined.")
-                    else:
-                        temp_item = item
+                temp_item = self._parse_parameters_placeholder(item, parameters_placeholder, "Command")
                 pss_command.append(temp_item)
             elif type(item) is str:
                 if "\n" in item:
@@ -263,34 +298,35 @@ class MetadataManager(LoggingConfigurable):
                     pss_command.append(item)
         component_yaml["implementation"]["container"]["command"] = pss_command
         if "args" in implementation:
-            self._add_component_args(implementation, parameters_placeholder, component_yaml)
+            args = yaml.safe_load(implementation.get("args"))
+            if args:
+                temp_args = []
+                for item in args:
+                    if type(item) is dict:
+                        temp_item = self._parse_parameters_placeholder(item, parameters_placeholder, "Args")
+                        temp_args.append(temp_item)
+                    elif type(item) is str:
+                        temp_args.append(item)
+                component_yaml["implementation"]["container"]["args"] = temp_args
         return component_yaml
 
-    def _add_component_args(self, implementation, parameters_placeholder, component_yaml):
-        args = yaml.safe_load(implementation.get("args"))
-        if args:
-            temp_args = []
-            for item in args:
-                if type(item) is dict:
-                    temp_item = {}
-                    for para in item:
-                        if item[para] is None:
-                            if para in parameters_placeholder:
-                                temp_item[parameters_placeholder[para]] = para
-                            else:
-                                raise Exception("Command parameter {" + para + "} is not defined.")
-                        else:
-                            temp_item = item
-                    temp_args.append(temp_item)
-                elif type(item) is str:
-                    temp_args.append(item)
-            component_yaml["implementation"]["container"]["args"] = temp_args
+    def _parse_parameters_placeholder(self, item, parameters_placeholder, para_name):
+        temp_item = {}
+        for para in item:
+            if item[para] is None:
+                if para in parameters_placeholder:
+                    temp_item[parameters_placeholder[para]] = para
+                else:
+                    raise Exception(para_name + " parameter {" + para + "} is not defined.")
+            else:
+                temp_item = item
+        return temp_item
 
     def save_component(self, component_metadata, path):
         component_yaml = self._metedata_to_component(component_metadata)
         yaml_loader = YAML()
-        file_fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o666)
-        with os.fdopen(file_fd, "w") as file:
+        fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
+        with os.fdopen(fd, "w") as file:
             yaml_loader.dump(component_yaml, file)
 
     def _save(
@@ -339,44 +375,7 @@ class MetadataManager(LoggingConfigurable):
         metadata_dict = metadata.to_dict()
 
         if metadata_dict.get("schema_name") == "new-component":
-            new_metadata = metadata_dict.get("metadata")
-            save_path = new_metadata.get("save_path")
-            file_name = new_metadata.get("file_name")
-            component_yaml = self._metedata_to_component(new_metadata)
-            yaml_loader = YAML()
-            file_path = os.path.join(save_path, file_name + ".yaml")
-            try:
-                file_fd = os.open(file_path, os.O_RDWR | os.O_CREAT, 0o666)
-                with os.fdopen(file_fd, "w") as file:
-                    yaml_loader.dump(component_yaml, file)
-                update_metadata = self.get(new_metadata.get("categories")[0])
-                update_metadata_dict = update_metadata.to_dict()
-                name = update_metadata_dict.get("name")
-                update_metadata_dict["metadata"]["paths"].append(
-                    os.path.relpath(
-                        file_path,
-                        update_metadata_dict.get("metadata").get("base_path"),
-                    )
-                )
-                for_update = True
-                metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
-            except MetadataNotFoundError:
-                new_metadata_dict = {
-                    "display_name": metadata_dict.get("display_name"),
-                    "metadata": {
-                        "categories": [new_metadata.get("categories")[0]],
-                        "paths": [os.path.relpath(file_path, new_metadata.get("root_dir"))],
-                        "base_path": new_metadata.get("root_dir"),
-                        "runtime_type": "KUBEFLOW_PIPELINES",
-                    },
-                    "schema_name": "local-file-catalog",
-                }
-                if "description" in new_metadata:
-                    new_metadata_dict["metadata"]["description"] = new_metadata.get("description")
-                metadata = Metadata.from_dict(self.schemaspace, new_metadata_dict)
-                metadata.pre_save(for_update=for_update)
-                self._apply_defaults(metadata)
-                self.validate(name, metadata)
+            name, for_update, metadata = self._save_component(name, for_update, metadata_dict)
 
         metadata_dict = self.metadata_store.store_instance(name, metadata.prepare_write(), for_update=for_update)
         metadata_post_op = Metadata.from_dict(self.schemaspace, metadata_dict)

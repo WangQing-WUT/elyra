@@ -1245,8 +1245,8 @@ class PipelineValidationManager(SingletonConfigurable):
             for single_pipeline in pipeline_json.get("pipelines"):
                 for node in single_pipeline.get("nodes"):
                     if node.get("type") == "execution_node":
-                        for input in node.get("inputs", []):
-                            for link in input.get("links", []):
+                        for node_input in node.get("inputs", []):
+                            for link in node_input.get("links", []):
                                 if link.get("id") == link_id:
                                     node_labels.append(self._get_node_label(node))
         return node_labels

@@ -214,7 +214,7 @@ class FileOpBase(ABC):
 
                 target = output_path / filename
                 # try to save the file in the destination location
-                file_fd = os.open(target, os.O_RDWR | os.O_CREAT, 0o666)
+                file_fd = os.open(target, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
                 with os.fdopen(file_fd, "w") as file:
                     json.dump(metadata, file)
             except FileNotFoundError:
@@ -270,7 +270,7 @@ class FileOpBase(ABC):
         logger.debug(f"Saving UI metadata file as {ui_metadata_output} ...")
 
         # Save [updated] KFP UI metadata file
-        file_fd = os.open(ui_metadata_output, os.O_RDWR | os.O_CREAT, 0o666)
+        file_fd = os.open(ui_metadata_output, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
         with os.fdopen(file_fd, "w") as file:
             json.dump(metadata, file)
         duration = time.time() - t_start
@@ -397,7 +397,7 @@ class NotebookFileOp(FileOpBase):
         nb_file = nbformat.read(notebook_file, as_version=4)
         html_exporter = nbconvert.HTMLExporter()
         data, resources = html_exporter.from_notebook_node(nb_file)
-        file_fd = os.open(html_file, os.O_RDWR | os.O_CREAT, 0o666)
+        file_fd = os.open(html_file, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
         with os.fdopen(file_fd, "w") as file:
             file.write(data)
 
@@ -466,7 +466,7 @@ class PythonFileOp(FileOpBase):
                 f"executing python script using " f"'python3 {python_script}' to '{python_script_output}'"
             )
             t_start = time.time()
-            file_fd = os.open(python_script_output, os.O_RDWR | os.O_CREAT, 0o666)
+            file_fd = os.open(python_script_output, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
             with os.fdopen(file_fd, "w") as log_file:
                 subprocess.run(
                     ["python3", python_script],
@@ -501,7 +501,7 @@ class RFileOp(FileOpBase):
         try:
             OpUtil.log_operation_info(f"executing R script using " f"'Rscript {r_script}' to '{r_script_output}'")
             t_start = time.time()
-            fd = os.open(r_script_output, os.O_RDWR | os.O_CREAT, 0o666)
+            fd = os.open(r_script_output, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
             with os.fdopen(fd, "w") as log_file:
                 subprocess.run(
                     ["Rscript", r_script],

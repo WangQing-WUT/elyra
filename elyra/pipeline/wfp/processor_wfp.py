@@ -37,7 +37,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "spec": {"resource": str_yaml},
         }
         save_path = path.replace(".yaml", "-pipeline.yaml")
-        file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT, 0o666)
+        file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
         with os.fdopen(file_fd, "w") as file:
             yaml_loader.dump(pipeline_template, file)
         file_list.append(save_path)
@@ -758,7 +758,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "spec": spec_field,
                 }
                 save_path = export_path.replace(".yaml", "-workflow.yaml")
-                file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT, 0o666)
+                file_fd = os.open(save_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
                 with os.fdopen(file_fd, "w") as file:
                     file.write(yaml.dump(workflow_yaml, allow_unicode=True, sort_keys=False))
                 file_list.append(save_path)
@@ -794,7 +794,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _validate(self, nodes, input_parameters):
         response = ValidationResponse(runtime="WORKFLOW")
-        name = {}
+        name_dict = {}
         workflow_input_parameters = []
         validate = {
             "model_event": self._validate_model_event,
@@ -829,7 +829,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         for node in nodes:
             node_type = node.get("op").split(":")[0]
             validate_func = validate[node_type]
-            validate_func(node, workflow_input_parameters, name, response)
+            validate_func(node, workflow_input_parameters, name_dict, response)
         return response
 
     def _validate_s3_event(self, node, workflow_input_parameters, name, response):
@@ -1309,7 +1309,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _validate_node_property_value(
         self,
-        property,
+        node_property,
         node_type,
         node_id,
         node_name,
@@ -1326,7 +1326,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         }
         if index != -1:
             data["index"] = index + 1
-        if ("value" not in property) or (property.get("value").strip() == ""):
+        if ("value" not in node_property) or (node_property.get("value").strip() == ""):
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
@@ -1334,8 +1334,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        elif property.get("widget") == "enum":
-            value = property.get("value").strip()
+        elif node_property.get("widget") == "enum":
+            value = node_property.get("value").strip()
             if value not in workflow_input_parameters:
                 response.add_message(
                     severity=ValidationSeverity.Error,
@@ -1348,7 +1348,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_event_filter(
         self,
         index,
-        property,
+        node_property,
         node_type,
         node_id,
         node_name,
@@ -1363,7 +1363,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "propertyName": "",
             "index": index + 1,
         }
-        if "name" not in property:
+        if "name" not in node_property:
             data["propertyName"] = "Property Name of " + property_name
             response.add_message(
                 severity=ValidationSeverity.Error,
@@ -1372,7 +1372,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        if "operate" not in property:
+        if "operate" not in node_property:
             data["propertyName"] = "Operate of " + property_name
             response.add_message(
                 severity=ValidationSeverity.Error,
@@ -1381,7 +1381,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        if str(property.get("value").get("value")).strip() == "":
+        if str(node_property.get("value").get("value")).strip() == "":
             data["propertyName"] = "Value of " + property_name
             response.add_message(
                 severity=ValidationSeverity.Error,
@@ -1390,9 +1390,9 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        elif property.get("value").get("widget") == "enum":
+        elif node_property.get("value").get("widget") == "enum":
             data["propertyName"] = "Value of " + property_name
-            value = property.get("value").get("value").strip()
+            value = node_property.get("value").get("value").strip()
             if value not in workflow_input_parameters:
                 response.add_message(
                     severity=ValidationSeverity.Error,

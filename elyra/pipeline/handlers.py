@@ -126,32 +126,24 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
                     if pipeline_upload:
                         response = await wfp_processor.upload(zip_file, runtime_config, name, description)
                         if not response.has_fatal:
-                            json_msg = json.dumps({"export_path": zip_file})
-                            self.set_status(201)
-                            self.set_header("Content-Type", "application/json")
-                            location = url_path_join(self.base_url, "api", "contents", zip_file)
-                            self.set_header("Location", location)
+                            json_msg = self._set_response_201(zip_file)
                         else:
                             json_msg = json.dumps(
                                 {
                                     "reason": responses.get(400),
-                                    "message": "Errors found in workflow",
+                                    "message": "Errors found in upload workflow",
                                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                     "issues": response.to_json().get("issues"),
                                 }
                             )
                             self.set_status(400)
                     else:
-                        json_msg = json.dumps({"export_path": zip_file})
-                        self.set_status(201)
-                        self.set_header("Content-Type", "application/json")
-                        location = url_path_join(self.base_url, "api", "contents", zip_file)
-                        self.set_header("Location", location)
+                        json_msg = self._set_response_201(zip_file)
                 else:
                     json_msg = json.dumps(
                         {
                             "reason": responses.get(400),
-                            "message": "Errors found in workflow",
+                            "message": "Errors found in export workflow",
                             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "issues": response.to_json().get("issues"),
                         }
@@ -193,6 +185,14 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
 
         self.set_header("Content-Type", "application/json")
         await self.finish(json_msg)
+
+    def _set_response_201(self, zip_file):
+        json_msg = json.dumps({"export_path": zip_file})
+        self.set_status(201)
+        self.set_header("Content-Type", "application/json")
+        location = url_path_join(self.base_url, "api", "contents", zip_file)
+        self.set_header("Location", location)
+        return json_msg
 
 
 class PipelineSchedulerHandler(HttpErrorMixin, APIHandler):

@@ -172,8 +172,10 @@ export class RequestHandler {
     options: RequestInit & { type?: 'blob' | 'json' | 'text' },
     longRequestDialog?: Dialog<any>
   ): Promise<T> {
-    // use ServerConnection utility to make calls to Jupyter Based services
-    // which in this case are in the extension installed by this package
+    /*
+     use ServerConnection utility to make calls to Jupyter Based services
+     which in this case are in the extension installed by this package
+    */
     const settings = ServerConnection.makeSettings();
     const requestUrl = URLExt.join(settings.baseUrl, requestPath);
 
