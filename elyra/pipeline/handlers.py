@@ -109,46 +109,9 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
 
         try:
             if pipeline_definition["pipelines"][0]["app_data"]["properties"]["runtime"] == "Workflow":
-                name = Path(str(pipeline_export_path)).stem
-                description = "No description yet."
-                if "description" in pipeline_definition["pipelines"][0]["app_data"]["properties"]:
-                    description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
-                runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
-                wfp_processor = WfpPipelineProcessor()
-                zip_file, response = await wfp_processor.export_custom(
-                    self.settings.get("server_root_dir"),
-                    parent,
-                    pipeline_definition,
-                    pipeline_export_path,
-                    pipeline_overwrite,
+                json_msg = await self._workflow(
+                    pipeline_export_path, pipeline_definition, pipeline_overwrite, pipeline_upload, parent
                 )
-                if not response.has_fatal:
-                    if pipeline_upload:
-                        response = await wfp_processor.upload(zip_file, runtime_config, name, description)
-                        if not response.has_fatal:
-                            json_msg = self._set_response_201(zip_file)
-                        else:
-                            json_msg = json.dumps(
-                                {
-                                    "reason": responses.get(400),
-                                    "message": "Errors found in upload workflow",
-                                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                    "issues": response.to_json().get("issues"),
-                                }
-                            )
-                            self.set_status(400)
-                    else:
-                        json_msg = self._set_response_201(zip_file)
-                else:
-                    json_msg = json.dumps(
-                        {
-                            "reason": responses.get(400),
-                            "message": "Errors found in export workflow",
-                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "issues": response.to_json().get("issues"),
-                        }
-                    )
-                    self.set_status(400)
             else:
                 response = await PipelineValidationManager.instance().validate(pipeline_definition)
                 self.log.debug(f"Validation checks completed. Results as follows: {response.to_json()}")
@@ -192,6 +155,49 @@ class PipelineExportHandler(HttpErrorMixin, APIHandler):
         self.set_header("Content-Type", "application/json")
         location = url_path_join(self.base_url, "api", "contents", zip_file)
         self.set_header("Location", location)
+        return json_msg
+
+    async def _workflow(self, pipeline_export_path, pipeline_definition, pipeline_overwrite, pipeline_upload, parent):
+        name = Path(str(pipeline_export_path)).stem
+        description = "No description yet."
+        if "description" in pipeline_definition["pipelines"][0]["app_data"]["properties"]:
+            description = pipeline_definition["pipelines"][0]["app_data"]["properties"]["description"]
+        runtime_config = pipeline_definition["pipelines"][0]["app_data"]["runtime_config"]
+        wfp_processor = WfpPipelineProcessor()
+        zip_file, response = await wfp_processor.export_custom(
+            self.settings.get("server_root_dir"),
+            parent,
+            pipeline_definition,
+            pipeline_export_path,
+            pipeline_overwrite,
+        )
+        if not response.has_fatal:
+            if pipeline_upload:
+                response = await wfp_processor.upload(zip_file, runtime_config, name, description)
+                if not response.has_fatal:
+                    json_msg = self._set_response_201(zip_file)
+                else:
+                    json_msg = json.dumps(
+                        {
+                            "reason": responses.get(400),
+                            "message": "Errors found in upload workflow",
+                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "issues": response.to_json().get("issues"),
+                        }
+                    )
+                    self.set_status(400)
+            else:
+                json_msg = self._set_response_201(zip_file)
+        else:
+            json_msg = json.dumps(
+                {
+                    "reason": responses.get(400),
+                    "message": "Errors found in export workflow",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "issues": response.to_json().get("issues"),
+                }
+            )
+            self.set_status(400)
         return json_msg
 
 
@@ -323,26 +329,36 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
         try:
             with open(pipeline_absolute_path, "r", encoding="utf-8") as file:
                 if pipeline_absolute_path.endswith(".pipeline"):
-                    pipeline = json.load(file)
-                    properties = pipeline.get("pipelines")[0].get("app_data").get("properties")
-                    if "pipeline_defaults" in properties:
-                        pipeline_defaults = properties.get("pipeline_defaults")
-                        if "input_parameters" in pipeline_defaults:
-                            for input_parameter in pipeline_defaults.get("input_parameters"):
-                                if "name" in input_parameter:
-                                    result.append(input_parameter.get("name"))
+                    result = self._open_pipeline(file)
                 elif pipeline_absolute_path.endswith(".yaml"):
-                    pipeline = yaml.safe_load(file.read())
-                    input_parameters = pipeline.get("spec").get("arguments").get("parameters")
-                    for input_parameter in input_parameters:
-                        if "name" in input_parameter:
-                            result.append(input_parameter.get("name"))
+                    result = self._open_yaml(file)
         except Exception as err:
             raise web.HTTPError(500, repr(err)) from err
 
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
         await self.finish({"input_parameters": result})
+
+    def _open_pipeline(self, file):
+        result = []
+        pipeline = json.load(file)
+        properties = pipeline.get("pipelines")[0].get("app_data").get("properties")
+        if "pipeline_defaults" in properties:
+            pipeline_defaults = properties.get("pipeline_defaults")
+            if "input_parameters" in pipeline_defaults:
+                for input_parameter in pipeline_defaults.get("input_parameters"):
+                    if "name" in input_parameter:
+                        result.append(input_parameter.get("name"))
+        return result
+
+    def _open_yaml(self, file):
+        result = []
+        pipeline = yaml.safe_load(file.read())
+        input_parameters = pipeline.get("spec").get("arguments").get("parameters")
+        for input_parameter in input_parameters:
+            if "name" in input_parameter:
+                result.append(input_parameter.get("name"))
+        return result
 
 
 class PipelineComponentPropertiesHandler(HttpErrorMixin, APIHandler):

@@ -70,16 +70,22 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             self.create_pipeline_template(path, resource, file_list)
         if not response.has_fatal:
             export_pipeline_yaml = yaml.safe_load(resource)
-            if "pipelines.kubeflow.org/pipeline_spec" in export_pipeline_yaml.get("metadata").get("annotations"):
+            if export_pipeline_yaml.get("metadata", {}).get("annotations", {}):
                 pipeline_spec_dict = json.loads(
                     export_pipeline_yaml.get("metadata").get("annotations").get("pipelines.kubeflow.org/pipeline_spec")
                 )
-                if "inputs" in pipeline_spec_dict:
-                    for item in pipeline_spec_dict.get("inputs"):
-                        pipeline_input_parameter = {}
-                        pipeline_input_parameter["name"] = item.get("name")
-                        pipeline_input_parameter["value"] = item.get("default")
-                        pipeline_input_parameters.append(pipeline_input_parameter)
+                for item in pipeline_spec_dict.get("inputs", []):
+                    pipeline_input_parameter = {}
+                    pipeline_input_parameter["name"] = item.get("name")
+                    pipeline_input_parameter["value"] = item.get("default")
+                    pipeline_input_parameters.append(pipeline_input_parameter)
+            else:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodePropertyValue",
+                    message="The yaml file is not an exported file for the pipeline.",
+                    runtime="WORKFLOW",
+                )
 
         return response, pipeline_input_parameters
 
@@ -120,335 +126,307 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             result.append(temp_filter)
         return result
 
+    def _parse_model_event(self, event_field, node):
+        if "model" not in event_field:
+            event_field["model"] = {}
+
+        event_field["model"][node.get("app_data").get("label").strip()] = {
+            "models": self._get_dataset_or_model_names(
+                node.get("app_data").get("component_parameters").get("model_name")
+            ),
+            "eventFilter": {
+                "expression": self._get_event_filter(
+                    node.get("app_data").get("component_parameters").get("event_filter"),
+                    node.get("app_data").get("component_parameters").get("expression"),
+                )
+            },
+        }
+
+    def _parse_s3_event(self, event_field, node):
+        if "s3" not in event_field:
+            event_field["s3"] = {}
+
+        event_field["s3"][node.get("app_data").get("label").strip()] = {
+            "bucket": {
+                "name": self._widget_value_str(node.get("app_data").get("component_parameters").get("bucket_name"))
+            },
+            "eventFilter": {"expression": self._get_s3_event_filter(node.get("app_data").get("component_parameters"))},
+        }
+
+    def _parse_calendar_event(self, event_field, node):
+        if "calendar" not in event_field:
+            event_field["calendar"] = {}
+
+        calendar = node.get("app_data").get("component_parameters").get("calendar")
+        event_field["calendar"][node.get("app_data").get("label").strip()] = {
+            calendar.get("name"): self._widget_value_str(calendar.get("value"))
+        }
+
+    def _parse_dataset_event(self, event_field, node):
+        if "dataset" not in event_field:
+            event_field["dataset"] = {}
+
+        event_field["dataset"][node.get("app_data").get("label").strip()] = {
+            "datasets": self._get_dataset_or_model_names(
+                node.get("app_data").get("component_parameters").get("dataset_name")
+            ),
+            "eventFilter": {
+                "expression": self._get_event_filter(
+                    node.get("app_data").get("component_parameters").get("event_filter"),
+                    node.get("app_data").get("component_parameters").get("expression"),
+                )
+            },
+        }
+
+    def _parse_model_monitor_event(self, event_field, node):
+        if "modelMonitor" not in event_field:
+            event_field["modelMonitor"] = {}
+
+        event_field["modelMonitor"][node.get("app_data").get("label").strip()] = {
+            "alertName": self._widget_value_str(node.get("app_data").get("component_parameters").get("alert_name")),
+            "eventFilter": self._get_model_monitor_event_filter(
+                node.get("app_data").get("component_parameters").get("event_filter")
+            ),
+        }
+
+    def _parse_k8s_object_trigger(self, trigger_field, node_json, node, response):
+        if "k8sobj" not in trigger_field:
+            trigger_field["k8sobj"] = {}
+
+        node_type = "K8s Object Trigger"
+        condition, linknodes_name_to_type = self._get_condition(node_json, node)
+        parameters = self._parse_trigger_parameters(
+            node,
+            node_type,
+            linknodes_name_to_type,
+            response,
+        )
+        trigger_field["k8sobj"][node.get("app_data").get("label").strip()] = {
+            "condition": condition,
+            "operation": node.get("app_data").get("component_parameters").get("operation"),
+            "source": self._get_k8s_source(node.get("app_data").get("component_parameters").get("source")),
+            "arguments": parameters,
+        }
+
+    def _parse_http_trigger(self, trigger_field, node_json, node, response):
+        if "http" not in trigger_field:
+            trigger_field["http"] = {}
+
+        node_type = "HTTP Trigger"
+        condition, linknodes_name_to_type = self._get_condition(node_json, node)
+        parameters = self._parse_trigger_parameters(
+            node,
+            node_type,
+            linknodes_name_to_type,
+            response,
+        )
+
+        trigger_field["http"][node.get("app_data").get("label").strip()] = {
+            "condition": condition,
+            "url": node.get("app_data").get("component_parameters").get("url"),
+            "method": node.get("app_data").get("component_parameters").get("method"),
+            "timeout": node.get("app_data").get("component_parameters").get("timeout"),
+            "payload": parameters,
+        }
+
+    async def _parse_pipeline_trigger(
+        self, trigger_field, node_json, node, runtime_config, root_dir, parent, file_list, response
+    ):
+        if "pipeline" not in trigger_field:
+            trigger_field["pipeline"] = {}
+
+        node_type = "Pipeline Trigger"
+        condition, linknodes_name_to_type = self._get_condition(node_json, node)
+        parameters = self._parse_trigger_parameters(
+            node,
+            node_type,
+            linknodes_name_to_type,
+            response,
+        )
+        path = node.get("app_data").get("component_parameters").get("template_name")
+        (
+            pipeline_response,
+            pipeline_input_parameters,
+        ) = await self.export_pipeline(path, runtime_config, root_dir, parent, file_list)
+        if pipeline_response.has_fatal:
+            issues = (pipeline_response.response).get("issues")
+            node_id = node.get("id")
+            node_name = node.get("app_data").get("label").strip()
+            for issue in issues:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="pipelineExportError",
+                    message="Pipeline Export Error",
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": node_type,
+                        "nodeID": node_id,
+                        "nodeName": node_name,
+                        "issue": issue,
+                    },
+                )
+            return
+        for parameter in parameters:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.get("name") == parameter.get("name"):
+                    pipeline_input_parameters.remove(pipeline_input_parameter)
+                    break
+        parameters += pipeline_input_parameters
+        condition, _ = self._get_condition(node_json, node)
+        trigger_field["pipeline"][node.get("app_data").get("label").strip()] = {
+            "condition": condition,
+            "operation": "create",
+            "pipeline": {
+                "pipelineTemplate": Path(
+                    str(node.get("app_data").get("component_parameters").get("template_name"))
+                ).stem,
+                "parameters": parameters,
+            },
+        }
+
+    async def _parse_init(self, node, runtime_config, root_dir, parent, file_list, response):
+        init_field = {}
+        init_pipeline_field = {}
+        pipeline_input_parameters = {}
+        pipeline_path = node.get("app_data").get("component_parameters").get("init_pipeline")
+        path_name = Path(str(pipeline_path)).stem
+        init_pipeline_field["pipelineTemplate"] = path_name
+        (
+            pipeline_response,
+            pipeline_input_parameters,
+        ) = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+        if pipeline_response.has_fatal:
+            issues = (pipeline_response.response).get("issues")
+            for issue in issues:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="pipelineExportError",
+                    message="Pipeline Export Error",
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": "Init",
+                        "nodeID": node.get("id"),
+                        "issue": issue,
+                    },
+                )
+            return init_field
+        init_parameters = []
+        for init_item in node.get("app_data").get("component_parameters").get("init_parameters"):
+            temp_value = self._widget_value_str(init_item.get("value"))
+            temp_init = {
+                "name": init_item.get("name"),
+                "value": temp_value,
+            }
+            if "description" in init_item:
+                temp_init["description"] = init_item.get("description")
+            init_parameters.append(temp_init)
+        for init_parameter in init_parameters:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.get("name") == init_parameter.get("name"):
+                    pipeline_input_parameters.remove(pipeline_input_parameter)
+                    break
+        init_parameters += pipeline_input_parameters
+        init_pipeline_field["parameters"] = init_parameters
+        init_pipeline_field = dict(sorted(init_pipeline_field.items(), key=lambda x: x[0], reverse=True))
+        init_field = {"pipeline": init_pipeline_field}
+        return init_field
+
+    async def _parse_exit(self, node, runtime_config, root_dir, parent, file_list, response):
+        exit_field = {}
+        exit_pipeline_field = {}
+        pipeline_input_parameters = {}
+        pipeline_path = node.get("app_data").get("component_parameters").get("exit_pipeline")
+        path_name = Path(str(pipeline_path)).stem
+        exit_pipeline_field["pipelineTemplate"] = path_name
+        (
+            pipeline_response,
+            pipeline_input_parameters,
+        ) = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
+        if pipeline_response.has_fatal:
+            issues = (pipeline_response.response).get("issues")
+            for issue in issues:
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="pipelineExportError",
+                    message="Pipeline Export Error",
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": "Exit",
+                        "nodeID": node.get("id"),
+                        "issue": issue,
+                    },
+                )
+            return exit_field
+        exit_parameters = []
+        for exit_item in node.get("app_data").get("component_parameters").get("exit_parameters"):
+            temp_value = self._widget_value_str(exit_item.get("value"))
+            temp_exit = {
+                "name": exit_item.get("name"),
+                "value": temp_value,
+            }
+            if "description" in exit_item:
+                temp_exit["description"] = exit_item.get("description")
+            exit_parameters.append(temp_exit)
+        for exit_parameter in exit_parameters:
+            for pipeline_input_parameter in pipeline_input_parameters:
+                if pipeline_input_parameter.get("name") == exit_parameter.get("name"):
+                    pipeline_input_parameters.remove(pipeline_input_parameter)
+                    break
+        exit_parameters += pipeline_input_parameters
+        exit_pipeline_field["parameters"] = exit_parameters
+        exit_pipeline_field = dict(
+            sorted(
+                exit_pipeline_field.items(),
+                key=lambda x: x[0],
+                reverse=True,
+            )
+        )
+        exit_field = {"pipeline": exit_pipeline_field}
+        return exit_field
+
     async def _component_parse(
         self,
         root_dir,
         parent,
         node_json: dict,
         runtime_config,
-        export_path,
         file_list,
     ):
-        # key: catalog type
-        # value: workflow.yaml field
         response = ValidationResponse(runtime="WORKFLOW")
         init_field = {}
         exit_field = {}
         event_field = {}
         trigger_field = {}
+        parser = {
+            "model_event": self._parse_model_event,
+            "s3_event": self._parse_s3_event,
+            "calendar_event": self._parse_calendar_event,
+            "dataset_event": self._parse_dataset_event,
+            "model_monitor_event": self._parse_model_monitor_event,
+            "pipeline_trigger": self._parse_pipeline_trigger,
+            "k8s_object_trigger": self._parse_k8s_object_trigger,
+            "http_trigger": self._parse_http_trigger,
+            "init": self._parse_init,
+            "exit": self._parse_exit,
+        }
         for node in node_json:
             node_type = node.get("op").split(":")[0]
-            if node_type == "model_event":
-                if "model" not in event_field:
-                    event_field["model"] = {}
-
-                event_field["model"][node.get("app_data").get("label").strip()] = {
-                    "models": self._get_dataset_or_model_names(
-                        node.get("app_data").get("component_parameters").get("model_name")
-                    ),
-                    "eventFilter": {
-                        "expression": self._get_event_filter(
-                            node.get("app_data").get("component_parameters").get("event_filter"),
-                            node.get("app_data").get("component_parameters").get("expression"),
-                        )
-                    },
-                }
-            elif node_type == "s3_event":
-                if "s3" not in event_field:
-                    event_field["s3"] = {}
-
-                event_field["s3"][node.get("app_data").get("label").strip()] = {
-                    "bucket": {
-                        "name": self._widget_value_str(
-                            node.get("app_data").get("component_parameters").get("bucket_name")
-                        )
-                    },
-                    "eventFilter": {
-                        "expression": self._get_s3_event_filter(node.get("app_data").get("component_parameters"))
-                    },
-                }
-            elif node_type == "calendar_event":
-                if "calendar" not in event_field:
-                    event_field["calendar"] = {}
-
-                calendar = node.get("app_data").get("component_parameters").get("calendar")
-                event_field["calendar"][node.get("app_data").get("label").strip()] = {
-                    calendar.get("name"): self._widget_value_str(calendar.get("value"))
-                }
-            elif node_type == "dataset_event":
-                if "dataset" not in event_field:
-                    event_field["dataset"] = {}
-
-                event_field["dataset"][node.get("app_data").get("label").strip()] = {
-                    "datasets": self._get_dataset_or_model_names(
-                        node.get("app_data").get("component_parameters").get("dataset_name")
-                    ),
-                    "eventFilter": {
-                        "expression": self._get_event_filter(
-                            node.get("app_data").get("component_parameters").get("event_filter"),
-                            node.get("app_data").get("component_parameters").get("expression"),
-                        )
-                    },
-                }
-            elif node_type == "model_monitor_event":
-                if "modelMonitor" not in event_field:
-                    event_field["modelMonitor"] = {}
-
-                event_field["modelMonitor"][node.get("app_data").get("label").strip()] = {
-                    "alertName": self._widget_value_str(
-                        node.get("app_data").get("component_parameters").get("alert_name")
-                    ),
-                    "eventFilter": self._get_model_monitor_event_filter(
-                        node.get("app_data").get("component_parameters").get("event_filter")
-                    ),
-                }
-            elif node_type == "pipeline_trigger":
-                if "pipeline" not in trigger_field:
-                    trigger_field["pipeline"] = {}
-
-                node_type = "Pipeline Trigger"
-                node_id = node.get("id")
-                node_name = node.get("app_data").get("label").strip()
-                data = {
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name,
-                    "propertyName": "",
-                    "index": 0,
-                }
-                condition, linknodes_name_to_type = self._get_condition(node_json, node)
-                parameters = self._parse_trigger_parameters(
-                    node.get("app_data").get("component_parameters").get("trigger_parameters"),
-                    data,
-                    linknodes_name_to_type,
-                    response,
-                )
-                path = node.get("app_data").get("component_parameters").get("template_name")
-                (
-                    pipeline_response,
-                    pipeline_input_parameters,
-                ) = await self.export_pipeline(path, runtime_config, root_dir, parent, file_list)
-                if pipeline_response.has_fatal:
-                    issues = (pipeline_response.response).get("issues")
-                    for issue in issues:
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="pipelineExportError",
-                            message="Pipeline Export Error",
-                            runtime="WORKFLOW",
-                            data={
-                                "nodeType": node_type,
-                                "nodeID": node_id,
-                                "nodeName": node_name,
-                                "issue": issue,
-                            },
-                        )
-                    return [
-                        init_field,
-                        event_field,
-                        trigger_field,
-                        exit_field,
-                        response,
-                    ]
-                for parameter in parameters:
-                    for pipeline_input_parameter in pipeline_input_parameters:
-                        if pipeline_input_parameter.get("name") == parameter.get("name"):
-                            pipeline_input_parameters.remove(pipeline_input_parameter)
-                            break
-                parameters += pipeline_input_parameters
-                condition, _ = self._get_condition(node_json, node)
-                trigger_field["pipeline"][node.get("app_data").get("label").strip()] = {
-                    "condition": condition,
-                    "operation": "create",
-                    "pipeline": {
-                        "pipelineTemplate": Path(
-                            str(node.get("app_data").get("component_parameters").get("template_name"))
-                        ).stem,
-                        "parameters": parameters,
-                    },
-                }
-                data = {
-                    "workflowSource": "Pipeline Trigger",
-                    "pipelineTriggerName": node.get("app_data").get("label").strip(),
-                }
-            elif node_type == "k8s_object_trigger":
-                if "k8sobj" not in trigger_field:
-                    trigger_field["k8sobj"] = {}
-
-                node_type = "K8s Object Trigger"
-                node_id = node.get("id")
-                node_name = node.get("app_data").get("label").strip()
-                data = {
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name,
-                    "propertyName": "",
-                    "index": 0,
-                }
-
-                condition, linknodes_name_to_type = self._get_condition(node_json, node)
-                parameters = self._parse_trigger_parameters(
-                    node.get("app_data").get("component_parameters").get("trigger_parameters"),
-                    data,
-                    linknodes_name_to_type,
-                    response,
-                )
-                trigger_field["k8sobj"][node.get("app_data").get("label").strip()] = {
-                    "condition": condition,
-                    "operation": node.get("app_data").get("component_parameters").get("operation"),
-                    "source": self._get_k8s_source(node.get("app_data").get("component_parameters").get("source")),
-                    "arguments": parameters,
-                }
-            elif node_type == "http_trigger":
-                if "http" not in trigger_field:
-                    trigger_field["http"] = {}
-
-                node_type = "HTTP Trigger"
-                node_id = node.get("id")
-                node_name = node.get("app_data").get("label").strip()
-                data = {
-                    "nodeType": node_type,
-                    "nodeID": node_id,
-                    "nodeName": node_name,
-                    "propertyName": "",
-                    "index": 0,
-                }
-                condition, linknodes_name_to_type = self._get_condition(node_json, node)
-                parameters = self._parse_trigger_parameters(
-                    node.get("app_data").get("component_parameters").get("trigger_parameters"),
-                    data,
-                    linknodes_name_to_type,
-                    response,
-                )
-
-                trigger_field["http"][node.get("app_data").get("label").strip()] = {
-                    "condition": condition,
-                    "url": node.get("app_data").get("component_parameters").get("url"),
-                    "method": node.get("app_data").get("component_parameters").get("method"),
-                    "timeout": node.get("app_data").get("component_parameters").get("timeout"),
-                    "payload": parameters,
-                }
-            elif node_type == "init":
-                init_pipeline_field = {}
-                pipeline_input_parameters = {}
-                data = {"workflowSource": "Init"}
-
-                pipeline_path = node.get("app_data").get("component_parameters").get("init_pipeline")
-                path_name = Path(str(pipeline_path)).stem
-                init_pipeline_field["pipelineTemplate"] = path_name
-                (
-                    pipeline_response,
-                    pipeline_input_parameters,
-                ) = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                if pipeline_response.has_fatal:
-                    issues = (pipeline_response.response).get("issues")
-                    for issue in issues:
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="pipelineExportError",
-                            message="Pipeline Export Error",
-                            runtime="WORKFLOW",
-                            data={
-                                "nodeType": "Init",
-                                "nodeID": node.get("id"),
-                                "issue": issue,
-                            },
-                        )
-                    return [
-                        init_field,
-                        event_field,
-                        trigger_field,
-                        exit_field,
-                        response,
-                    ]
-
-                init_parameters = []
-                for init_item in node.get("app_data").get("component_parameters").get("init_parameters"):
-                    temp_value = self._widget_value_str(init_item.get("value"))
-                    temp_init = {
-                        "name": init_item.get("name"),
-                        "value": temp_value,
-                    }
-                    if "description" in init_item:
-                        temp_init["description"] = init_item.get("description")
-                    init_parameters.append(temp_init)
-                for init_parameter in init_parameters:
-                    for pipeline_input_parameter in pipeline_input_parameters:
-                        if pipeline_input_parameter.get("name") == init_parameter.get("name"):
-                            pipeline_input_parameters.remove(pipeline_input_parameter)
-                            break
-                init_parameters += pipeline_input_parameters
-                init_pipeline_field["parameters"] = init_parameters
-
-                init_pipeline_field = dict(
-                    sorted(
-                        init_pipeline_field.items(),
-                        key=lambda x: x[0],
-                        reverse=True,
+            parse_func = parser[node_type]
+            if node_type in ["init", "exit", "pipeline_trigger"]:
+                if node_type == "init":
+                    init_field = await parse_func(node, runtime_config, root_dir, parent, file_list, response)
+                elif node_type == "exit":
+                    exit_field = await parse_func(node, runtime_config, root_dir, parent, file_list, response)
+                elif node_type == "pipeline_trigger":
+                    await parse_func(
+                        trigger_field, node_json, node, runtime_config, root_dir, parent, file_list, response
                     )
-                )
-                init_field = {"pipeline": init_pipeline_field}
-            elif node_type == "exit":
-                exit_pipeline_field = {}
-                pipeline_input_parameters = {}
-                data = {"workflowSource": "Exit"}
-
-                pipeline_path = node.get("app_data").get("component_parameters").get("exit_pipeline")
-                path_name = Path(str(pipeline_path)).stem
-                exit_pipeline_field["pipelineTemplate"] = path_name
-                (
-                    pipeline_response,
-                    pipeline_input_parameters,
-                ) = await self.export_pipeline(pipeline_path, runtime_config, root_dir, parent, file_list)
-                if pipeline_response.has_fatal:
-                    issues = (pipeline_response.response).get("issues")
-                    for issue in issues:
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="pipelineExportError",
-                            message="Pipeline Export Error",
-                            runtime="WORKFLOW",
-                            data={
-                                "nodeType": "Exit",
-                                "nodeID": node.get("id"),
-                                "issue": issue,
-                            },
-                        )
-                    return [
-                        init_field,
-                        event_field,
-                        trigger_field,
-                        exit_field,
-                        response,
-                    ]
-
-                exit_parameters = []
-                for exit_item in node.get("app_data").get("component_parameters").get("exit_parameters"):
-                    temp_value = self._widget_value_str(exit_item.get("value"))
-
-                    temp_exit = {
-                        "name": exit_item.get("name"),
-                        "value": temp_value,
-                    }
-                    if "description" in exit_item:
-                        temp_exit["description"] = exit_item.get("description")
-                    exit_parameters.append(temp_exit)
-                for exit_parameter in exit_parameters:
-                    for pipeline_input_parameter in pipeline_input_parameters:
-                        if pipeline_input_parameter.get("name") == exit_parameter.get("name"):
-                            pipeline_input_parameters.remove(pipeline_input_parameter)
-                            break
-                exit_parameters += pipeline_input_parameters
-                exit_pipeline_field["parameters"] = exit_parameters
-
-                exit_pipeline_field = dict(
-                    sorted(
-                        exit_pipeline_field.items(),
-                        key=lambda x: x[0],
-                        reverse=True,
-                    )
-                )
-                exit_field = {"pipeline": exit_pipeline_field}
+                if response.has_fatal:
+                    return [init_field, event_field, trigger_field, exit_field, response]
+            elif node_type in ["k8s_object_trigger", "http_trigger"]:
+                parse_func(trigger_field, node_json, node, response)
+            else:
+                parse_func(event_field, node)
         return [init_field, event_field, trigger_field, exit_field, response]
 
     def _get_condition(self, node_json: dict, node: dict):
@@ -482,8 +460,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     def _get_event_filter(self, event_filter: list[dict], expression: str):
         expression = expression.replace(" ", "")
-        expression_num = len(re.findall(r"\d+\.?\d*", expression))
-        count = 0
         stack_expression = ""
         expression_id = 0
         for char in expression:
@@ -496,21 +472,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 if expression_item == "":
                     stack_expression += char
                 else:
-                    if count == 0 or expression_num == 1:
-                        stack_expression += "(" + expression_item + ") " + char
-                        count += 1
-                    elif count == expression_item:
-                        stack_expression += " (" + expression_item + ")" + char
-                        count += 1
-                    else:
-                        stack_expression += " (" + expression_item + ") " + char
+                    stack_expression += "(" + expression_item + ")" + char
                 expression_id = 0
         if expression_id != 0:
             expression_item = self._get_expression_item(expression_id, event_filter)
             if stack_expression == "":
                 stack_expression += expression_item
             else:
-                stack_expression += " (" + expression_item + ")"
+                stack_expression += "(" + expression_item + ")"
+        stack_expression = stack_expression.replace("&&", " && ")
+        stack_expression = stack_expression.replace("||", " || ")
         return stack_expression
 
     def _widget_value_str(self, value_dict: dict):
@@ -631,13 +602,22 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
     @staticmethod
     def _parse_trigger_parameters(
-        trigger_parameters: dict,
-        data: dict,
+        node: dict,
+        node_type,
         linknodes_name_to_type: dict,
         response,
     ):
         trigger_parameters_field = []
-
+        node_id = node.get("id")
+        node_name = node.get("app_data").get("label").strip()
+        data = {
+            "nodeType": node_type,
+            "nodeID": node_id,
+            "nodeName": node_name,
+            "propertyName": "",
+            "index": 0,
+        }
+        trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
         for index, item in enumerate(trigger_parameters):
             data["index"] = index + 1
             temp_item = {}
@@ -741,7 +721,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
 
         response = self._validate(nodes, parameters_field)
         if not response.has_fatal:
-            para_field = await self._component_parse(root, parent, nodes, runtime_config, export_path, file_list)
+            para_field = await self._component_parse(root, parent, nodes, runtime_config, file_list)
             response = para_field[4]
             if not response.has_fatal:
                 spec_field = self._sepc_parse(
@@ -795,8 +775,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate(self, nodes, input_parameters):
         response = ValidationResponse(runtime="WORKFLOW")
         name_dict = {}
-        workflow_input_parameters = []
-        validate = {
+        wf_input_paras = []
+        validator = {
             "model_event": self._validate_model_event,
             "s3_event": self._validate_s3_event,
             "calendar_event": self._validate_calendar_event,
@@ -825,61 +805,42 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime="WORKFLOW",
                 )
             else:
-                workflow_input_parameters.append("workflow.parameters." + parameter.get("name").strip())
+                wf_input_paras.append("workflow.parameters." + parameter.get("name").strip())
         for node in nodes:
             node_type = node.get("op").split(":")[0]
-            validate_func = validate[node_type]
-            validate_func(node, workflow_input_parameters, name_dict, response)
+            validate_func = validator[node_type]
+            validate_func(node, wf_input_paras, name_dict, response)
         return response
 
-    def _validate_s3_event(self, node, workflow_input_parameters, name, response):
+    def _validate_s3_event(self, node, wf_input_paras, name, response):
         node_type = "S3 Event"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
         self._validate_node_name(node, name, response)
         bucket_name = node.get("app_data").get("component_parameters").get("bucket_name")
-        s3_object_prefix = node.get("app_data").get("component_parameters").get("prefix")
-        s3_object_suffix = node.get("app_data").get("component_parameters").get("suffix")
         self._validate_node_property_value(
-            bucket_name,
-            node_type,
-            node_id,
-            node_name,
-            "Bucket Name",
-            workflow_input_parameters,
-            response,
+            bucket_name, node_type, node_id, node_name, "Bucket Name", wf_input_paras, response
         )
-        if s3_object_prefix.get("widget") == "enum":
-            value = s3_object_prefix.get("value").strip()
-            if (value != "") and (value not in workflow_input_parameters):
-                response.add_message(
-                    severity=ValidationSeverity.Error,
-                    message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + value + "'.",
-                    runtime="WORKFLOW",
-                    data={
-                        "nodeType": node_type,
-                        "nodeID": node_id,
-                        "nodeName": node_name,
-                        "propertyName": "S3 Object Prefix",
-                    },
-                )
-        if s3_object_suffix.get("widget") == "enum":
-            value = s3_object_suffix.get("value").strip()
-            if (value != "") and (value not in workflow_input_parameters):
-                response.add_message(
-                    severity=ValidationSeverity.Error,
-                    message_type="invalidNodePropertyValue",
-                    message="Workflow input parameters do not contain '" + value + "'.",
-                    runtime="WORKFLOW",
-                    data={
-                        "nodeType": node_type,
-                        "nodeID": node_id,
-                        "nodeName": node_name,
-                        "propertyName": "S3 Object Suffix",
-                    },
-                )
-
+        s3_object = {
+            "S3 Object Prefix": node.get("app_data").get("component_parameters").get("prefix"),
+            "S3 Object Suffix": node.get("app_data").get("component_parameters").get("suffix"),
+        }
+        for property_name, property_value in s3_object.items():
+            if property_value.get("widget") == "enum":
+                value = property_value.get("value").strip()
+                if (value != "") and (value not in wf_input_paras):
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodePropertyValue",
+                        message="Workflow input parameters do not contain '" + value + "'.",
+                        runtime="WORKFLOW",
+                        data={
+                            "nodeType": node_type,
+                            "nodeID": node_id,
+                            "nodeName": node_name,
+                            "propertyName": property_name,
+                        },
+                    )
         if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
             len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
         ):
@@ -892,24 +853,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "nodeType": node_type,
                     "nodeID": node_id,
                     "nodeName": node_name,
-                    "propertyName": "Dataset Event Filter",
+                    "propertyName": "S3 Event Filters",
                 },
             )
         else:
             event_filters = node.get("app_data").get("component_parameters").get("event_filter")
             for index, event_filter in enumerate(event_filters):
                 self._validate_event_filter(
-                    index,
-                    event_filter,
-                    node_type,
-                    node_id,
-                    node_name,
-                    "S3 Event Filter",
-                    workflow_input_parameters,
-                    response,
+                    index, event_filter, node_type, node_id, node_name, "S3 Event Filters", wf_input_paras, response
                 )
 
-    def _validate_calendar_event(self, node, workflow_input_parameters, name, response):
+    def _validate_calendar_event(self, node, wf_input_paras, name, response):
         node_type = "Calendar Event"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -921,157 +875,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             node_id,
             node_name,
             calendar.get("name"),
-            workflow_input_parameters,
+            wf_input_paras,
             response,
         )
 
-    def _validate_model_event(self, node, workflow_input_parameters, name, response):
-        node_type = "Model Event"
-        node_id = node.get("id")
-        node_name = node.get("app_data").get("label").strip()
-        self._validate_node_name(node, name, response)
+    def _validate_model_event(self, node, wf_input_paras, name, response):
+        self._validate_dataset_model_event(node, wf_input_paras, name, response, "Model")
 
-        data = {
-            "nodeType": node_type,
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-        }
+    def _validate_dataset_event(self, node, wf_input_paras, name, response):
+        self._validate_dataset_model_event(node, wf_input_paras, name, response, "Dataset")
 
-        if ("model_name" not in node.get("app_data").get("component_parameters")) or (
-            len(node.get("app_data").get("component_parameters").get("model_name")) == 0
-        ):
-            data["propertyName"] = "Model Name"
-            response.add_message(
-                severity=ValidationSeverity.Error,
-                message_type="invalidNodePropertyValue",
-                message="Node is missing a value for a required property.",
-                runtime="WORKFLOW",
-                data=data,
-            )
-        else:
-            model_names = node.get("app_data").get("component_parameters").get("model_name")
-            for index, model_name in enumerate(model_names):
-                self._validate_node_property_value(
-                    model_name,
-                    node_type,
-                    node_id,
-                    node_name,
-                    "Model Name",
-                    workflow_input_parameters,
-                    response,
-                    index,
-                )
-
-        if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
-            len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
-        ):
-            data["propertyName"] = "Model Event Filter"
-            response.add_message(
-                severity=ValidationSeverity.Error,
-                message_type="invalidNodePropertyValue",
-                message="Node is missing a value for a required property.",
-                runtime="WORKFLOW",
-                data=data,
-            )
-        else:
-            component_parameters = node.get("app_data").get("component_parameters")
-            event_filters = component_parameters.get("event_filter")
-            filter_id = 1
-            expression = "1"
-            for index, event_filter in enumerate(event_filters):
-                self._validate_event_filter(
-                    index,
-                    event_filter,
-                    node_type,
-                    node_id,
-                    node_name,
-                    "Model Event Filter",
-                    workflow_input_parameters,
-                    response,
-                )
-                if filter_id > 1:
-                    expression += "&&" + str(filter_id)
-                filter_id += 1
-            if (
-                "expression" not in component_parameters
-                or component_parameters.get("expression").replace(" ", "") == ""
-            ):
-                component_parameters["expression"] = expression
-
-    def _validate_dataset_event(self, node, workflow_input_parameters, name, response):
-        node_type = "Dataset Event"
-        node_id = node.get("id")
-        node_name = node.get("app_data").get("label").strip()
-        data = {
-            "nodeType": node_type,
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-        }
-        self._validate_node_name(node, name, response)
-        if ("dataset_name" not in node.get("app_data").get("component_parameters")) or (
-            len(node.get("app_data").get("component_parameters").get("dataset_name")) == 0
-        ):
-            data["propertyName"] = "Dataset Name"
-            response.add_message(
-                severity=ValidationSeverity.Error,
-                message_type="invalidNodePropertyValue",
-                message="Node is missing a value for a required property.",
-                runtime="WORKFLOW",
-                data=data,
-            )
-        else:
-            dataset_names = node.get("app_data").get("component_parameters").get("dataset_name")
-            for index, dataset_name in enumerate(dataset_names):
-                self._validate_node_property_value(
-                    dataset_name,
-                    node_type,
-                    node_id,
-                    node_name,
-                    "Dataset Name",
-                    workflow_input_parameters,
-                    response,
-                    index,
-                )
-
-        if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
-            len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
-        ):
-            data["propertyName"] = "Dataset Event Filter"
-            response.add_message(
-                severity=ValidationSeverity.Error,
-                message_type="invalidNodePropertyValue",
-                message="Node is missing a value for a required property.",
-                runtime="WORKFLOW",
-                data=data,
-            )
-        else:
-            component_parameters = node.get("app_data").get("component_parameters")
-            event_filters = component_parameters.get("event_filter")
-            filter_id = 1
-            expression = "1"
-            for index, event_filter in enumerate(event_filters):
-                self._validate_event_filter(
-                    index,
-                    event_filter,
-                    node_type,
-                    node_id,
-                    node_name,
-                    "Dataset Event Filter",
-                    workflow_input_parameters,
-                    response,
-                )
-                if filter_id > 1:
-                    expression += "&&" + str(filter_id)
-                filter_id += 1
-            if (
-                "expression" not in component_parameters
-                or component_parameters.get("expression").replace(" ", "") == ""
-            ):
-                component_parameters["expression"] = expression
-
-    def _validate_model_monitor_event(self, node, workflow_input_parameters, name, response):
+    def _validate_model_monitor_event(self, node, wf_input_paras, name, response):
         node_type = "Model Monitor Event"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1100,7 +914,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     node_id,
                     node_name,
                     "App Name of Model Configuration with Id=" + str(event_filter.get("id")),
-                    workflow_input_parameters,
+                    wf_input_paras,
                     response,
                     index,
                 )
@@ -1110,12 +924,12 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     node_id,
                     node_name,
                     "Model Name of Model Configuration with Id=" + str(event_filter.get("id")),
-                    workflow_input_parameters,
+                    wf_input_paras,
                     response,
                     index,
                 )
 
-    def _validate_pipeline_trigger(self, node, workflow_input_parameters, name, response):
+    def _validate_pipeline_trigger(self, node, wf_input_paras, name, response):
         node_type = "Pipeline Trigger"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1133,11 +947,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 node_id,
                 node_name,
                 "Pipeline Trigger Parameters",
-                workflow_input_parameters,
+                wf_input_paras,
                 response,
             )
 
-    def _validate_k8s_object_trigger(self, node, workflow_input_parameters, name, response):
+    def _validate_k8s_object_trigger(self, node, wf_input_paras, name, response):
         node_type = "K8s Object Trigger"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1179,22 +993,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime="WORKFLOW",
                     data=data,
                 )
-
         if "trigger_parameters" not in node.get("app_data").get("component_parameters"):
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
         else:
             trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
+            para_name = "K8s Object Trigger Parameters"
             self._validate_trigger_parameters(
-                trigger_parameters,
-                node_type,
-                node_id,
-                node_name,
-                "K8s Object Trigger Parameters",
-                workflow_input_parameters,
-                response,
+                trigger_parameters, node_type, node_id, node_name, para_name, wf_input_paras, response
             )
 
-    def _validate_http_trigger(self, node, workflow_input_parameters, name, response):
+    def _validate_http_trigger(self, node, wf_input_paras, name, response):
         node_type = "HTTP Trigger"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1226,11 +1034,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 node_id,
                 node_name,
                 "HTTP Trigger Parameters",
-                workflow_input_parameters,
+                wf_input_paras,
                 response,
             )
 
-    def _validate_init(self, node, workflow_input_parameters, name, response):
+    def _validate_init(self, node, wf_input_paras, name, response):
         node_type = "Init"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1245,11 +1053,11 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             node_id,
             node_name,
             "Init Parameters",
-            workflow_input_parameters,
+            wf_input_paras,
             response,
         )
 
-    def _validate_exit(self, node, workflow_input_parameters, name, response):
+    def _validate_exit(self, node, wf_input_paras, name, response):
         node_type = "Exit"
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
@@ -1264,9 +1072,78 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             node_id,
             node_name,
             "Exit Parameters",
-            workflow_input_parameters,
+            wf_input_paras,
             response,
         )
+
+    def _validate_dataset_model_event(self, node, wf_input_paras, name, response, node_type):
+        node_id = node.get("id")
+        node_name = node.get("app_data").get("label").strip()
+        data = {
+            "nodeType": "{} Event".format(node_type),
+            "nodeID": node_id,
+            "nodeName": node_name,
+            "propertyName": "",
+        }
+        self._validate_node_name(node, name, response)
+        if ("{}_name".format(node_type.lower()) not in node.get("app_data").get("component_parameters")) or (
+            len(node.get("app_data").get("component_parameters").get("{}_name".format(node_type.lower()))) == 0
+        ):
+            data["propertyName"] = "{} Names".format(node_type)
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodePropertyValue",
+                message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
+                data=data,
+            )
+        else:
+            names = node.get("app_data").get("component_parameters").get("{}_name".format(node_type.lower()))
+            for index, name in enumerate(names):
+                self._validate_node_property_value(
+                    name, node_type, node_id, node_name, "{} Name".format(node_type), wf_input_paras, response, index
+                )
+        if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
+            len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
+        ):
+            data["propertyName"] = "{} Event Filters".format(node_type)
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodePropertyValue",
+                message="Node is missing a value for a required property.",
+                runtime="WORKFLOW",
+                data=data,
+            )
+        else:
+            component_parameters = node.get("app_data").get("component_parameters")
+            expression = self._get_default_expression(
+                component_parameters, node_type, node_id, node_name, wf_input_paras, response
+            )
+            if (
+                "expression" not in component_parameters
+                or component_parameters.get("expression").replace(" ", "") == ""
+            ):
+                component_parameters["expression"] = expression
+
+    def _get_default_expression(self, component_parameters, node_type, node_id, node_name, wf_input_paras, response):
+        event_filters = component_parameters.get("event_filter")
+        filter_id = 1
+        expression = "1"
+        for index, event_filter in enumerate(event_filters):
+            self._validate_event_filter(
+                index,
+                event_filter,
+                node_type,
+                node_id,
+                node_name,
+                "{} Event Filters".format(node_type),
+                wf_input_paras,
+                response,
+            )
+            if filter_id > 1:
+                expression += "&&" + str(filter_id)
+            filter_id += 1
+        return expression
 
     def _validate_filepath(
         self,
@@ -1314,7 +1191,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_id,
         node_name,
         property_name,
-        workflow_input_parameters,
+        wf_input_paras,
         response,
         index=-1,
     ):
@@ -1336,7 +1213,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             )
         elif node_property.get("widget") == "enum":
             value = node_property.get("value").strip()
-            if value not in workflow_input_parameters:
+            if value not in wf_input_paras:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
@@ -1353,7 +1230,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_id,
         node_name,
         property_name,
-        workflow_input_parameters,
+        wf_input_paras,
         response,
     ):
         data = {
@@ -1393,7 +1270,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         elif node_property.get("value").get("widget") == "enum":
             data["propertyName"] = "Value of " + property_name
             value = node_property.get("value").get("value").strip()
-            if value not in workflow_input_parameters:
+            if value not in wf_input_paras:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
@@ -1423,7 +1300,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         node_id,
         node_name,
         property_name,
-        workflow_input_parameters,
+        wf_input_paras,
         response,
     ):
         data = {
@@ -1464,7 +1341,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 )
             elif parameter[value].get("widget") in ["workflow_enum", "enum"]:
                 if (
-                    parameter[value].get("value") not in workflow_input_parameters
+                    parameter[value].get("value") not in wf_input_paras
                     and parameter[value].get("value") != "workflow.instance_name"
                 ):
                     data["propertyName"] = value.title() + " of " + property_name

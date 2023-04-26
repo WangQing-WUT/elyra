@@ -360,7 +360,6 @@ export function getNodeProblems(pipeline: any, nodeDefinitions: any) {
       }
     }
   }
-
   return problems;
 }
 

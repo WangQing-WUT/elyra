@@ -502,22 +502,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     response=response,
                 )
 
-    async def _validate_custom_component_node_properties(
-        self,
-        node: Node,
-        response: ValidationResponse,
-        pipeline_definition: PipelineDefinition,
-        pipeline_runtime: str,
-    ):
-        """
-        Validates the properties of the custom component node
-        :param node: the node to be validated
-        :param response: the validation response object to attach any error messages
-        :param pipeline_definition: the pipeline definition containing the node
-        :param pipeline_runtime: the pipeline runtime selected
-        :return:
-        """
-        node_label = node.label
+    async def _get_parsed_para_and_prop(self, node, pipeline_runtime, node_label, response):
         parsed_parameters = []
         component_property_dict = {}
         if node.op.startswith("branch"):
@@ -555,7 +540,33 @@ class PipelineValidationManager(SingletonConfigurable):
             parsed_parameters = [
                 p for p in current_parameters.keys() if p not in node.elyra_owned_properties and p not in resources
             ]
+        return parsed_parameters, component_property_dict
+
+    async def _validate_custom_component_node_properties(
+        self,
+        node: Node,
+        response: ValidationResponse,
+        pipeline_definition: PipelineDefinition,
+        pipeline_runtime: str,
+    ):
+        """
+        Validates the properties of the custom component node
+        :param node: the node to be validated
+        :param response: the validation response object to attach any error messages
+        :param pipeline_definition: the pipeline definition containing the node
+        :param pipeline_runtime: the pipeline runtime selected
+        :return:
+        """
+        node_label = node.label
+        parsed_parameters, component_property_dict = await self._get_parsed_para_and_prop(
+            node, pipeline_runtime, node_label, response
+        )
         for default_parameter in parsed_parameters:
+            data = {
+                "nodeID": node.id,
+                "nodeName": node.label,
+                "propertyName": default_parameter,
+            }
             node_param = node.get_component_parameter(default_parameter)
             if node.op.startswith("branch"):
                 node_param = node.get_component_parameter("branch_conditions").get(default_parameter)
@@ -565,11 +576,7 @@ class PipelineValidationManager(SingletonConfigurable):
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodeProperty",
                         message="Node has an invalid value. Parallelism should be a positive integer.",
-                        data={
-                            "nodeID": node.id,
-                            "nodeName": node.label,
-                            "propertyName": default_parameter,
-                        },
+                        data=data,
                     )
             elif not node_param or (type(node_param) is not str and node_param.get("value") is None):
                 if self._is_required_property(component_property_dict, default_parameter):
@@ -577,11 +584,7 @@ class PipelineValidationManager(SingletonConfigurable):
                         severity=ValidationSeverity.Error,
                         message_type="invalidNodeProperty",
                         message="Node is missing a value for a required property.",
-                        data={
-                            "nodeID": node.id,
-                            "nodeName": node.label,
-                            "propertyName": default_parameter,
-                        },
+                        data=data,
                     )
             elif type(node_param) is not str:
                 if node_param.get("widget") == "inputpath":
@@ -589,120 +592,64 @@ class PipelineValidationManager(SingletonConfigurable):
                     # dictionary of two keys:
                     #   "value": the node ID of the parent node containing the output
                     #   "option": the name of the key (which is an output) of the above referenced node
-                    inputpath_value = node_param.get("value")
-                    if (
-                        not isinstance(inputpath_value, dict)
-                        or len(inputpath_value) != 2
-                        or set(inputpath_value.keys()) != {"value", "option"}
-                    ):
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="invalidNodeProperty",
-                            message="Node parameter takes output from a parent, but parameter structure is malformed.",
-                            data={"nodeID": node.id, "nodeName": node.label},
-                        )
-                    node_ids = [x.get("node_id_ref", None) for x in node.component_links]
-                    parent_list = self._get_parent_id_list(pipeline_definition, node_ids, [])
-                    upstream_node_id = inputpath_value.get("value")
-                    if upstream_node_id not in parent_list:
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="invalidNodeProperty",
-                            message="Node parameter takes output from a parent, but the referenced node is not a "
-                            "parent. Check your node-to-node connections.",
-                            data={"nodeID": node.id, "nodeName": node.label},
-                        )
-                    if pipeline_runtime == "airflow":
-                        # TODO: Update this runtime-specific check for xcom_push, i.e. abstraction for byo validation?
-                        upstream_node = pipeline_definition.get_node(upstream_node_id)
-                        xcom_param = upstream_node.get_component_parameter("xcom_push")
-                        if xcom_param:
-                            xcom_value = xcom_param.get("value")
-                            if not xcom_value:
-                                response.add_message(
-                                    severity=ValidationSeverity.Error,
-                                    message_type="invalidNodeProperty",
-                                    message="Node parameter takes output from a parent, but the parent "
-                                    "node does not have the xcom_push property enabled.",
-                                    data={
-                                        "nodeID": node.id,
-                                        "nodeName": node.label,
-                                        "parentNodeID": upstream_node_id,
-                                    },
-                                )
+                    self._validate_widget_inputpath(node_param, node, pipeline_definition, response)
                 elif node_param.get("widget") == "file":
-                    filename = node_param.get("value")
-                    if filename:
-                        self._validate_filepath(
-                            node_id=node.id,
-                            node_label=node.label,
-                            property_name=default_parameter,
-                            filename=filename,
-                            response=response,
-                        )
-                    elif self._is_required_property(component_property_dict, default_parameter):
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="invalidNodeProperty",
-                            message="Node is missing a value for a required property.",
-                            data={
-                                "nodeID": node.id,
-                                "nodeName": node.label,
-                                "propertyName": default_parameter,
-                            },
-                        )
-                elif node_param.get("widget") == "string":
-                    if node_param.get("value") == "":
-                        response.add_message(
-                            severity=ValidationSeverity.Error,
-                            message_type="invalidNodeProperty",
-                            message="Node is missing a value for a required property.",
-                            data={
-                                "nodeID": node.id,
-                                "nodeName": node.label,
-                                "propertyName": default_parameter,
-                            },
-                        )
+                    self._validate_widget_file(component_property_dict, node_param, node, default_parameter, response)
                 elif node_param.get("widget") == "enum":
-                    self._validate_widget_enum(
-                        node,
-                        node_param,
-                        default_parameter,
-                        pipeline_definition,
-                        response,
-                    )
+                    self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
                 elif default_parameter == "loop_args":
                     self._validate_loop_list(node, node_param, default_parameter, response)
 
+    def _validate_widget_inputpath(self, node_param, node, pipeline_definition, response):
+        inputpath_value = node_param.get("value")
+        if (
+            not isinstance(inputpath_value, dict)
+            or len(inputpath_value) != 2
+            or set(inputpath_value.keys()) != {"value", "option"}
+        ):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="Node parameter takes output from a parent, but parameter structure is malformed.",
+                data={"nodeID": node.id, "nodeName": node.label},
+            )
+        node_ids = [x.get("node_id_ref", None) for x in node.component_links]
+        parent_list = self._get_parent_id_list(pipeline_definition, node_ids, [])
+        upstream_node_id = inputpath_value.get("value")
+        if upstream_node_id not in parent_list:
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="Node parameter takes output from a parent, but the referenced node is not a "
+                "parent. Check your node-to-node connections.",
+                data={"nodeID": node.id, "nodeName": node.label},
+            )
+
+    def _validate_widget_file(self, component_property_dict, node_param, node, default_parameter, response):
+        filename = node_param.get("value")
+        if filename:
+            self._validate_filepath(
+                node_id=node.id,
+                node_label=node.label,
+                property_name=default_parameter,
+                filename=filename,
+                response=response,
+            )
+        elif self._is_required_property(component_property_dict, default_parameter):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="Node is missing a value for a required property.",
+                data={
+                    "nodeID": node.id,
+                    "nodeName": node.label,
+                    "propertyName": default_parameter,
+                },
+            )
+
     def _validate_loop_list(self, node, node_param, default_parameter, response):
-        notlist = False
         if node_param.get("widget") == "List[str|int|float]":
-            value = node_param.get("value")
-            converted_list = None
-            if value.startswith("[") and value.endswith("]"):
-                try:
-                    converted_list = ast.literal_eval(value)
-                except (
-                    ValueError,
-                    TypeError,
-                    SyntaxError,
-                    MemoryError,
-                    RecursionError,
-                ):
-                    notlist = True
-            if not isinstance(converted_list, list):
-                notlist = True
-            if notlist:
-                response.add_message(
-                    severity=ValidationSeverity.Error,
-                    message_type="invalidNodeProperty",
-                    message="The value of the property cannot be converted to an array.",
-                    data={
-                        "nodeID": node.id,
-                        "nodeName": node.label,
-                        "propertyName": default_parameter,
-                    },
-                )
+            self._validate_list(node, node_param, default_parameter, response)
         elif node_param.get("widget") == "Number":
             if type(node_param.get("value")) is not int or node_param.get("value") <= 0:
                 response.add_message(
@@ -745,6 +692,29 @@ class PipelineValidationManager(SingletonConfigurable):
                         "propertyName": default_parameter,
                     },
                 )
+
+    def _validate_list(self, node, node_param, default_parameter, response):
+        notlist = False
+        value = node_param.get("value")
+        converted_list = None
+        if value.startswith("[") and value.endswith("]"):
+            try:
+                converted_list = ast.literal_eval(value)
+            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+                notlist = True
+        if not isinstance(converted_list, list):
+            notlist = True
+        if notlist:
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="The value of the property cannot be converted to an array.",
+                data={
+                    "nodeID": node.id,
+                    "nodeName": node.label,
+                    "propertyName": default_parameter,
+                },
+            )
 
     def _validate_widget_enum(self, node, node_param, default_parameter, pipeline_definition, response):
         if node_param.get("value") == "":

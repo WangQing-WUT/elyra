@@ -292,7 +292,7 @@ const PipelineEditor = forwardRef(
           controller.current.setPalette(palette);
           controller.current.validate({ redColor: theme.palette.error.main });
         } else {
-          controller.current.resetStyles();
+          // controller.current.resetStyles();
         }
         // don't call to persist change because it will cause an infinate loop
       } catch (e) {
@@ -806,7 +806,7 @@ const PipelineEditor = forwardRef(
               contextMenuHandler={() => {}}
               editActionHandler={() => {
                 controller.current.setPipelineFlow(pipeline);
-                controller.current.resetStyles();
+                // controller.current.resetStyles();
               }}
               toolbarConfig={[]}
               config={{

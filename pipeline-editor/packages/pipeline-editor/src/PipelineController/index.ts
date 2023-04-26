@@ -224,23 +224,23 @@ class PipelineController extends CanvasController {
     );
 
     // TODO: this shouldn't be hard-coded but we cant use css variables.
-    const indicator = {
-      id: "error",
-      image:
-        "data:image/svg+xml;utf8," +
-        encodeURIComponent(
-          '<svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="#da1e28" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#ffffff"></circle><path d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"></path><path d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z" data-icon-path="inner-path" opacity="0"></path></svg>'
-        ),
-      outline: false,
-      position: "topRight",
-      x_pos: -24,
-      y_pos: -8
-    };
-    for (const [pipelineID, nodes] of Object.entries(nodeToBeStyled)) {
-      for (const nodeID of nodes) {
-        this.setNodeDecorations(nodeID, [indicator], pipelineID);
-      }
-    }
+    // const indicator = {
+    //   id: "error",
+    //   image:
+    //     "data:image/svg+xml;utf8," +
+    //     encodeURIComponent(
+    //       '<svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="#da1e28" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#ffffff"></circle><path d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"></path><path d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z" data-icon-path="inner-path" opacity="0"></path></svg>'
+    //     ),
+    //   outline: false,
+    //   position: "topRight",
+    //   x_pos: -24,
+    //   y_pos: -8
+    // };
+    // for (const [pipelineID, nodes] of Object.entries(nodeToBeStyled)) {
+    //   for (const nodeID of nodes) {
+    //     this.setNodeDecorations(nodeID, [indicator], pipelineID);
+    //   }
+    // }
   }
 
   setLinkErrors(
@@ -372,8 +372,7 @@ class PipelineController extends CanvasController {
   // couples style to the controller which isn't great. Setting a classname
   // would be better, but the CommonCanvas implementation is very buggy.
   validate(styleOptions?: { redColor: string }) {
-    this.resetStyles();
-
+    // this.resetStyles();
     const problems = validate(
       JSON.stringify(this.getPipelineFlow()),
       this.getAllPaletteNodes()
