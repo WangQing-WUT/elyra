@@ -43,6 +43,7 @@
           "title": "Name",
           "description": "The name of this component.",
           "type": "string",
+          "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,254}$",
           "uihints": {
             "category": "Component Properties"
           }

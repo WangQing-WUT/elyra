@@ -606,7 +606,9 @@ wfeeditor 启动前，将配置文件放置在 ~/.local/share/jupyter/metadata/r
 
     - Name
 
-      新建组件名称
+      新建组件名称，遵循 kfp 组件名称规范
+
+      不超过63字符，仅包含小写字母、数字、下划线(_)、短横线(-)和点(.)，以小写字母或数字开头，以小写字母或数字结尾
 
     - Description
 
@@ -656,7 +658,9 @@ wfeeditor 启动前，将配置文件放置在 ~/.local/share/jupyter/metadata/r
 
     - File Name
 
-      新建组件yaml文件名称，可选字段，默认与组件名称相同
+      新建组件yaml文件名称，可选字段，默认与组件名称相同，遵循 Linux 文件命名规范
+
+      不超过256字符，仅包含字母、数字、下划线(_)、短横线(-)和点(.)，以字母、数字或下划线开头
 
     - Save Path
 

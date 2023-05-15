@@ -224,6 +224,8 @@ class MetadataManager(LoggingConfigurable):
         metadata = {}
         temp_name = name
         temp_for_update = for_update
+        if os.path.exists(file_path):
+            raise FileExistsError('file "' + file_path + '" already exist!')
         try:
             file_fd = os.open(file_path, os.O_RDWR | os.O_CREAT | os.O_TRUNC, 0o666)
             with os.fdopen(file_fd, "w") as file:

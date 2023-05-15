@@ -81,6 +81,7 @@
             "type": "string",
             "format": "file"
           },
+          "minItems": 1,
           "uihints": {
             "category": "Configuration"
           }

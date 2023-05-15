@@ -68,6 +68,7 @@
           "title": "Name",
           "description": "The name of this component.",
           "type": "string",
+          "pattern": "^[a-z0-9][-a-z0-9._]{0,61}[a-z0-9]$",
           "uihints": {
             "category": "Component Properties"
           }
@@ -189,6 +190,7 @@
           "title": "File Name",
           "description": "File name of this Component yaml",
           "type": "string",
+          "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,254}$",
           "uihints": {
             "category": "File Info"
           }
