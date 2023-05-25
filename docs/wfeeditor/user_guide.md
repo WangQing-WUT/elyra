@@ -82,7 +82,7 @@ conda -h
 - 创建 conda 环境并激活
 
 ```shell
-conda create -n <env-name> python
+conda create -n <env-name> python=3.10
 conda activate <env-name>
 ```
 
@@ -95,18 +95,12 @@ pip3 --version
 which pip3
 ```
 
-- 安装 node.js 并验证
+- 安装 yarn 和 nodejs 并验证
 
 ```shell
-conda install -y -c conda-forge/label/main nodejs
-node --version 
-```
-
-- 安装 yarn 并验证
-
-```shell
-conda install -y -c conda-forge/label/main yarn
-yarn --version 
+conda install -y -c conda-forge/label/main yarn=1.22.19
+yarn --version
+node --version
 ```
 
 #### 编译与构建

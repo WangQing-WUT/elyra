@@ -69,15 +69,7 @@ data_files_spec = [
     ("share/jupyter/labextensions", "dist/labextensions", "**"),
 ]
 
-runtime_extras = {
-    "kfp-tekton": [
-        "kfp-tekton~=1.3.0",
-    ],  # See elyra-ai/elyra/pull/2034 for fix pack pinning
-    # Kubeflow Pipelines example components
-    # (https://github.com/elyra-ai/examples/tree/main/component-catalog-connectors/kfp-example-components-connector)
-    # Use gitlab as Airflow DAG repository
-    "gitlab": ["python-gitlab"],
-}
+runtime_extras = {}
 runtime_extras["all"] = list(set(sum(runtime_extras.values(), [])))
 
 setup_args = dict(
@@ -121,7 +113,7 @@ setup_args = dict(
         "tornado>=6.1.0",
         "traitlets>=4.3.2",
         "typing-extensions>=3.10,<5",  # Cap from kfp
-        "urllib3>=1.26.5",
+        "urllib3>=1.26.5,<2",
         "watchdog>=2.1.3",
         "websocket-client",
         "yaspin",
