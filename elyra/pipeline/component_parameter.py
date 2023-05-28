@@ -1053,7 +1053,12 @@ class ComponentParameter(object):
                     obj["title"] = InputTypeDescriptionMap[param.value_entry_type].value
                     obj["properties"]["widget"]["default"] = param.value_entry_type
                     obj["properties"]["value"]["type"] = param.value_entry_type
+                    start = param.description.rfind('(') + 1
+                    end = param.description.rfind(')')
+                    json_dict["type_desc"] = param.description[start:end].replace("type: ", "")
                     if param.value_entry_type == "boolean":
+                        obj["properties"]["value"]["type"] = "string"
+                        obj["properties"]["value"]["enum"] = ["True", "False"]
                         obj["properties"]["value"]["title"] = " "
 
                     # Render default value if it is not None
@@ -1094,7 +1099,7 @@ class InputTypeDescriptionMap(Enum):
 
     string = "Please enter a string value:"
     number = "Please enter a number value:"
-    boolean = "Please select or deselect the checkbox:"
+    boolean = "Please select true or false:"
     file = "Please select a file to use as input:"
     inputpath = "Please select an output from a parent:"
     enum = "Please select one from pipeline input parameters"

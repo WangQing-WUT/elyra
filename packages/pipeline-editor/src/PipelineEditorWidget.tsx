@@ -1015,13 +1015,6 @@ const PipelineWrapper: React.FC<IProps> = ({
     toolbar = {
       leftBar: [
         {
-          action: 'openPipeline',
-          label: 'Open Pipeline',
-          enable: true,
-          iconEnabled: IconUtil.encode(openPipelineIcon),
-          iconDisabled: IconUtil.encode(openPipelineIcon)
-        },
-        {
           action: 'upload',
           label: 'Upload Workflow',
           enable: true,
@@ -1109,13 +1102,6 @@ const PipelineWrapper: React.FC<IProps> = ({
   } else {
     toolbar = {
       leftBar: [
-        {
-          action: 'openPipeline',
-          label: 'Open Pipeline',
-          enable: true,
-          iconEnabled: IconUtil.encode(openPipelineIcon),
-          iconDisabled: IconUtil.encode(openPipelineIcon)
-        },
         {
           action: 'run',
           label: 'Run Pipeline',

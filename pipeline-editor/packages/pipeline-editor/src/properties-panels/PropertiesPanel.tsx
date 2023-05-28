@@ -94,9 +94,11 @@ export function PropertiesPanel({
         schema_copy.properties.pipeline_defaults.properties;
       for (let index in input_parameters) {
         if (input_parameters[index]?.name) {
-          pipeline_input_parameters.push(
-            `${input_parameters[index]?.name.trim()}`
-          );
+          if (input_parameters[index].type.widget === "String") {
+            pipeline_input_parameters.push(
+              `${input_parameters[index]?.name.trim()}`
+            );
+          }
         }
       }
       pipeline_input_parameters.sort();

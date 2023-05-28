@@ -205,12 +205,7 @@
           }
         }
       },
-      "required": [
-        "runtime_type",
-        "categories",
-        "component_name",
-        "implementation"
-      ]
+      "required": ["runtime_type", "categories", "component_name"]
     }
   },
   "required": ["schema_name", "display_name", "metadata"]

@@ -57,7 +57,7 @@ class MetadataHandler(HttpErrorMixin, APIHandler):
 
         schemaspace = url_unescape(schemaspace)
         parent = self.settings.get("elyra")
-        server_root_dir = self.settings.get("server_root_dir")
+        server_root_dir = os.path.expanduser(self.settings.get("server_root_dir"))
         try:
             instance = self._validate_body(schemaspace)
             instance_dict = instance.to_dict()

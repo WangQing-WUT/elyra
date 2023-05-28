@@ -369,8 +369,6 @@ wfeeditor 在 JupyterLab的左侧边栏中添加了多个选项卡，这些选�
 鼠标悬浮在按钮上方可以看到按钮描述，从左至右依次是：
 
 - Palette: 展开或关闭组件面板
-- Open Pipeline: 从文件系统打开一个 .pipeline 文件
-
 - Run Pipeline: 运行 pipeline
 - Save Pipeline: 保存 pipeline
 - Export Pipelie: 导出 pipeline
@@ -387,7 +385,6 @@ wfeeditor 在 JupyterLab的左侧边栏中添加了多个选项卡，这些选�
 - Delete: 删除选中
 - Arrange Horizontally: 水平排列画布节点
 - Arrange Vertically: 垂直排列画布节点
-
 - Open Panel: 打开属性面板
 
 ##### 组件面板
@@ -420,8 +417,6 @@ wfeeditor 在 JupyterLab的左侧边栏中添加了多个选项卡，这些选�
 鼠标悬浮在按钮上方可以看到按钮描述，从左至右依次是：
 
 - Palette: 展开或关闭组件面板
-- Open Pipeline: 从文件系统打开一个 .pipeline 文件
-
 - Upload Workflow: 上传 workflow
 - Save Workflow: 保存 workflow
 - Export Workflow: 导出 workflow
@@ -438,7 +433,6 @@ wfeeditor 在 JupyterLab的左侧边栏中添加了多个选项卡，这些选�
 - Delete: 删除选中
 - Arrange Horizontally: 水平排列画布节点
 - Arrange Vertically: 垂直排列画布节点
-
 - Open Panel: 打开属性面板
 
 ##### 组件面板
@@ -778,7 +772,7 @@ Pipeline Input Parameters 是 pipeline 的全局参数，配置后可作为其�
 
   - Type
 
-    参数类型，必填字段，下拉框选择["String", "List", "Integer", "Float", "Bool"]，默认为 String
+    参数类型，必填字段，下拉框选择["String", "List", "Integer", "Float", "Boolean"]，默认为 String
 
   - Default Value
 
@@ -791,10 +785,10 @@ Pipeline Input Parameters 是 pipeline 的全局参数，配置后可作为其�
 | **Pipeline 参数类型** | **Component 参数类型** |
 | :-------------------: | :--------------------: |
 |        String         |         String         |
-|         List          |       JsonArray        |
+|       JsonArray       |       JsonArray        |
 |        Integer        |        Integer         |
 |         Float         |         Float          |
-|         Bool          |        Boolean         |
+|        Boolean        |        Boolean         |
 
 
 
@@ -1254,7 +1248,7 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
   - Type
 
-    参数类型，必填字段，下拉框选择["String", “List”, "S3 Path", "Integer", "Float", "Bool"]，默认为 String
+    参数类型，必填字段，下拉框选择["String", “List”, "S3 Path", "Integer", "Float", "Boolean"]，默认为 String
 
   - Default Value
 

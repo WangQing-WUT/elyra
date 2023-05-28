@@ -1116,14 +1116,49 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             )
         else:
             component_parameters = node.get("app_data").get("component_parameters")
-            expression = self._get_default_expression(
+            default_expression = self._get_default_expression(
                 component_parameters, node_type, node_id, node_name, wf_input_paras, response
             )
-            if (
-                "expression" not in component_parameters
-                or component_parameters.get("expression").replace(" ", "") == ""
-            ):
-                component_parameters["expression"] = expression
+            expression = component_parameters.get("expression")
+            if "expression" not in component_parameters or expression == "":
+                component_parameters["expression"] = default_expression
+            else:
+                max_num = len(node.get("app_data").get("component_parameters").get("event_filter"))
+                self._validate_expression(node_type, node_id, node_name, max_num, expression, response)
+
+    def _validate_expression(self, node_type, node_id, node_name, max_num, expression, response):
+        pattern = r"^([1-9]+|\([1-9]+((&&|\|\|)[1-9]+)+\))((&&|\|\|)([1-9]+|\([1-9]+((&&|\|\|)[1-9]+)+\)))*$"
+        match_result = re.match(pattern, expression)
+        if not match_result:
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodePropertyValue",
+                message="Incorrect expression format.",
+                runtime="WORKFLOW",
+                data={
+                    "nodeType": "{} Event".format(node_type),
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "Expression",
+                },
+            )
+        else:
+            pattern = r"\d+"
+            match_num = [int(num) for num in re.findall(pattern, expression)]
+            if any(num < 1 or num > max_num for num in match_num):
+                response.add_message(
+                    severity=ValidationSeverity.Error,
+                    message_type="invalidNodePropertyValue",
+                    message="The index value appearing in the expression is not within "
+                    + "the range of {} Event Filter.".format(node_type),
+                    runtime="WORKFLOW",
+                    data={
+                        "nodeType": "{} Event".format(node_type),
+                        "nodeID": node_id,
+                        "nodeName": node_name,
+                        "propertyName": "Expression",
+                    },
+                )
 
     def _get_default_expression(self, component_parameters, node_type, node_id, node_name, wf_input_paras, response):
         event_filters = component_parameters.get("event_filter")

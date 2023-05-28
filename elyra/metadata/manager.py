@@ -201,6 +201,17 @@ class MetadataManager(LoggingConfigurable):
                     "description": get_value("description", input_parameter),
                 }
                 input_parameters.append(temp_input_parameter)
+                if (
+                    input_parameter.get("placeholder_type") == "inputPath"
+                    and temp_input_parameter.get("type") != "String"
+                ):
+                    raise ValueError(
+                        "When the placeholder type of the input parameter is 'inputPath', "
+                        + "the value type of the input parameter can only be 'String'."
+                        + "The name of the incorrect input parameter is '"
+                        + temp_input_parameter.get("name")
+                        + "'."
+                    )
                 parameters_placeholder[input_parameter.get("name")] = input_parameter.get("placeholder_type")
 
         if "output_parameters" in new_metadata:
@@ -241,6 +252,7 @@ class MetadataManager(LoggingConfigurable):
             )
             temp_for_update = True
             metadata = Metadata.from_dict(self.schemaspace, update_metadata_dict)
+            return temp_name, temp_for_update, metadata
         except MetadataNotFoundError:
             new_metadata_dict = {
                 "display_name": metadata_dict.get("display_name"),
@@ -258,7 +270,6 @@ class MetadataManager(LoggingConfigurable):
             metadata.pre_save(for_update=temp_for_update)
             self._apply_defaults(metadata)
             self.validate(name, metadata)
-        finally:
             return temp_name, temp_for_update, metadata
 
     def _metedata_to_component(self, new_metadata: Dict):

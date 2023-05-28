@@ -190,7 +190,14 @@ function NodeProperties({
     const oneOfValuesNoOpt: any[] = [];
     let workflowParameters: string[] = ["", "workflow.instance_name"];
     let eventParameters: string[] = [""];
-    const pipeline_input_parameters: string[] = [""];
+    let pipelineInputParameters: { [index: string]: string[] } = {
+      String: [""],
+      Integer: [""],
+      Float: [""],
+      Boolean: [""],
+      JsonArray: [""]
+    };
+    let pipelineFlag = false;
     const evnetObject: { [index: string]: string[] } = {
       calendar_event: ["time"],
       model_event: ["operate"],
@@ -199,10 +206,10 @@ function NodeProperties({
       s3_event: ["bucket", "object", "operate", "size"]
     };
     if (data?.input_parameters) {
-      for (const input_paramter of data.input_parameters) {
-        if (input_paramter?.name) {
+      for (const input_parameter of data.input_parameters) {
+        if (input_parameter?.name) {
           workflowParameters.push(
-            `workflow.parameters.${input_paramter?.name.trim()}`
+            `workflow.parameters.${input_parameter?.name.trim()}`
           );
         }
       }
@@ -210,10 +217,18 @@ function NodeProperties({
     }
 
     if (data?.pipeline_defaults?.input_parameters) {
-      for (const input_paramter of data.pipeline_defaults.input_parameters) {
-        pipeline_input_parameters.push(`${input_paramter?.name}`);
+      pipelineFlag = true;
+      for (const input_parameter of data.pipeline_defaults.input_parameters) {
+        if (input_parameter.type.widget in pipelineInputParameters) {
+          pipelineInputParameters[input_parameter.type.widget].push(
+            `${input_parameter?.name}`
+          );
+        }
       }
-      pipeline_input_parameters.sort();
+      const sortedKeys = Object.keys(pipelineInputParameters).sort();
+      for (const key of sortedKeys) {
+        pipelineInputParameters[key].sort();
+      }
     }
 
     oneOfValues.push(getOneOfValue(" ", " ", " "));
@@ -303,7 +318,7 @@ function NodeProperties({
             ?.kubernetes_pod_labels?.items?.properties?.value?.oneOf[1]
             ?.properties?.value;
         if (kubernetes_pod_labels) {
-          kubernetes_pod_labels.enum = pipeline_input_parameters;
+          kubernetes_pod_labels.enum = pipelineInputParameters["String"];
         }
 
         const kubernetes_pod_annotations =
@@ -311,35 +326,35 @@ function NodeProperties({
             ?.kubernetes_pod_annotations?.items?.properties?.value?.oneOf[1]
             ?.properties?.value;
         if (kubernetes_pod_annotations) {
-          kubernetes_pod_annotations.enum = pipeline_input_parameters;
+          kubernetes_pod_annotations.enum = pipelineInputParameters["String"];
         }
 
         const mounted_volumes =
           draft.properties.component_parameters?.properties?.mounted_volumes
             ?.items?.properties?.pvc_name?.oneOf[1]?.properties?.value;
         if (mounted_volumes) {
-          mounted_volumes.enum = pipeline_input_parameters;
+          mounted_volumes.enum = pipelineInputParameters["String"];
         }
 
         const kubernetes_secrets_key =
           draft.properties.component_parameters?.properties?.kubernetes_secrets
             ?.items?.properties?.key?.oneOf[1]?.properties?.value;
         if (kubernetes_secrets_key) {
-          kubernetes_secrets_key.enum = pipeline_input_parameters;
+          kubernetes_secrets_key.enum = pipelineInputParameters["String"];
         }
 
         const kubernetes_secrets_name =
           draft.properties.component_parameters?.properties?.kubernetes_secrets
             ?.items?.properties?.name?.oneOf[1]?.properties?.value;
         if (kubernetes_secrets_name) {
-          kubernetes_secrets_name.enum = pipeline_input_parameters;
+          kubernetes_secrets_name.enum = pipelineInputParameters["String"];
         }
 
         const env_vars =
           draft.properties.component_parameters?.properties?.env_vars?.items
             ?.properties?.value?.oneOf[1]?.properties?.value;
         if (env_vars) {
-          env_vars.enum = pipeline_input_parameters;
+          env_vars.enum = pipelineInputParameters["String"];
         }
         // workflow input parameters placeholder of trigger parameters、init and exit
         const workflowOneOfValue =
@@ -420,12 +435,20 @@ function NodeProperties({
           draft.properties.component_parameters?.properties?.branch_conditions
             ?.properties?.branch_parameter2;
         if (branch_parameter1 && branch_parameter2) {
-          branch_parameter1.oneOf[0].properties.value.enum = pipeline_input_parameters;
+          const branch_para = pipelineInputParameters["String"]
+            .concat(pipelineInputParameters["Boolean"])
+            .concat(pipelineInputParameters["Integer"])
+            .concat(pipelineInputParameters["Float"])
+            .filter((value, index, self) => {
+              return self.indexOf(value) === index;
+            })
+            .sort();
+          branch_parameter1.oneOf[0].properties.value.enum = branch_para;
           branch_parameter1.oneOf[1].properties.value.oneOf = oneOfValues;
           branch_parameter1.oneOf[1].properties.value.type = "object";
           delete branch_parameter1.oneOf[1].properties.value.enum;
           delete branch_parameter1.oneOf[1].properties.value.default;
-          branch_parameter2.oneOf[1].properties.value.enum = pipeline_input_parameters;
+          branch_parameter2.oneOf[1].properties.value.enum = branch_para;
           branch_parameter2.oneOf[2].properties.value.oneOf = oneOfValues;
           branch_parameter2.oneOf[2].properties.value.type = "object";
           delete branch_parameter2.oneOf[2].properties.value.enum;
@@ -468,6 +491,8 @@ function NodeProperties({
               }
             }
           } else if (component_properties[prop].oneOf) {
+            console.log("======");
+            console.log(JSON.parse(JSON.stringify(component_properties[prop])));
             for (const i in component_properties[prop].oneOf) {
               const nestedOneOf = component_properties[prop].oneOf[i].uihints
                 ?.allownooptions
@@ -487,14 +512,25 @@ function NodeProperties({
                 component_properties[prop].oneOf[i].properties.widget
                   .default === "enum"
               ) {
-                if (pipeline_input_parameters.length == 1) {
-                  component_properties[prop].oneOf[
-                    i
-                  ].properties.value.enum = workflowParameters;
+                if (pipelineFlag) {
+                  if (
+                    pipelineInputParameters[
+                      component_properties[prop]?.type_desc
+                    ]
+                  ) {
+                    component_properties[prop].oneOf[i].properties.value.enum =
+                      pipelineInputParameters[
+                        component_properties[prop]?.type_desc
+                      ];
+                  } else {
+                    component_properties[prop].oneOf[
+                      i
+                    ].properties.value.enum = [""];
+                  }
                 } else {
                   component_properties[prop].oneOf[
                     i
-                  ].properties.value.enum = pipeline_input_parameters;
+                  ].properties.value.enum = workflowParameters;
                 }
               } else if (
                 component_properties[prop].oneOf[i].properties.widget

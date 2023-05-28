@@ -14,7 +14,7 @@
 				"dataset_name": {
 					"type": "array",
 					"title": "Dataset Names",
-					"description": "Dataset name.",
+					"description": "S3 path of dataset event.",
 					"items": {
 						"type": "object",
 						"oneOf":[
@@ -70,21 +70,21 @@
 						},
 						"allOf": [
 							{
-								"if": {
-        							"properties": {
-          								"name": {
-           					 				"const": "operate"
-     						  			}
-       								}
-      							},
-								"then": {
-        							"properties": {
-          								"operate": {
-            								"type": "string",
-											"title": "Operate",
-											"enum": ["=="],
-											"default": "=="
-         								},
+									"if": {
+										"properties": {
+											"name": {
+												"const": "operate"
+											}
+										}
+									},
+									"then": {
+										"properties": {
+											"operate": {
+												"type": "string",
+												"title": "Operate",
+												"enum": ["=="],
+												"default": "=="
+											},
 										"value": {
 											"title": "Value",
 											"oneOf":[
@@ -227,7 +227,7 @@
 				"model_name": {
 					"type": "array",
 					"title": "Model Names",
-					"description": "Model name.",
+					"description": "S3 path of model event.",
 					"items": {
 						"type": "object",
 						"oneOf":[
@@ -803,6 +803,7 @@
 				"expression": {
 					"type": "string",
 					"title": "Expression",
+					"pattern": "^([1-9]+|\\([1-9]+((&&|\\|\\|)[1-9]+)+\\))((&&|\\|\\|)([1-9]+|\\([1-9]+((&&|\\|\\|)[1-9]+)+\\)))*$",
 					"description": "{{component.name}} expression."
 				}
 				{% endif %}

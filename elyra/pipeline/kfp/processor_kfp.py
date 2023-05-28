@@ -685,7 +685,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     input_parameters[item.get("name")] = float(temp_value)
                 elif item.get("type").get("widget") == "Integer":
                     input_parameters[item.get("name")] = int(temp_value)
-                elif item.get("type").get("widget") == "List":
+                elif item.get("type").get("widget") == "JsonArray":
                     input_parameters[item.get("name")] = self._process_list_value(temp_value)
                 else:
                     input_parameters[item.get("name")] = temp_value
@@ -694,7 +694,7 @@ class KfpPipelineProcessor(RuntimePipelineProcessor):
                     input_parameters[item.get("name")] = ""
                 elif item.get("type").get("widget") == "Float":
                     input_parameters[item.get("name")] = 0.0
-                elif item.get("type").get("widget") == "List":
+                elif item.get("type").get("widget") == "JsonArray":
                     input_parameters[item.get("name")] = []
                 else:
                     input_parameters[item.get("name")] = 0

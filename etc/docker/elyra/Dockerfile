@@ -36,7 +36,11 @@ RUN echo "[global]" >> ~/.pip/pip.conf && echo "index-url=http://pypi.douban.com
 
 # Install Elyra
 # RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
-RUN pip install jupyterlab==3.4.6
+RUN pip install jupyterlab==3.6.1
+USER root
+RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
+RUN apt update && apt install gcc python3-dev -y
+USER jovyan
 RUN python3 -m pip install --no-cache-dir --use-deprecated=legacy-resolver "$ELYRA_PACKAGE" && rm $ELYRA_PACKAGE
 # Install custom requirements
 RUN python3 -m pip install -r requirements.txt && rm requirements.txt
