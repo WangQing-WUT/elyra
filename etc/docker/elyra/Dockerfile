@@ -25,9 +25,9 @@ ARG ELYRA_PACKAGE=elyra-"$ELYRA_VERSION"-py3-none-any.whl
 
 COPY requirements.txt ${ELYRA_PACKAGE}* ./
 
-#USER root
-#RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
-#USER jovyan
+USER root
+RUN apt update && apt install gcc python3-dev -y
+USER jovyan
 
 #RUN ls -al /home/jovyan
 RUN mkdir ~/.pip/ && touch ~/.pip/pip.conf
@@ -35,23 +35,10 @@ RUN echo "[global]" >> ~/.pip/pip.conf && echo "index-url=http://pypi.douban.com
     echo "[install]" >> ~/.pip/pip.conf && echo "trusted-host=pypi.douban.com" >> ~/.pip/pip.conf
 
 # Install Elyra
-# RUN python3 -m pip install --quiet --no-cache-dir "$ELYRA_PACKAGE"[all] && rm $ELYRA_PACKAGE
 RUN pip install jupyterlab==3.6.1
-USER root
-RUN chown jovyan:users ./requirements.txt ./"${ELYRA_PACKAGE}"
-RUN apt update && apt install gcc python3-dev -y
-USER jovyan
 RUN python3 -m pip install --no-cache-dir --use-deprecated=legacy-resolver "$ELYRA_PACKAGE" && rm $ELYRA_PACKAGE
 # Install custom requirements
 RUN python3 -m pip install -r requirements.txt && rm requirements.txt
-
-# Install component examples catalogs
-#  - this wail fail if the 'kfp-examples' pip extra is not installed
-# RUN elyra-metadata create component-catalogs \
-#     --schema_name=elyra-kfp-examples-catalog  \
-#     --display_name="Kubeflow Pipelines examples" \
-#     --runtime_type=KUBEFLOW_PIPELINES \
-#     --categories="['examples']"
 
 # Copy Elyra entrypoint
 COPY start-elyra.sh /usr/local/bin/start-elyra.sh
