@@ -624,6 +624,15 @@ class PipelineDefinition(object):
                             f"The 'Parameter Name' field of {i + 1}-th "
                             + "pipeline input parameter cannot be duplicate."
                         )
+                    elif (
+                        input_parameter.get("type").get("widget") == "Integer"
+                        and input_parameter.get("type").get("value")
+                        and type(input_parameter.get("type").get("value")) is not int
+                    ):
+                        validation_issues.append(
+                            f"The 'Default Value' field of {i + 1}-th "
+                            + "pipeline input parameter does not match the type 'Integer'."
+                        )
                     else:
                         input_parameter_names.append(input_parameter.get("name"))
 

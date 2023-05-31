@@ -189,6 +189,7 @@ export function PropertiesPanel({
             error.message !== "should be object" &&
             error.message !== "should be string" &&
             error.message !== "should be number" &&
+            error.message !== "should be integer" &&
             error.message !== "should be equal to one of the allowed values" &&
             error.message !== 'should match "then" schema'
           ) {

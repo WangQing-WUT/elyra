@@ -95,6 +95,8 @@ export const PipelineExportDialog: React.FC<IProps> = ({
         className="elyra-Dialog-checkbox"
         id="overwrite"
         name="overwrite"
+        defaultChecked={true}
+        style={{ display: 'none' }}
       />
       <label htmlFor="overwrite">Replace if file already exists</label>
       <br />
@@ -125,6 +127,8 @@ export const WorkflowExportDialog: React.FC<IProps> = ({
         className="elyra-Dialog-checkbox"
         id="overwrite"
         name="overwrite"
+        defaultChecked={true}
+        style={{ display: 'none' }}
       />
       <label htmlFor="overwrite">Replace if file already exists</label>
       <br />

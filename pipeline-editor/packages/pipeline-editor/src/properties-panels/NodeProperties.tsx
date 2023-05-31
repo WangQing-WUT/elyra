@@ -188,7 +188,14 @@ function NodeProperties({
   const getNodeProperties = (): any => {
     const oneOfValues: any[] = [];
     const oneOfValuesNoOpt: any[] = [];
-    let workflowParameters: string[] = ["", "workflow.instance_name"];
+    let workflowInputParameters: { [index: string]: string[] } = {
+      String: [""],
+      "S3 Path": [""],
+      Integer: [""],
+      Float: [""],
+      Boolean: [""],
+      List: [""]
+    };
     let eventParameters: string[] = [""];
     let pipelineInputParameters: { [index: string]: string[] } = {
       String: [""],
@@ -207,19 +214,28 @@ function NodeProperties({
     };
     if (data?.input_parameters) {
       for (const input_parameter of data.input_parameters) {
-        if (input_parameter?.name) {
-          workflowParameters.push(
+        if (
+          input_parameter.type.widget in workflowInputParameters &&
+          input_parameter?.name
+        ) {
+          workflowInputParameters[input_parameter.type.widget].push(
             `workflow.parameters.${input_parameter?.name.trim()}`
           );
         }
       }
-      workflowParameters.sort();
+      const sortedKeys = Object.keys(workflowInputParameters).sort();
+      for (const key of sortedKeys) {
+        workflowInputParameters[key].sort();
+      }
     }
 
     if (data?.pipeline_defaults?.input_parameters) {
       pipelineFlag = true;
       for (const input_parameter of data.pipeline_defaults.input_parameters) {
-        if (input_parameter.type.widget in pipelineInputParameters) {
+        if (
+          input_parameter.type.widget in pipelineInputParameters &&
+          input_parameter?.name
+        ) {
           pipelineInputParameters[input_parameter.type.widget].push(
             `${input_parameter?.name}`
           );
@@ -366,11 +382,18 @@ function NodeProperties({
             ?.items?.properties?.value?.oneOf[1]?.properties?.value;
 
         if (workflowOneOfValue) {
-          workflowOneOfValue.enum = workflowParameters;
-        } else {
-          workflowParameters.splice(1, 1);
+          const trigger_para = workflowInputParameters["String"]
+            .concat(workflowInputParameters["Boolean"])
+            .concat(workflowInputParameters["Integer"])
+            .concat(workflowInputParameters["Float"])
+            .concat(workflowInputParameters["List"])
+            .concat(["workflow.instance_name"])
+            .filter((value, index, self) => {
+              return self.indexOf(value) === index;
+            })
+            .sort();
+          workflowOneOfValue.enum = trigger_para;
         }
-
         // events parameters placeholder of trigger parameters
         const eventOneOfValue =
           draft.properties.component_parameters?.properties?.trigger_parameters
@@ -387,8 +410,15 @@ function NodeProperties({
         if (allOf) {
           for (let item of allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
+            const paraName = item?.if?.properties?.name?.const;
             if (valueOneOf) {
-              valueOneOf[2].properties.value.enum = workflowParameters;
+              if (paraName == "samples") {
+                valueOneOf[2].properties.value.enum =
+                  workflowInputParameters["Integer"];
+              } else {
+                valueOneOf[2].properties.value.enum =
+                  workflowInputParameters["String"];
+              }
             }
           }
         }
@@ -400,7 +430,8 @@ function NodeProperties({
           for (let item of calendar_allOf) {
             const valueOneOf = item?.then?.properties?.value?.oneOf;
             if (valueOneOf) {
-              valueOneOf[1].properties.value.enum = workflowParameters;
+              valueOneOf[1].properties.value.enum =
+                workflowInputParameters["String"];
             }
           }
         }
@@ -412,7 +443,8 @@ function NodeProperties({
           draft.properties.component_parameters?.properties?.model_name?.items
             ?.oneOf;
         if (dataset_or_model_oneOf) {
-          dataset_or_model_oneOf[1].properties.value.enum = workflowParameters;
+          dataset_or_model_oneOf[1].properties.value.enum =
+            workflowInputParameters["S3 Path"];
         }
 
         // workflow input parameters placeholder of appNames or modelName of model monitor event
@@ -422,9 +454,11 @@ function NodeProperties({
         const model_name =
           draft.properties.component_parameters?.properties?.event_filter?.items
             ?.properties?.model_name;
-        if (app_name && model_name && workflowParameters.length > 0) {
-          app_name.oneOf[2].properties.value.enum = workflowParameters;
-          model_name.oneOf[2].properties.value.enum = workflowParameters;
+        if (app_name && model_name) {
+          app_name.oneOf[2].properties.value.enum =
+            workflowInputParameters["String"];
+          model_name.oneOf[2].properties.value.enum =
+            workflowInputParameters["String"];
         }
 
         // pipeline input parameters placeholder of condition
@@ -491,8 +525,6 @@ function NodeProperties({
               }
             }
           } else if (component_properties[prop].oneOf) {
-            console.log("======");
-            console.log(JSON.parse(JSON.stringify(component_properties[prop])));
             for (const i in component_properties[prop].oneOf) {
               const nestedOneOf = component_properties[prop].oneOf[i].uihints
                 ?.allownooptions
@@ -522,15 +554,17 @@ function NodeProperties({
                       pipelineInputParameters[
                         component_properties[prop]?.type_desc
                       ];
+                  } else if (prop == "loop_args") {
+                    component_properties[prop].oneOf[i].properties.value.enum =
+                      pipelineInputParameters["JsonArray"];
                   } else {
                     component_properties[prop].oneOf[
                       i
                     ].properties.value.enum = [""];
                   }
                 } else {
-                  component_properties[prop].oneOf[
-                    i
-                  ].properties.value.enum = workflowParameters;
+                  component_properties[prop].oneOf[i].properties.value.enum =
+                    workflowInputParameters["String"];
                 }
               } else if (
                 component_properties[prop].oneOf[i].properties.widget

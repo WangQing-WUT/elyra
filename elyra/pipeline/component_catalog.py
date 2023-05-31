@@ -754,8 +754,8 @@ class ComponentCache(SingletonConfigurable):
         template.globals.update(template_vars)
         canvas_properties = template.render(component=component)
         result = json.loads(canvas_properties)
-        if (ComponentCache.get_generic_component(component.id) is not None) or (
-            component.id.startswith("local-file-catalog")
+        if ComponentCache.get_generic_component(component.id) is not None or component.id.startswith(
+            ("local-file-catalog", "url-catalog")
         ):
             result["properties"]["component_parameters"]["properties"]["kubernetes_pod_labels"]["items"]["properties"][
                 "value"

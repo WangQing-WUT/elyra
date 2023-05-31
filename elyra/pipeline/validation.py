@@ -588,10 +588,6 @@ class PipelineValidationManager(SingletonConfigurable):
                     )
             elif type(node_param) is not str:
                 if node_param.get("widget") == "inputpath":
-                    # The value of any component property with widget type `inputpath` will be a
-                    # dictionary of two keys:
-                    #   "value": the node ID of the parent node containing the output
-                    #   "option": the name of the key (which is an output) of the above referenced node
                     self._validate_widget_inputpath(node_param, node, pipeline_definition, response)
                 elif node_param.get("widget") == "file":
                     self._validate_widget_file(component_property_dict, node_param, node, default_parameter, response)
@@ -599,6 +595,25 @@ class PipelineValidationManager(SingletonConfigurable):
                     self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
                 elif default_parameter == "loop_args":
                     self._validate_loop_list(node, node_param, default_parameter, response)
+                elif node_param.get("widget") == "number":
+                    self._validate_integer(node_param, component_property_dict, default_parameter, data, response)
+
+    def _validate_integer(self, node_param, component_property_dict, default_parameter, data, response):
+        if (
+            component_property_dict.get("properties")
+            .get("component_parameters")
+            .get("properties")
+            .get(default_parameter)
+            .get("type_desc")
+            == "Integer"
+            and type(node_param.get("value")) is not int
+        ):
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodeProperty",
+                message="The value of this property should be an integer.",
+                data=data,
+            )
 
     def _validate_widget_inputpath(self, node_param, node, pipeline_definition, response):
         inputpath_value = node_param.get("value")

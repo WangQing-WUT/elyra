@@ -320,13 +320,11 @@ class ComponentParser(LoggingConfigurable):  # ABC
                 data_type_info = ParameterTypeInfo(
                     parsed_data=parsed_type_lowered,
                     json_data_type="number",
-                    default_value=0,
                 )
             elif any(word in parsed_type_lowered for word in ["float"]):
                 data_type_info = ParameterTypeInfo(
                     parsed_data=parsed_type_lowered,
                     json_data_type="number",
-                    default_value=0.0,
                 )
             elif any(word in parsed_type_lowered for word in ["bool", "boolean"]):
                 data_type_info = ParameterTypeInfo(

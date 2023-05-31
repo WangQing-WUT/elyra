@@ -935,7 +935,10 @@ class ComponentParameter(object):
                 value = int(value)
             except ValueError:
                 # Value could not be coerced to integer, assume float
-                value = float(value)
+                try:
+                    value = float(value)
+                except ValueError:
+                    value = None
         if json_data_type in {"array", "object"} and not isinstance(value, str):
             value = str(value)
         self._value = value
@@ -1053,8 +1056,8 @@ class ComponentParameter(object):
                     obj["title"] = InputTypeDescriptionMap[param.value_entry_type].value
                     obj["properties"]["widget"]["default"] = param.value_entry_type
                     obj["properties"]["value"]["type"] = param.value_entry_type
-                    start = param.description.rfind('(') + 1
-                    end = param.description.rfind(')')
+                    start = param.description.rfind("(") + 1
+                    end = param.description.rfind(")")
                     json_dict["type_desc"] = param.description[start:end].replace("type: ", "")
                     if param.value_entry_type == "boolean":
                         obj["properties"]["value"]["type"] = "string"

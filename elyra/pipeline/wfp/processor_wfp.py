@@ -805,6 +805,18 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     runtime="WORKFLOW",
                 )
             else:
+                if (
+                    parameter.get("type") == "Integer"
+                    and parameter.get("value")
+                    and type(parameter.get("value")) is not int
+                ):
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message=f"The 'Default Value' field of {index + 1}-th workflow input parameter "
+                        + "does not match the type 'Integer'.",
+                        runtime="WORKFLOW",
+                    )
                 wf_input_paras.append("workflow.parameters." + parameter.get("name").strip())
         for node in nodes:
             node_type = node.get("op").split(":")[0]
@@ -913,7 +925,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     node_type,
                     node_id,
                     node_name,
-                    "App Name of Model Configuration with Id=" + str(event_filter.get("id")),
+                    "App Name of Model Configuration",
                     wf_input_paras,
                     response,
                     index,
@@ -923,7 +935,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     node_type,
                     node_id,
                     node_name,
-                    "Model Name of Model Configuration with Id=" + str(event_filter.get("id")),
+                    "Model Name of Model Configuration",
                     wf_input_paras,
                     response,
                     index,
@@ -1024,6 +1036,20 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     "propertyName": "Url of HTTP Trigger",
                 },
             )
+        timeout = node.get("app_data").get("component_parameters").get("timeout")
+        if type(timeout) is not int or timeout < 1:
+            response.add_message(
+                severity=ValidationSeverity.Error,
+                message_type="invalidNodePropertyValue",
+                message="The property value should be a positive integer.",
+                runtime="WORKFLOW",
+                data={
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "Timeout of HTTP Trigger",
+                },
+            )
         if "trigger_parameters" not in node.get("app_data").get("component_parameters"):
             node["app_data"]["component_parameters"]["trigger_parameters"] = []
         else:
@@ -1101,7 +1127,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             names = node.get("app_data").get("component_parameters").get("{}_name".format(node_type.lower()))
             for index, name in enumerate(names):
                 self._validate_node_property_value(
-                    name, node_type, node_id, node_name, "{} Name".format(node_type), wf_input_paras, response, index
+                    name, "{} Event".format(node_type), node_id, node_name, "{} Name".format(node_type), wf_input_paras, response, index
                 )
         if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
             len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
@@ -1168,13 +1194,35 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             self._validate_event_filter(
                 index,
                 event_filter,
-                node_type,
+                "{} Event".format(node_type),
                 node_id,
                 node_name,
                 "{} Event Filters".format(node_type),
                 wf_input_paras,
                 response,
             )
+            if "name" in event_filter and event_filter.get("name") == "samples":
+                if (
+                    "value" in event_filter.get("value")
+                    and event_filter.get("value").get("widget") == "string"
+                    and (
+                        type(event_filter.get("value").get("value")) is not int
+                        or event_filter.get("value").get("value") < 1
+                    )
+                ):
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodePropertyValue",
+                        message="When Property Name is samples, the property value should be a positive integer.",
+                        runtime="WORKFLOW",
+                        data={
+                            "nodeType": "{} Event".format(node_type),
+                            "nodeID": node_id,
+                            "nodeName": node_name,
+                            "propertyName": "Value of Dataset Event Filters",
+                            "index": index + 1,
+                        },
+                    )
             if filter_id > 1:
                 expression += "&&" + str(filter_id)
             filter_id += 1
@@ -1293,7 +1341,7 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 runtime="WORKFLOW",
                 data=data,
             )
-        if str(node_property.get("value").get("value")).strip() == "":
+        if "value" not in node_property.get("value") or str(node_property.get("value").get("value")) == "":
             data["propertyName"] = "Value of " + property_name
             response.add_message(
                 severity=ValidationSeverity.Error,
