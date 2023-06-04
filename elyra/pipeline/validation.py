@@ -436,6 +436,7 @@ class PipelineValidationManager(SingletonConfigurable):
                             node=node,
                             response=response,
                             pipeline_runtime=pipeline_runtime,
+                            pipeline_definition=pipeline_definition,
                         )
                     # Validate runtime components against specific node properties in component registry
                     else:
@@ -446,7 +447,13 @@ class PipelineValidationManager(SingletonConfigurable):
                             pipeline_definition=pipeline_definition,
                         )
 
-    async def _validate_generic_node_properties(self, node: Node, response: ValidationResponse, pipeline_runtime: str):
+    async def _validate_generic_node_properties(
+        self,
+        node: Node,
+        response: ValidationResponse,
+        pipeline_runtime: str,
+        pipeline_definition: PipelineDefinition,
+    ):
         """
         Validate properties of a generic node
         :param node: the generic node to check
@@ -467,7 +474,7 @@ class PipelineValidationManager(SingletonConfigurable):
             filename=filename,
             response=response,
         )
-
+        input_parameters = self._get_pipeline_input_paras(pipeline_definition)
         # If not running locally, we check resource and image name
         if pipeline_runtime != "local":
             self._validate_container_image_name(node.id, node_label, image_name, response=response)
@@ -484,10 +491,12 @@ class PipelineValidationManager(SingletonConfigurable):
 
             for param in node.elyra_owned_properties:
                 required = self._is_required_property(component_props, param)
-                self._validate_elyra_owned_property(node.id, node.label, node, param, response, required)
+                self._validate_elyra_owned_property(
+                    node.id, node.label, node, param, input_parameters, response, required
+                )
         else:
             # Only env vars need to be validated for local runtime
-            self._validate_elyra_owned_property(node.id, node.label, node, ENV_VARIABLES, response)
+            self._validate_elyra_owned_property(node.id, node.label, node, ENV_VARIABLES, input_parameters, response)
 
         self._validate_label(node_id=node.id, node_label=node_label, response=response)
         if dependencies:
@@ -502,7 +511,7 @@ class PipelineValidationManager(SingletonConfigurable):
                     response=response,
                 )
 
-    async def _get_parsed_para_and_prop(self, node, pipeline_runtime, node_label, response):
+    async def _get_parsed_para_and_prop(self, node, pipeline_runtime, node_label, input_parameters, response):
         parsed_parameters = []
         component_property_dict = {}
         if node.op.startswith("branch"):
@@ -533,7 +542,9 @@ class PipelineValidationManager(SingletonConfigurable):
 
             for param in node.elyra_owned_properties:
                 param_required = self._is_required_property(component_property_dict, param)
-                self._validate_elyra_owned_property(node.id, node.label, node, param, response, param_required)
+                self._validate_elyra_owned_property(
+                    node.id, node.label, node, param, input_parameters, response, param_required
+                )
 
             # List of just the current parameters for the component
             resources = ["cpu", "gpu", "memory", "npu310", "npu910", "node_selector"]
@@ -558,8 +569,9 @@ class PipelineValidationManager(SingletonConfigurable):
         :return:
         """
         node_label = node.label
+        input_parameters = self._get_pipeline_input_paras(pipeline_definition)
         parsed_parameters, component_property_dict = await self._get_parsed_para_and_prop(
-            node, pipeline_runtime, node_label, response
+            node, pipeline_runtime, node_label, input_parameters, response
         )
         for default_parameter in parsed_parameters:
             data = {
@@ -588,17 +600,29 @@ class PipelineValidationManager(SingletonConfigurable):
                     )
             elif type(node_param) is not str:
                 if node_param.get("widget") == "inputpath":
-                    self._validate_widget_inputpath(node_param, node, pipeline_definition, response)
+                    self._validate_widget_inputpath(node, node_param, pipeline_definition, response)
                 elif node_param.get("widget") == "file":
-                    self._validate_widget_file(component_property_dict, node_param, node, default_parameter, response)
+                    self._validate_widget_file(node, node_param, default_parameter, component_property_dict, response)
                 elif node_param.get("widget") == "enum":
-                    self._validate_widget_enum(node, node_param, default_parameter, pipeline_definition, response)
+                    self._validate_widget_enum(
+                        node, node_param, default_parameter, component_property_dict, data, input_parameters, response
+                    )
                 elif default_parameter == "loop_args":
                     self._validate_loop_list(node, node_param, default_parameter, response)
                 elif node_param.get("widget") == "number":
-                    self._validate_integer(node_param, component_property_dict, default_parameter, data, response)
+                    self._validate_integer(node_param, default_parameter, component_property_dict, data, response)
 
-    def _validate_integer(self, node_param, component_property_dict, default_parameter, data, response):
+    def _get_pipeline_input_paras(self, pipeline_definition):
+        pipelines = pipeline_definition.pipelines[0]
+        pipeline_defaults = pipelines.get_property("pipeline_defaults")
+        input_parameters = {"All": [], "String": [], "Float": [], "Integer": [], "JsonArray": [], "Boolean": []}
+        if pipeline_defaults and "input_parameters" in pipeline_defaults:
+            for item in pipeline_defaults.get("input_parameters"):
+                input_parameters["All"].append(item.get("name"))
+                input_parameters[item.get("type").get("widget")].append(item.get("name"))
+        return input_parameters
+
+    def _validate_integer(self, node_param, default_parameter, component_property_dict, data, response):
         if (
             component_property_dict.get("properties")
             .get("component_parameters")
@@ -615,7 +639,7 @@ class PipelineValidationManager(SingletonConfigurable):
                 data=data,
             )
 
-    def _validate_widget_inputpath(self, node_param, node, pipeline_definition, response):
+    def _validate_widget_inputpath(self, node, node_param, pipeline_definition, response):
         inputpath_value = node_param.get("value")
         if (
             not isinstance(inputpath_value, dict)
@@ -640,7 +664,7 @@ class PipelineValidationManager(SingletonConfigurable):
                 data={"nodeID": node.id, "nodeName": node.label},
             )
 
-    def _validate_widget_file(self, component_property_dict, node_param, node, default_parameter, response):
+    def _validate_widget_file(self, node, node_param, default_parameter, component_property_dict, response):
         filename = node_param.get("value")
         if filename:
             self._validate_filepath(
@@ -731,47 +755,59 @@ class PipelineValidationManager(SingletonConfigurable):
                 },
             )
 
-    def _validate_widget_enum(self, node, node_param, default_parameter, pipeline_definition, response):
+    def _validate_widget_enum(
+        self, node, node_param, default_parameter, component_property_dict, data, input_parameters, response
+    ):
         if node_param.get("value") == "":
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodeProperty",
                 message="Node is missing a value for a required property.",
-                data={
-                    "nodeID": node.id,
-                    "nodeName": node.label,
-                    "propertyName": default_parameter,
-                },
+                data=data,
             )
         else:
-            pipelines = pipeline_definition.pipelines[0]
-            pipeline_defaults = pipelines.get_property("pipeline_defaults")
-            if pipeline_defaults and "input_parameters" in pipeline_defaults:
-                input_parameters = []
-                for item in pipeline_defaults.get("input_parameters"):
-                    input_parameters.append(item.get("name"))
-                if node_param.get("value") not in input_parameters:
-                    response.add_message(
-                        severity=ValidationSeverity.Error,
-                        message_type="invalidNodeProperty",
-                        message="Pipeline input parameters does not contain '" + node_param.get("value") + "'.",
-                        data={
-                            "nodeID": node.id,
-                            "nodeName": node.label,
-                            "propertyName": default_parameter,
-                        },
-                    )
-            else:
+            if node_param.get("value") not in input_parameters["All"]:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodeProperty",
                     message="Pipeline input parameters do not contain '" + node_param.get("value") + "'.",
-                    data={
-                        "nodeID": node.id,
-                        "nodeName": node.label,
-                        "propertyName": default_parameter,
-                    },
+                    data=data,
                 )
+            elif node.op.startswith("branch"):
+                if node_param.get("value") in input_parameters["JsonArray"]:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="The pipeline input parameter placeholder type does not match "
+                        + "the property input type '['String', 'Integer', 'Boolean', 'Float']'.",
+                        data=data,
+                    )
+            elif node.op.startswith("loop_start"):
+                if node_param.get("value") not in input_parameters["JsonArray"]:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="The pipeline input parameter placeholder type does not match "
+                        + "the property input type 'JsonArray'.",
+                        data=data,
+                    )
+            else:
+                type_desc = (
+                    component_property_dict.get("properties")
+                    .get("component_parameters")
+                    .get("properties")
+                    .get(default_parameter)
+                    .get("type_desc")
+                )
+                if node_param.get("value") not in input_parameters[type_desc]:
+                    response.add_message(
+                        severity=ValidationSeverity.Error,
+                        message_type="invalidNodeProperty",
+                        message="The pipeline input parameter placeholder type does not match the property input type '"
+                        + type_desc
+                        + "'.",
+                        data=data,
+                    )
 
     def _validate_node_selector(
         self,
@@ -919,6 +955,7 @@ class PipelineValidationManager(SingletonConfigurable):
         node_label: str,
         node: Node,
         param_name: str,
+        input_parameters,
         response: ValidationResponse,
         required: bool = False,
     ) -> None:
@@ -931,8 +968,8 @@ class PipelineValidationManager(SingletonConfigurable):
         :param response: ValidationResponse containing the issue list to be updated
         """
 
-        def validate_elyra_owned_property(elyra_property):
-            for msg in elyra_property.get_all_validation_errors():
+        def validate_elyra_owned_property(elyra_property, input_paras):
+            for msg in elyra_property.get_all_validation_errors(input_paras):
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type=f"invalid{elyra_property.__class__.__name__}",
@@ -949,9 +986,9 @@ class PipelineValidationManager(SingletonConfigurable):
         if param_value:
             if isinstance(param_value, ElyraPropertyList):
                 for prop in param_value:
-                    validate_elyra_owned_property(prop)
+                    validate_elyra_owned_property(prop, input_parameters)
             elif isinstance(param_value, ElyraProperty):
-                validate_elyra_owned_property(param_value)
+                validate_elyra_owned_property(param_value, input_parameters)
         elif required:
             response.add_message(
                 severity=ValidationSeverity.Error,

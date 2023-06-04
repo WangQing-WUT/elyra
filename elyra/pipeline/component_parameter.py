@@ -205,7 +205,7 @@ class ElyraProperty:
         """
         pass
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Perform custom validation on an instance."""
         return []
 
@@ -339,11 +339,22 @@ class EnvironmentVariable(ElyraPropertyListItem):
         """Returns the value to be used when constructing a dict from a list of classes."""
         return self.value
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Perform custom validation on an instance."""
         validation_errors = []
         if not self.env_var:
             validation_errors.append("Required environment variable was not specified.")
+        elif self.type == "enum":
+            if self.value not in input_paras["All"]:
+                validation_errors.append(
+                    f"Environment variable '{self.env_var}': "
+                    + f"Pipeline input parameters do not contain '{self.value}'."
+                )
+            elif self.value not in input_paras["String"]:
+                validation_errors.append(
+                    f"Environment variable '{self.env_var}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
         elif not is_valid_environment_variable(self.env_var):
             validation_errors.append(f"Environment variable '{self.env_var}' includes invalid character(s).")
         return validation_errors
@@ -414,7 +425,7 @@ class KubernetesSecret(ElyraPropertyListItem):
         env_var, name, key = cls.unpack(value, "env_var", "name", "key")
         return KubernetesSecret(env_var=env_var, name=name, key=key)
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Perform custom validation on an instance."""
         validation_errors = []
         if not self.env_var:
@@ -423,15 +434,37 @@ class KubernetesSecret(ElyraPropertyListItem):
             validation_errors.append(f"Environment variable '{self.env_var}' includes invalid character(s).")
         if not self.name:
             validation_errors.append("Required secret name was not specified.")
-        elif self.name_type == "string" and not is_valid_kubernetes_resource_name(self.name):
+        elif self.name_type == "enum":
+            if self.name not in input_paras["All"]:
+                validation_errors.append(
+                    f"Secret name '{self.name}' of Environment variable '{self.env_var}': "
+                    + f"Pipeline input parameters do not contain '{self.name}'."
+                )
+            elif self.name not in input_paras["String"]:
+                validation_errors.append(
+                    f"Secret name '{self.name}' of Environment variable '{self.env_var}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
+        elif not is_valid_kubernetes_resource_name(self.name):
             validation_errors.append(
                 f"Secret name '{self.name}' is not a valid Kubernetes resource name.",
             )
         if not self.key:
             validation_errors.append("Required secret key was not specified.")
-        elif self.key_type == "string" and not is_valid_kubernetes_key(self.key):
+        elif self.key_type == "enum":
+            if self.key not in input_paras["All"]:
+                validation_errors.append(
+                    f"Secret key '{self.key}' of Environment variable '{self.env_var}': "
+                    + f"Pipeline input parameters do not contain '{self.key}'."
+                )
+            elif self.key not in input_paras["String"]:
+                validation_errors.append(
+                    f"Secret key '{self.key}' of Environment variable '{self.env_var}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
+        elif not is_valid_kubernetes_key(self.key):
             validation_errors.append(
-                f"Key '{self.key}' is not a valid Kubernetes secret key.",
+                f"Secret key '{self.key}' is not a valid Kubernetes secret key.",
             )
 
         return validation_errors
@@ -491,7 +524,7 @@ class VolumeMount(ElyraPropertyListItem):
         path, pvc_name = cls.unpack(value, "path", "pvc_name")
         return VolumeMount(path=path, pvc_name=pvc_name)
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Identify configuration issues for this instance"""
         validation_errors = []
         if not self.path:
@@ -500,6 +533,17 @@ class VolumeMount(ElyraPropertyListItem):
             validation_errors.append(f"Mount Path '{self.path}' includes invalid character(s).")
         if not self.pvc_name:
             validation_errors.append("Required persistent volume claim name was not specified.")
+        elif self.type == "enum":
+            if self.pvc_name not in input_paras["All"]:
+                validation_errors.append(
+                    f"PVC name '{self.pvc_name}' of Mount Path '{self.path}': "
+                    + f"Pipeline input parameters do not contain '{self.pvc_name}'."
+                )
+            elif self.pvc_name not in input_paras["String"]:
+                validation_errors.append(
+                    f"PVC name '{self.pvc_name}' of Mount Path '{self.path}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
         elif not is_valid_kubernetes_resource_name(self.pvc_name):
             validation_errors.append(f"PVC name '{self.pvc_name}' is not a valid Kubernetes resource name.")
 
@@ -561,7 +605,7 @@ class KubernetesAnnotation(ElyraPropertyListItem):
         key, value = cls.unpack(value, "key", "value")
         return KubernetesAnnotation(key=key, value=value)
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Perform custom validation on an instance."""
         validation_errors = []
         # verify annotation key
@@ -570,7 +614,18 @@ class KubernetesAnnotation(ElyraPropertyListItem):
         elif not is_valid_annotation_key(self.key):
             validation_errors.append(f"'{self.key}' is not a valid Kubernetes annotation key.")
         # verify annotation value
-        if not is_valid_annotation_value(self.value):
+        if self.type == "enum":
+            if self.value not in input_paras["All"]:
+                validation_errors.append(
+                    f"Kubernetes annotation value '{self.value}' of Kubernetes annotation key '{self.key}': "
+                    + f"Pipeline input parameters do not contain '{self.value}'."
+                )
+            elif self.value not in input_paras["String"]:
+                validation_errors.append(
+                    f"Kubernetes annotation value '{self.value}' of Kubernetes annotation key '{self.key}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
+        elif not is_valid_annotation_value(self.value):
             validation_errors.append(f"'{self.value}' is not a valid Kubernetes annotation value.")
 
         return validation_errors
@@ -634,7 +689,7 @@ class KubernetesLabel(ElyraPropertyListItem):
         key, value = cls.unpack(value, "key", "value")
         return KubernetesLabel(key=key, value=value)
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """Perform custom validation on an instance."""
         validation_errors = []
         # verify label key
@@ -643,7 +698,18 @@ class KubernetesLabel(ElyraPropertyListItem):
         elif not is_valid_label_key(self.key):
             validation_errors.append(f"'{self.key}' is not a valid Kubernetes label key.")
         # verify label value
-        if not is_valid_label_value(self.value):
+        if self.type == "enum":
+            if self.value not in input_paras["All"]:
+                validation_errors.append(
+                    f"Kubernetes label value '{self.value}' of kubernetes label key '{self.key}': "
+                    + f"Pipeline input parameters do not contain '{self.value}'."
+                )
+            elif self.value not in input_paras["String"]:
+                validation_errors.append(
+                    f"Kubernetes label value '{self.value}' of kubernetes label key '{self.key}': "
+                    + "Pipeline input parameter placeholder should be 'String' type."
+                )
+        elif not is_valid_label_value(self.value):
             validation_errors.append(f"'{self.value}' is not a valid Kubernetes label value.")
         return validation_errors
 
@@ -730,7 +796,7 @@ class KubernetesToleration(ElyraPropertyListItem):
         ]
         return schema
 
-    def get_all_validation_errors(self) -> List[str]:
+    def get_all_validation_errors(self, input_paras) -> List[str]:
         """
         Perform custom validation on an instance using the constraints documented in
         https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/

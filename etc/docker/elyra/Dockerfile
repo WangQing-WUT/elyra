@@ -42,6 +42,9 @@ RUN python3 -m pip install -r requirements.txt && rm requirements.txt
 
 # Copy Elyra entrypoint
 COPY start-elyra.sh /usr/local/bin/start-elyra.sh
+USER root
+RUN chmod +x /usr/local/bin/start-elyra.sh
+USER jovyan
 RUN mkdir -p ~/.local/share/jupyter/metadata/runtimes
 RUN jupyter notebook --generate-config -y
 RUN echo "c.NotebookApp.token = ''" >> ~/.jupyter/jupyter_notebook_config.py

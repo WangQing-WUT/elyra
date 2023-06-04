@@ -347,17 +347,23 @@ class PipelineTriggerParametersHandler(HttpErrorMixin, APIHandler):
             pipeline_defaults = properties.get("pipeline_defaults")
             if "input_parameters" in pipeline_defaults:
                 for input_parameter in pipeline_defaults.get("input_parameters"):
-                    if "name" in input_parameter:
-                        result.append(input_parameter.get("name"))
+                    if input_parameter.get("name") and input_parameter.get("type").get("widget"):
+                        result.append(
+                            input_parameter.get("name") + "(" + input_parameter.get("type").get("widget") + ")"
+                        )
         return result
 
     def _open_yaml(self, file):
         result = []
         pipeline = yaml.safe_load(file.read())
-        input_parameters = pipeline.get("spec").get("arguments").get("parameters")
-        for input_parameter in input_parameters:
-            if "name" in input_parameter:
-                result.append(input_parameter.get("name"))
+        pipeline_spec_str = (
+            pipeline.get("metadata", {}).get("annotations", {}).get("pipelines.kubeflow.org/pipeline_spec", "")
+        )
+        pipeline_spec_dict = yaml.safe_load(pipeline_spec_str)
+        if pipeline_spec_dict.get("inputs"):
+            for input_parameter in pipeline_spec_dict.get("inputs"):
+                if input_parameter.get("name") and input_parameter.get("type"):
+                    result.append(input_parameter.get("name") + "(" + input_parameter.get("type") + ")")
         return result
 
 

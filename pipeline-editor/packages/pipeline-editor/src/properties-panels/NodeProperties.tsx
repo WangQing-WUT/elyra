@@ -99,7 +99,6 @@ async function pipelineTriggerParameters(template_name: any): Promise<any> {
 
 let para: string[] = [];
 let template_name_global: string = "";
-//let id_global: string = "";
 
 function NodeProperties({
   data,
@@ -443,8 +442,13 @@ function NodeProperties({
           draft.properties.component_parameters?.properties?.model_name?.items
             ?.oneOf;
         if (dataset_or_model_oneOf) {
-          dataset_or_model_oneOf[1].properties.value.enum =
-            workflowInputParameters["S3 Path"];
+          const s3_para = workflowInputParameters["String"]
+            .concat(workflowInputParameters["S3 Path"])
+            .filter((value, index, self) => {
+              return self.indexOf(value) === index;
+            })
+            .sort();
+          dataset_or_model_oneOf[1].properties.value.enum = s3_para;
         }
 
         // workflow input parameters placeholder of appNames or modelName of model monitor event
