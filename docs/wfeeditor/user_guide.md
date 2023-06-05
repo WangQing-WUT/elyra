@@ -20,7 +20,7 @@ wfeeditor 是基于 [Elyra v3.12.0](https://github.com/elyra-ai/elyra/tree/v3.12
 
 wfeeditor 提供了一个为模型构建 pipeline 的可视化编辑器，用于从 kfp 自定义组件、notebook 文件、Python 脚本或 R 脚本构建 pipeline，简化了从多个组件或脚本文件构建 pipeline 的过程。
 
-当前 pipeline 编辑器支持顺序、分支和循环逻辑，使用 Argo 作为 pipeline 引擎，能够完成编辑、导出、运行等操作。
+当前 pipeline 编辑器支持顺序、分支和循环逻辑，使用 Argo 作为 pipeline 引擎，能够完成 pipeline 的编辑、导出、运行等操作。
 
 ![](./images/1-1.png)
 
@@ -30,7 +30,7 @@ wfeeditor 提供了一个为模型构建 pipeline 的可视化编辑器，用于
 
 workflow 用于封装多个 pipeline 及相关 Event ，组合成一个独立的对象，避免用户看到零散的 pipeline，不方便管理和使用。
 
-wfeeditor 提供可视化 workflow 编辑器，支持 HTTP Trigger、K8s Object Trigger、Pipeline Trigger、Calendar Event、Dataset Event、Model Event、Model Monitor Event、S3 Event、Init 和 Exit 组件的编辑与组合，支持导出、上传等操作。
+wfeeditor 提供可视化 workflow 编辑器，支持 HTTP Trigger、K8s Object Trigger、Pipeline Trigger、Calendar Event、Dataset Event、Model Event、Model Monitor Event、S3 Event、Init 和 Exit 组件的编辑与组合，支持 workflow 的导出、上传等操作。
 
 ![](./images/1-2.png)
 
@@ -682,7 +682,7 @@ wfeeditor 启动前，将配置文件放置在 ~/.local/share/jupyter/metadata/r
 
 #### 3.5 使用 JupyterLab GUI 编辑组件
 
-添加的组件分类以列表形式展示，点击分类条目展开可以查看并编辑该分类下的组件。
+添加的组件分类以列表形式展示，点击分类条目展开可以查看并编辑该分类下的组件，编辑按钮仅对从文件系统导入的组件生效。
 
 ##### 通过文本编辑器编辑
 
@@ -1154,8 +1154,6 @@ Workflow 组件面板以字母表顺序排序，包含 Actions 组件分类、Ev
 
 ##### 5.1.1 Actions 分类
 
-分类[介绍]
-
 - HTTP Trigger
 
   HTTP Trigger 触发后会发送 http 请求（支持Get、Put、Post、Patch 和 Delete请求），支持携带参数
@@ -1328,15 +1326,13 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
 - Dataset Names
 
-  Dataset Name 数组[介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数
+  Dataset Name 必填字段，可以手动输入，也可引用 workflow 全局参数
 
 - Dataset Event Filters
 
   Dataset Event 过滤规则，必填字段
 
   - Property Name 为 operate
-
-    [介绍]
 
     - Operate
 
@@ -1347,8 +1343,6 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
       必填字段，可以手动输入，也可引用 workflow 全局参数，输入值只能是 create 或 delete
 
   - Property Name 为 sample
-
-    [介绍]
 
     - Operate
 
@@ -1370,7 +1364,7 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
 - Model Names
 
-  Model Name 数组[介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数
+  Model Name 必填字段，可以手动输入，也可引用 workflow 全局参数
 
 - Model Event Filters
 
@@ -1400,19 +1394,19 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
 - Alter Name
 
-  [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数，输入值只能是下拉框列表中所列出的值
+  必填字段，可以手动输入，也可引用 workflow 全局参数，输入值只能是下拉框列表中所列出的值
 
 - Model Configuration
 
-  [介绍]，必填字段
+  必填字段
 
   - App Name
 
-    [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数
+    必填字段，可以手动输入，也可引用 workflow 全局参数
 
   - Model Name
 
-    [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数
+    必填字段，可以手动输入，也可引用 workflow 全局参数
 
 
 
@@ -1422,15 +1416,15 @@ Workflow 编辑器画布，单击右上角的 Open Panel 按钮，然后选择 W
 
 - Bucket Name
 
-  [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数
+  必填字段，可以手动输入，也可引用 workflow 全局参数
 
 - S3 Object Prefix
 
-  [介绍]，可选字段，可以手动输入，也可引用 workflow 全局参数
+  可选字段，可以手动输入，也可引用 workflow 全局参数
 
 - S3 Object Suffix
 
-  [介绍]，可选字段，可以手动输入，也可引用 workflow 全局参数
+  可选字段，可以手动输入，也可引用 workflow 全局参数
 
 - S3 Event Filters
 
@@ -1470,27 +1464,27 @@ Actions 节点可以从所连接的 Events 节点获取 Events 输出参数，�
 
 - HTTP URL
 
-  [介绍]，必填字段，输入要符合 URL 格式
+  必填字段，输入要符合 URL 格式
 
 - HTTP Method
 
-  [介绍]，必填字段，输入只能是下拉框列表中所列出的值，包括 GET、DELETE、PATCH、POST 和 PUT 方法
+  必填字段，输入只能是下拉框列表中所列出的值，包括 GET、DELETE、PATCH、POST 和 PUT 方法
 
 - Timeout
 
-  [介绍]，必填字段，输入只能正整数
+  必填字段，输入只能是正整数
 
 - HTTP Trigger Parameters
 
-  [介绍]，可选字段
+  可选字段
 
   - Name
 
-    [介绍]，必填字段，
+    必填字段
 
   - From
 
-    [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数，也可以是所连接的 events 输出的参数
+    必填字段，可以手动输入，也可引用 workflow 全局参数，也可以是所连接的 events 输出的参数
 
 
 
@@ -1500,39 +1494,37 @@ Actions 节点可以从所连接的 Events 节点获取 Events 输出参数，�
 
 - Source
 
-  [介绍]，必填字段，包括 s3 和 http 两种
+  必填字段，包括 s3 和 http 两种
 
   - s3
 
-    [介绍]
-
     - Bucket Name
 
-      [介绍]，必填字段
+      必填字段
 
     - Object
 
-      [介绍]，必填字段
+      必填字段
 
   - http
 
     - URL
 
-      [介绍]，必填字段，输入要符合 URL 格式
+      必填字段，输入要符合 URL 格式
 
 - Operation
 
-  [介绍]，必填字段，输入只能是下拉框列表中所列出的值，包括 create、update 和 delete
+  必填字段，输入只能是下拉框列表中所列出的值，包括 create、update 和 delete
 
 - K8s Object Trigger Parameters
 
   - From
 
-    [介绍]，必填字段，可以手动输入，也可引用 workflow 全局参数，也可以是所连接的 events 输出的参数
+    必填字段，可以手动输入，也可引用 workflow 全局参数，也可以是所连接的 events 输出的参数
 
   - Destination
 
-    [介绍]，必填字段
+    必填字段
 
 
 

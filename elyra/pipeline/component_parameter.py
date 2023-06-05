@@ -332,7 +332,6 @@ class EnvironmentVariable(ElyraPropertyListItem):
     def get_schema(cls) -> Dict[str, Any]:
         """Build the JSON schema for an Elyra-owned component property"""
         schema = super().get_schema()
-        schema["uihints"] = {"canRefresh": True}
         return schema
 
     def get_value_for_dict_entry(self) -> str:

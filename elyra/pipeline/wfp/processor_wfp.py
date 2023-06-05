@@ -54,8 +54,14 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             pipeline_definition["pipelines"][0]["app_data"]["name"] = Path(str(path)).stem
             pipeline_definition["pipelines"][0]["app_data"]["source"] = path
 
-            response = await PipelineValidationManager.instance().validate(pipeline_definition)
+            for node in pipeline_definition.get("pipelines")[0].get("nodes"):
+                component_parameters = node.get("app_data").get("component_parameters")
+                for key, value in component_parameters.items():
+                    if isinstance(value, dict) and value.get("widget") == "file":
+                        normpath = os.path.normpath(os.path.join(pipeline_definition.get("basepath"), value.get("value")))
+                        component_parameters[key]["value"] = normpath
 
+            response = await PipelineValidationManager.instance().validate(pipeline_definition)
             if not response.has_fatal:
                 pipeline = PipelineParser(root_dir=root_dir, parent=parent).parse(pipeline_definition)
                 await PipelineProcessorManager.instance().export(
@@ -86,7 +92,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                     message="The yaml file is not an exported file for the pipeline.",
                     runtime="WORKFLOW",
                 )
-
         return response, pipeline_input_parameters
 
     @staticmethod
