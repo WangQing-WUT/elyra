@@ -58,7 +58,8 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 component_parameters = node.get("app_data").get("component_parameters")
                 for key, value in component_parameters.items():
                     if isinstance(value, dict) and value.get("widget") == "file":
-                        normpath = os.path.normpath(os.path.join(pipeline_definition.get("basepath"), value.get("value")))
+                        joinpath = os.path.join(pipeline_definition.get("basepath"), value.get("value"))
+                        normpath = os.path.normpath(joinpath)
                         component_parameters[key]["value"] = normpath
 
             response = await PipelineValidationManager.instance().validate(pipeline_definition)
@@ -611,16 +612,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         trigger_parameters_field = []
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
-        data = {
-            "nodeType": node_type,
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-            "index": 0,
-        }
         trigger_parameters = node.get("app_data").get("component_parameters").get("trigger_parameters")
         for index, item in enumerate(trigger_parameters):
-            data["index"] = index + 1
+            data = {
+                "nodeType": node_type,
+                "nodeID": node_id,
+                "nodeName": node_name,
+                "propertyName": "",
+                "index": index + 1,
+            }
             temp_item = {}
             key = "value"
             if data.get("nodeType") == "K8s Object Trigger":
@@ -847,23 +847,21 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "S3 Object Prefix": node.get("app_data").get("component_parameters").get("prefix"),
             "S3 Object Suffix": node.get("app_data").get("component_parameters").get("suffix"),
         }
-        data = {
-            "nodeType": node_type,
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-        }
-        self._validate_s3obj_pre_and_suf(data, s3_object, wf_input_paras, response)
+        self._validate_s3obj_pre_and_suf(node_type, node_id, node_name, s3_object, wf_input_paras, response)
         if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
             len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
         ):
-            data["propertyName"] = "S3 Event Filters"
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data=data,
+                data={
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "S3 Event Filters",
+                },
             )
         else:
             event_filters = node.get("app_data").get("component_parameters").get("event_filter")
@@ -980,17 +978,15 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             "propertyName": "",
         }
         if source.get("widget") == "s3":
-            if ("bucket_name" not in source) or (source.get("bucket_name").strip() == ""):
+            bn_flag = ("bucket_name" not in source) or (source.get("bucket_name").strip() == "")
+            obj_flag = ("object" not in source) or (source.get("object").strip() == "")
+            if bn_flag and obj_flag:
+                data["propertyName"] = "Bucket Name and Object of Source s3"
+            elif bn_flag:
                 data["propertyName"] = "Bucket Name of Source s3"
-                response.add_message(
-                    severity=ValidationSeverity.Error,
-                    message_type="invalidNodePropertyValue",
-                    message="Node is missing a value for a required property.",
-                    runtime="WORKFLOW",
-                    data=data,
-                )
-            if ("object" not in source) or (source.get("object").strip() == ""):
+            elif obj_flag:
                 data["propertyName"] = "Object of Source s3"
+            if bn_flag or obj_flag:
                 response.add_message(
                     severity=ValidationSeverity.Error,
                     message_type="invalidNodePropertyValue",
@@ -1111,11 +1107,16 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
                 pipeline_input_paras=pipeline_input_paras,
             )
 
-    def _validate_s3obj_pre_and_suf(self, data, s3_object, wf_input_paras, response):
+    def _validate_s3obj_pre_and_suf(self, node_type, node_id, node_name, s3_object, wf_input_paras, response):
         for property_name, property_value in s3_object.items():
             if property_value.get("widget") == "enum":
+                data = {
+                    "nodeType": node_type,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": property_name,
+                }
                 value = property_value.get("value").strip()
-                data["propertyName"] = property_name
                 if (value != "") and (value not in wf_input_paras["All"]):
                     response.add_message(
                         severity=ValidationSeverity.Error,
@@ -1136,30 +1137,29 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
     def _validate_dataset_model_event(self, node, wf_input_paras, name, response, node_type):
         node_id = node.get("id")
         node_name = node.get("app_data").get("label").strip()
-        data = {
-            "nodeType": "{} Event".format(node_type),
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-        }
+        format_nt = "{} Event".format(node_type)
         self._validate_node_name(node, name, response)
         if ("{}_name".format(node_type.lower()) not in node.get("app_data").get("component_parameters")) or (
             len(node.get("app_data").get("component_parameters").get("{}_name".format(node_type.lower()))) == 0
         ):
-            data["propertyName"] = "{} Names".format(node_type)
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data=data,
+                data={
+                    "nodeType": format_nt,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "{} Names".format(node_type),
+                },
             )
         else:
             names = node.get("app_data").get("component_parameters").get("{}_name".format(node_type.lower()))
             for index, name in enumerate(names):
                 self._validate_node_property_value(
                     name,
-                    "{} Event".format(node_type),
+                    format_nt,
                     node_id,
                     node_name,
                     "{} Names".format(node_type),
@@ -1170,13 +1170,17 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         if ("event_filter" not in node.get("app_data").get("component_parameters")) or (
             len(node.get("app_data").get("component_parameters").get("event_filter")) == 0
         ):
-            data["propertyName"] = "{} Event Filters".format(node_type)
             response.add_message(
                 severity=ValidationSeverity.Error,
                 message_type="invalidNodePropertyValue",
                 message="Node is missing a value for a required property.",
                 runtime="WORKFLOW",
-                data=data,
+                data={
+                    "nodeType": format_nt,
+                    "nodeID": node_id,
+                    "nodeName": node_name,
+                    "propertyName": "{} Event Filters".format(node_type),
+                },
             )
         else:
             component_parameters = node.get("app_data").get("component_parameters")
@@ -1467,13 +1471,6 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
         pipeline_input_paras=[],
     ):
         name_list = []
-        data = {
-            "nodeType": node_type,
-            "nodeID": node_id,
-            "nodeName": node_name,
-            "propertyName": "",
-            "index": 0,
-        }
         name = "name"
         value = "value"
         if node_type in ["Pipeline Trigger", "HTTP Trigger"]:
@@ -1482,7 +1479,13 @@ class WfpPipelineProcessor(RuntimePipelineProcessor):
             name = "dest"
             value = "from"
         for index, parameter in enumerate(parameters):
-            data["index"] = index + 1
+            data = {
+                "nodeType": node_type,
+                "nodeID": node_id,
+                "nodeName": node_name,
+                "propertyName": "",
+                "index": index + 1,
+            }
             if (name not in parameter) or (parameter[name].strip() == ""):
                 data["propertyName"] = name.title() + " of " + property_name
                 response.add_message(
