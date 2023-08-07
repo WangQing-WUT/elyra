@@ -98,6 +98,7 @@ which pip3
 - 安装 yarn 和 nodejs 并验证
 
 ```shell
+conda install -y -c conda-forge/label/main nodejs=16.10.0
 conda install -y -c conda-forge/label/main yarn=1.22.19
 yarn --version
 node --version

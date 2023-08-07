@@ -37,7 +37,7 @@ which pip3       # displays current `pip` path
 ```
 * Install a version of Node.js that is supported by wfeeditor.
 ```shell
-conda install -y -c conda-forge/label/main nodejs
+conda install -y -c conda-forge/label/main nodejs=16.10.0
 ```
 * Verify node is installed correctly
 ```shell
@@ -45,7 +45,7 @@ node --version
 ```
 * Install Yarn
 ```shell
-conda install -y -c conda-forge/label/main yarn
+conda install -y -c conda-forge/label/main yarn=1.22.19
 ```
 * Verify yarn is installed correctly
 ```shell
